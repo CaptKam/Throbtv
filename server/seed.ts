@@ -106,7 +106,7 @@ export async function seedVideos() {
       const timeout = setTimeout(() => controller.abort(), 120000);
       const res = await fetch(FEED_URL, {
         signal: controller.signal,
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; NOOG/1.0)" },
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; Throb.TV/1.0)" },
       });
       clearTimeout(timeout);
       if (res.ok) {

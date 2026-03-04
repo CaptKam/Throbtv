@@ -94,7 +94,7 @@ export default function Remote() {
         <div className="text-center">
           <WifiOff className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
           <div className="text-xl font-bold text-white mb-2">Connecting...</div>
-          <div className="text-muted-foreground">Establishing connection to NOOG</div>
+          <div className="text-muted-foreground">Establishing connection to Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></div>
         </div>
       </div>
     );
@@ -128,7 +128,7 @@ export default function Remote() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-800 flex items-center justify-center">
                 <Play className="w-4 h-4 text-white fill-white ml-0.5" />
               </div>
-              <span className="text-lg font-black tracking-tighter">NOOG</span>
+              <span className="text-lg font-black tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
             </div>
 
             <div className="flex-1 relative">

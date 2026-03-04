@@ -140,7 +140,7 @@ export async function importFeedFromUrl(feedUrl: string) {
   try {
     const res = await fetch(feedUrl, {
       signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; NOOG/1.0)" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; Throb.TV/1.0)" },
     });
     clearTimeout(timeout);
 

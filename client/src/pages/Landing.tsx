@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { motion } from "framer-motion";
 import { Play, Sparkles, Mail, Lock, ArrowRight, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,7 +58,7 @@ export default function Landing() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-800 flex items-center justify-center shadow-lg shadow-primary/20">
             <Play className="w-5 h-5 text-white fill-white ml-0.5" />
           </div>
-          <span className="text-2xl font-black tracking-tight tracking-tighter">NOOG</span>
+          <span className="text-2xl font-black tracking-tight tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
         </div>
         <div className="flex gap-4">
           <Button variant="ghost" className="text-muted-foreground hover:text-foreground hidden sm:flex">
@@ -216,7 +216,7 @@ export default function Landing() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center w-full relative">
-                      <span>{isLogin ? "Continue to NOOG" : "Create Account"}</span>
+                      <span>{isLogin ? <>Continue to Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></> : "Create Account"}</span>
                       <ChevronRight className="w-5 h-5 absolute right-2" />
                     </div>
                   )}
@@ -224,7 +224,7 @@ export default function Landing() {
               </form>
 
               <div className="mt-8 text-center text-xs text-muted-foreground">
-                By continuing, you agree to our <a href="#" className="text-white hover:underline">Terms of Service</a> and <a href="#" className="text-white hover:underline">Privacy Policy</a>.
+                By continuing, you agree to our <Link href="/legal/terms" className="text-white hover:underline">Terms of Service</Link> and <Link href="/legal/privacy" className="text-white hover:underline">Privacy Policy</Link>.
               </div>
             </div>
           </div>
