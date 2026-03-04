@@ -4,11 +4,8 @@ import { videos } from "../shared/schema";
 import { sql } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const FEED_FILE = path.resolve(__dirname, "../attached_assets/fapcash_gay_feed.txt");
+const FEED_FILE = path.resolve(process.cwd(), "attached_assets/fapcash_gay_feed.txt");
 const FEED_URL = "https://fap.cash/content/dump?camp=Test%20&ai=qAZ&forient=gay&fcats=!&fres=all&fperiod=all&furls=c1&fthumbs=ssmall&ftcnt=25&ford=dt&fembed=code&fdelim=%7C&fformat=csv&fowner=all&ftsize=small&emb=on&vid=on&url=on&thumb=on&title=on&titles=on&desc=on&cats=on&pstarts=on&sname=on&orient=on&dur=on&embdur=on&dt=on&likes=on&trailer=on&res=on";
 
 function extractEmbedUrl(embedHtml: string): string {
