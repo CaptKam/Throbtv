@@ -28,6 +28,7 @@ export const videos = pgTable("videos", {
   tags: text("tags").array(),
   category: text("category"),
   thumbnailUrl: text("thumbnail_url"),
+  trailerUrl: text("trailer_url"),
   views: integer("views").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
