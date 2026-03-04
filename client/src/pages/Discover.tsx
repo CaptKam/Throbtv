@@ -35,6 +35,8 @@ export default function Discover() {
   const peekRowRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoProgress, setVideoProgress] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fetch videos
   const { data, isLoading } = useQuery({
@@ -121,7 +123,7 @@ export default function Discover() {
 
   const cycleStage = () => setStage(s => (s >= 3 ? 1 : s + 1) as 1 | 2 | 3);
 
-  // Video progress tracking
+  // Video progress tracking for <video> elements (trailer fallback)
   const handleTimeUpdate = useCallback(() => {
     const vid = videoRef.current;
     if (vid && vid.duration > 0) {
@@ -129,10 +131,49 @@ export default function Discover() {
     }
   }, []);
 
-  // Reset progress when video changes
+  // Timer-based progress for iframe embeds using durationSeconds
   useEffect(() => {
+    // Clean up previous timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     setVideoProgress(0);
-  }, [currentVideo?.id]);
+    setElapsedSeconds(0);
+
+    if (!currentVideo) return;
+
+    // Only use timer for iframe embeds (embedUrl present)
+    const isEmbed = !!currentVideo.embedUrl;
+    const totalSec = currentVideo.durationSeconds || 0;
+
+    if (isEmbed && totalSec > 0 && isPlaying) {
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(prev => {
+          const next = prev + 1;
+          setVideoProgress(Math.min((next / totalSec) * 100, 100));
+          if (next >= totalSec) {
+            // Auto-skip to next when video ends
+            skipNext();
+          }
+          return next;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [currentVideo?.id, isPlaying]);
+
+  const formatTime = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   const formatViews = (n: number) => {
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
@@ -147,16 +188,7 @@ export default function Discover() {
         {/* ======= VIDEO LAYER ======= */}
         <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
           {currentVideo ? (
-            currentVideo.trailerUrl ? (
-              <video
-                ref={videoRef}
-                key={currentVideo.id}
-                src={currentVideo.trailerUrl}
-                className="throb-video-el"
-                autoPlay loop muted playsInline
-                onTimeUpdate={handleTimeUpdate}
-              />
-            ) : currentVideo.embedUrl ? (
+            currentVideo.embedUrl ? (
               <iframe
                 key={currentVideo.id}
                 src={currentVideo.embedUrl}
@@ -165,6 +197,15 @@ export default function Discover() {
                 allowFullScreen
                 referrerPolicy="origin"
                 style={{ border: 0 }}
+              />
+            ) : currentVideo.trailerUrl ? (
+              <video
+                ref={videoRef}
+                key={currentVideo.id}
+                src={currentVideo.trailerUrl}
+                className="throb-video-el"
+                autoPlay loop muted playsInline
+                onTimeUpdate={handleTimeUpdate}
               />
             ) : (
               <div className="throb-video-fallback">
@@ -359,7 +400,11 @@ export default function Discover() {
               <div className="throb-now-info">
                 <div className="throb-now-title">{currentVideo?.title || "No video selected"}</div>
                 <div className="throb-now-sub">
-                  {currentVideo ? `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}` : "Browse to find videos"}
+                  {currentVideo
+                    ? currentVideo.embedUrl && currentVideo.durationSeconds
+                      ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · ${currentVideo.sourceDomain || ""}`
+                      : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
+                    : "Browse to find videos"}
                 </div>
               </div>
               <button className="throb-t-btn ghost" onClick={skipPrev}>
