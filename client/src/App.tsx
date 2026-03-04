@@ -5,14 +5,17 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Landing from "@/pages/Landing";
 import Discover from "@/pages/Discover";
+import Theater from "@/pages/Theater";
+import Remote from "@/pages/Remote";
 import NotFound from "@/pages/not-found";
-import { GlobalMiniPlayer } from "@/components/layout/GlobalMiniPlayer";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/discover" component={Discover} />
+      <Route path="/theater" component={Theater} />
+      <Route path="/remote/:sessionCode" component={Remote} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -24,11 +27,9 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
-        <GlobalMiniPlayer />
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
 
 export default App;
-

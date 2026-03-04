@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { 
   Play, Pause, SkipBack, SkipForward, Search, 
   Plus, FastForward, CheckCircle2,
-  Tv, ListMusic, GripVertical, Trash2, X, ChevronUp, ChevronDown, Minimize, LogOut
+  Tv, ListMusic, GripVertical, Trash2, X, ChevronUp, ChevronDown, Minimize, LogOut, Cast
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,6 +158,9 @@ export default function Discover() {
             </div>
             <Button variant="ghost" size="icon" className="shrink-0 h-11 w-11 rounded-full bg-white/5 border border-white/10 hover:bg-white/10" onClick={() => { if (nowPlaying) { setCurrentVideo(nowPlaying); setIsFullScreen(true); } }}>
               <Tv className="w-5 h-5 text-primary" />
+            </Button>
+            <Button variant="ghost" size="icon" className="shrink-0 h-11 w-11 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20" onClick={() => window.open("/theater", "_blank")} data-testid="button-theater-mode" title="Open Theater Mode">
+              <Cast className="w-5 h-5 text-primary" />
             </Button>
             <Button variant="ghost" size="icon" className="shrink-0 h-11 w-11 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-muted-foreground hover:text-white" onClick={() => logout.mutate()} data-testid="button-logout">
               <LogOut className="w-5 h-5" />

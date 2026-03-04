@@ -63,6 +63,9 @@ app.use((req, res, next) => {
   const { seedVideos } = await import("./seed");
   await seedVideos().catch(err => console.error("Seed error:", err));
 
+  const { setupSocket } = await import("./socket");
+  setupSocket(httpServer);
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
