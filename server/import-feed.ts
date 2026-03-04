@@ -26,7 +26,8 @@ interface FeedVideo {
 function extractEmbedUrl(embedHtml: string): string {
   const match = embedHtml.match(/src="([^"]+)"/);
   if (!match) return "";
-  const url = match[1];
+  let url = match[1];
+  url = url.replace("fh.video/embed/", "faphouse.com/embed/");
   const sep = url.includes("?") ? "&" : "?";
   return `${url}${sep}utm_content=throb.tv`;
 }
