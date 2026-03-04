@@ -203,17 +203,7 @@ export default function Theater() {
       {currentVideo && !quickFade && (
         <div className="fixed inset-0 flex flex-col">
           <div className="flex-1 bg-black relative">
-            {currentVideo.trailerUrl ? (
-              <video
-                key={currentVideo.id}
-                src={currentVideo.trailerUrl}
-                className="w-full h-full object-contain"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-            ) : currentVideo.embedUrl ? (
+            {currentVideo.embedUrl ? (
               <iframe
                 key={currentVideo.id}
                 src={currentVideo.embedUrl}
