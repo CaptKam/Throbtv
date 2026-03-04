@@ -107,7 +107,7 @@ export default function Theater() {
             onClick={() => setQuickFade(false)}
           >
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-red-800 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-red-700 flex items-center justify-center">
                 <Play className="w-7 h-7 text-white fill-white ml-1" />
               </div>
               <span className="text-4xl font-black tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
@@ -132,7 +132,7 @@ export default function Theater() {
       {!currentVideo && (
         <div className="flex flex-col items-center justify-center gap-8 p-8 max-w-lg text-center">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-red-800 flex items-center justify-center shadow-lg shadow-primary/30">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-red-700 flex items-center justify-center shadow-lg shadow-primary/30">
               <Play className="w-6 h-6 text-white fill-white ml-0.5" />
             </div>
             <span className="text-3xl font-black tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
@@ -218,8 +218,9 @@ export default function Theater() {
                 key={currentVideo.id}
                 src={currentVideo.embedUrl}
                 className="w-full h-full border-0"
-                allow="autoplay; encrypted-media"
+                allow="autoplay; encrypted-media; fullscreen"
                 allowFullScreen
+                referrerPolicy="origin"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
