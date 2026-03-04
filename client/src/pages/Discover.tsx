@@ -283,12 +283,29 @@ export default function Discover() {
                   <div className="throb-grid">
                     {videos.map((v) => (
                       <div key={v.id} className="throb-card" onClick={() => playNow(v)}>
-                        <div className="throb-thumb">
+                        <div className="throb-thumb"
+                          onMouseEnter={(e) => {
+                            const vid = e.currentTarget.querySelector('video');
+                            if (vid) { vid.style.opacity = '1'; vid.play().catch(() => {}); }
+                          }}
+                          onMouseLeave={(e) => {
+                            const vid = e.currentTarget.querySelector('video');
+                            if (vid) { vid.style.opacity = '0'; vid.pause(); vid.currentTime = 0; }
+                          }}
+                        >
                           <img
                             src={v.thumbnailUrl || ""}
                             alt={v.title}
                             loading="lazy"
                           />
+                          {v.trailerUrl && (
+                            <video
+                              src={v.trailerUrl}
+                              className="throb-trailer-preview"
+                              muted loop playsInline preload="none"
+                              style={{ opacity: 0 }}
+                            />
+                          )}
                           <span className="throb-dur">{v.duration}</span>
                           <span className="throb-src">{v.sourceDomain?.replace(".com", "")}</span>
                           <div className="throb-thumb-hover">
@@ -373,8 +390,25 @@ export default function Discover() {
             <div className="throb-peek-row" ref={peekRowRef}>
               {videos.slice(0, 20).map((v) => (
                 <div key={v.id} className="throb-pk-card" onClick={() => playNow(v)}>
-                  <div className="throb-pk-thumb">
+                  <div className="throb-pk-thumb"
+                    onMouseEnter={(e) => {
+                      const vid = e.currentTarget.querySelector('video');
+                      if (vid) { vid.style.opacity = '1'; vid.play().catch(() => {}); }
+                    }}
+                    onMouseLeave={(e) => {
+                      const vid = e.currentTarget.querySelector('video');
+                      if (vid) { vid.style.opacity = '0'; vid.pause(); vid.currentTime = 0; }
+                    }}
+                  >
                     <img src={v.thumbnailUrl || ""} alt={v.title} loading="lazy" />
+                    {v.trailerUrl && (
+                      <video
+                        src={v.trailerUrl}
+                        className="throb-trailer-preview"
+                        muted loop playsInline preload="none"
+                        style={{ opacity: 0 }}
+                      />
+                    )}
                     <span className="throb-dur">{v.duration}</span>
                     <span className="throb-src">{v.sourceDomain?.replace(".com", "")}</span>
                   </div>
@@ -754,6 +788,10 @@ const scopedStyles = `
     overflow: hidden; position: relative; background: #111;
   }
   .throb-pk-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .throb-pk-thumb .throb-trailer-preview {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; transition: opacity 0.3s; z-index: 1;
+  }
   .throb-pk-title {
     font-size: 11px; font-weight: 600; color: #94a3b8;
     margin-top: 4px; white-space: nowrap;
@@ -805,6 +843,10 @@ const scopedStyles = `
   }
   .throb-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
   .throb-card:hover .throb-thumb img { transform: scale(1.05); }
+  .throb-thumb .throb-trailer-preview {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; transition: opacity 0.3s; z-index: 1;
+  }
   .throb-thumb-hover {
     position: absolute; inset: 0;
     background: rgba(0,0,0,0.4);
