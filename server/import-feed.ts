@@ -25,7 +25,10 @@ interface FeedVideo {
 
 function extractEmbedUrl(embedHtml: string): string {
   const match = embedHtml.match(/src="([^"]+)"/);
-  return match ? match[1] : "";
+  if (!match) return "";
+  const url = match[1];
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}utm_content=throb.tv`;
 }
 
 function parseFeedCsv(rawText: string): FeedVideo[] {

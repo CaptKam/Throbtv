@@ -10,7 +10,10 @@ const FEED_URL = "https://fap.cash/content/dump?camp=Test%20&ai=qAZ&forient=gay&
 
 function extractEmbedUrl(embedHtml: string): string {
   const match = embedHtml.match(/src="([^"]+)"/);
-  return match ? match[1] : "";
+  if (!match) return "";
+  const url = match[1];
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}utm_content=throb.tv`;
 }
 
 function formatDuration(seconds: number): string {
