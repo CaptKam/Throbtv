@@ -1,66 +1,38 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, Reorder, AnimatePresence } from "framer-motion";
 import { 
   Play, Pause, SkipBack, SkipForward, Search, 
   Clock, Plus, FastForward, CheckCircle2,
-  Tv, ListMusic, GripVertical, Trash2, X, ChevronUp, ChevronDown
+  Tv, ListMusic, GripVertical, Trash2, X, ChevronUp, ChevronDown, Maximize, Minimize
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock Data
-const CATEGORIES = ["Trending", "New", "Muscular", "Amateur", "Studio", "Solo", "Collabs"];
+// Mock Data - Expanded for a denser "tube" feel
+const CATEGORIES = ["Trending", "New", "Muscular", "Amateur", "Studio", "Solo", "Collabs", "Verified", "Most Viewed"];
 
-const MOCK_VIDEOS = [
-  {
-    id: "1",
-    title: "Summer Workout Routine at the Beach",
-    duration: "12:34",
-    source: "FapHouse",
-    thumbnail: "https://images.unsplash.com/photo-1583465583625-f71626017b6c?q=80&w=800&auto=format&fit=crop",
-    tags: ["outdoor", "muscle", "solo"]
-  },
-  {
-    id: "2",
-    title: "Locker Room Flex & Pose",
-    duration: "08:15",
-    source: "BoyfriendTV",
-    thumbnail: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop",
-    tags: ["amateur", "jock"]
-  },
-  {
-    id: "3",
-    title: "Late Night Studio Session",
-    duration: "22:40",
-    source: "Faptor",
-    thumbnail: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?q=80&w=800&auto=format&fit=crop",
-    tags: ["studio", "collab"]
-  },
-  {
-    id: "4",
-    title: "Morning Run & Stretch",
-    duration: "15:20",
-    source: "GayHaus",
-    thumbnail: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=800&auto=format&fit=crop",
-    tags: ["outdoor", "morning"]
-  },
-  {
-    id: "5",
-    title: "Heavy Lifting Reps",
-    duration: "10:05",
-    source: "OnlyGayVideo",
-    thumbnail: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop",
-    tags: ["muscle", "gym"]
-  }
-];
+const generateMockVideos = (count: number) => {
+  return Array.from({ length: count }).map((_, i) => ({
+    id: String(i + 1),
+    title: `Video Title ${i + 1} - High Quality Scene`,
+    duration: `${Math.floor(Math.random() * 20 + 5)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+    source: ["FapHouse", "BoyfriendTV", "Faptor", "GayHaus", "OnlyGayVideo"][Math.floor(Math.random() * 5)],
+    thumbnail: `https://images.unsplash.com/photo-${1500000000000 + i * 1000}?q=80&w=600&auto=format&fit=crop`,
+    tags: ["muscle", "solo", "amateur", "jock"].sort(() => 0.5 - Math.random()).slice(0, 2),
+    views: `${Math.floor(Math.random() * 900 + 10)}k`
+  }));
+};
+
+const MOCK_VIDEOS = generateMockVideos(24);
 
 export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("Trending");
   const [isPlaying, setIsPlaying] = useState(true);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [queue, setQueue] = useState<typeof MOCK_VIDEOS>([MOCK_VIDEOS[1], MOCK_VIDEOS[2], MOCK_VIDEOS[3]]);
   const { toast } = useToast();
 
@@ -81,44 +53,115 @@ export default function Discover() {
       action: <ListMusic className="w-5 h-5 text-primary" />
     });
   };
-  
+
   const removeFromQueue = (id: string) => {
     setQueue(queue.filter(v => v.id !== id));
   };
 
+  const handlePlayNow = (video: typeof MOCK_VIDEOS[0]) => {
+    // Simulating playing now by putting it at the front and opening full screen
+    setQueue([video, ...queue]);
+    setIsFullScreen(true);
+    setIsPlaying(true);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
+      
+      {/* FULL SCREEN PLAYER OVERLAY */}
+      <AnimatePresence>
+        {isFullScreen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-[100] bg-black flex flex-col"
+          >
+            {/* Top Bar for Full Screen */}
+            <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/80 to-transparent z-10 flex justify-between items-center transition-opacity hover:opacity-100 opacity-0 sm:opacity-100">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => setIsFullScreen(false)}>
+                <X className="w-6 h-6" />
+              </Button>
+              <div className="text-white font-medium text-sm drop-shadow-md">
+                {MOCK_VIDEOS[0].title}
+              </div>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => setIsFullScreen(false)}>
+                <Minimize className="w-6 h-6" />
+              </Button>
+            </div>
+
+            {/* Video Container (Mocked with Image for Prototype) */}
+            <div className="flex-1 flex items-center justify-center relative w-full h-full bg-zinc-900">
+               <img src={MOCK_VIDEOS[0].thumbnail} className="w-full h-full object-contain opacity-60" />
+               <div className="absolute inset-0 flex items-center justify-center">
+                 {!isPlaying && (
+                   <div className="w-24 h-24 bg-primary/80 backdrop-blur rounded-full flex items-center justify-center cursor-pointer hover:bg-primary transition-colors" onClick={() => setIsPlaying(true)}>
+                     <Play className="w-12 h-12 text-white ml-2" />
+                   </div>
+                 )}
+               </div>
+               
+               {/* Progress overlay at bottom of video */}
+               <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+                 <div className="h-full bg-primary w-1/3 relative" />
+               </div>
+            </div>
+            
+            {/* Minimal Transport in Full Screen */}
+            <div className="bg-black/90 p-6 flex justify-center items-center gap-8 border-t border-white/10 pb-safe">
+              <Button variant="ghost" size="icon" className="w-14 h-14 rounded-full text-white hover:bg-white/10">
+                <SkipBack className="w-8 h-8 fill-current" />
+              </Button>
+              <Button 
+                size="icon" 
+                className="w-20 h-20 rounded-full bg-primary text-white hover:bg-primary/80 shadow-[0_0_30px_-5px_rgba(147,51,234,0.4)] transition-transform hover:scale-105"
+                onClick={() => setIsPlaying(!isPlaying)}
+              >
+                {isPlaying ? (
+                  <Pause className="w-10 h-10 fill-current" />
+                ) : (
+                  <Play className="w-10 h-10 fill-current ml-2" />
+                )}
+              </Button>
+              <Button variant="ghost" size="icon" className="w-14 h-14 rounded-full text-white hover:bg-white/10">
+                <SkipForward className="w-8 h-8 fill-current" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Zone 2: Browse Feed (Everything above transport bar) */}
       <div className="flex-1 overflow-y-auto pb-40">
         
         {/* Header & Search */}
-        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5 pt-safe">
+        <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl border-b border-white/5 pt-safe shadow-md">
           <div className="px-4 py-4 flex items-center justify-between gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input 
-                placeholder="Search videos, tags, or actors..." 
+                placeholder="Search thousands of videos..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 bg-white/5 border-transparent focus-visible:ring-primary h-12 rounded-2xl text-base"
+                className="w-full pl-10 bg-white/5 border-white/10 focus-visible:ring-primary h-11 rounded-full text-base"
               />
             </div>
-            <Button variant="ghost" size="icon" className="shrink-0 h-12 w-12 rounded-full bg-white/5 hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="shrink-0 h-11 w-11 rounded-full bg-white/5 border border-white/10 hover:bg-white/10" onClick={() => setIsFullScreen(true)}>
               <Tv className="w-5 h-5 text-primary" />
             </Button>
           </div>
 
           {/* Categories */}
-          <ScrollArea className="w-full whitespace-nowrap pb-4">
+          <ScrollArea className="w-full whitespace-nowrap pb-3">
             <div className="flex px-4 gap-2">
               {CATEGORIES.map(category => (
                 <button
                   key={category}
                   onClick={() => setActiveCategory(category)}
-                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
                     activeCategory === category 
-                      ? "bg-primary text-white shadow-[0_0_15px_-3px_rgba(147,51,234,0.5)]" 
-                      : "bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+                      ? "bg-white text-black shadow-[0_0_15px_-3px_rgba(255,255,255,0.3)]" 
+                      : "bg-white/5 text-muted-foreground border border-white/10 hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   {category}
@@ -128,68 +171,78 @@ export default function Discover() {
           </ScrollArea>
         </div>
 
-        {/* Video Feed */}
-        <div className="p-4 space-y-6 max-w-2xl mx-auto">
-          {MOCK_VIDEOS.map((video, idx) => (
-            <motion.div 
-              key={video.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-card border border-white/5 rounded-3xl overflow-hidden shadow-lg"
-            >
-              {/* Thumbnail */}
-              <div className="relative aspect-video bg-muted group">
-                <img 
-                  src={video.thumbnail} 
-                  alt={video.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                
-                {/* Duration Badge */}
-                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md text-xs font-semibold text-white flex items-center gap-1.5">
-                  <Clock className="w-3 h-3" />
-                  {video.duration}
-                </div>
-                
-                {/* Source Badge */}
-                <div className="absolute top-3 left-3 bg-primary/90 backdrop-blur-md px-2.5 py-1 rounded-md text-xs font-bold text-white shadow-lg">
-                  {video.source}
-                </div>
-              </div>
-
-              {/* Info & Actions */}
-              <div className="p-5">
-                <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{video.title}</h3>
-                <div className="flex gap-2 mb-6 overflow-x-auto whitespace-nowrap hide-scrollbar">
-                  {video.tags.map(tag => (
-                    <span key={tag} className="text-xs font-medium text-muted-foreground bg-white/5 px-2 py-1 rounded-md">
-                      #{tag}
-                    </span>
-                  ))}
+        {/* Dense Video Grid */}
+        <div className="p-2 sm:p-4 md:p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+            {MOCK_VIDEOS.map((video, idx) => (
+              <motion.div 
+                key={video.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: (idx % 10) * 0.05 }}
+                className="group flex flex-col cursor-pointer"
+              >
+                {/* Thumbnail Container */}
+                <div 
+                  className="relative aspect-[16/9] bg-zinc-900 rounded-xl overflow-hidden shadow-md mb-2 group-hover:ring-2 ring-primary/80 transition-all"
+                  onClick={() => handlePlayNow(video)}
+                >
+                  <img 
+                    src={video.thumbnail} 
+                    alt={video.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  
+                  {/* Play Overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                    <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                      <Play className="w-6 h-6 text-white ml-1 fill-current" />
+                    </div>
+                  </div>
+                  
+                  {/* Bottom Stats */}
+                  <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-end">
+                    <div className="text-[10px] font-bold text-white bg-primary/90 px-1.5 py-0.5 rounded shadow-sm">
+                      {video.source}
+                    </div>
+                    <div className="bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold text-white flex items-center gap-1">
+                      {video.duration}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex gap-3">
+                {/* Meta Info */}
+                <div className="px-1 flex-1 flex flex-col">
+                  <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight group-hover:text-primary transition-colors">{video.title}</h3>
+                  <div className="flex items-center gap-2 mt-1.5 text-[11px] font-medium text-muted-foreground">
+                    <span>{video.views} views</span>
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground/40"></span>
+                    <span>100%</span>
+                  </div>
+                </div>
+
+                {/* Quick Actions overlayed implicitly on mobile, visible on hover desktop */}
+                <div className="mt-2 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <Button 
-                    className="flex-1 h-14 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold text-base transition-colors"
-                    onClick={() => handlePlayNext(video)}
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1 h-8 rounded-lg text-xs font-bold bg-white/10 hover:bg-white/20 text-white"
+                    onClick={(e) => { e.stopPropagation(); handlePlayNext(video); }}
                   >
-                    <FastForward className="w-5 h-5 mr-2" />
-                    Play Next
+                    Next
                   </Button>
                   <Button 
                     variant="outline"
-                    className="flex-1 h-14 rounded-2xl border-white/10 hover:bg-white/10 text-white font-semibold text-base transition-colors"
-                    onClick={() => handleAddToQueue(video)}
+                    size="sm"
+                    className="flex-1 h-8 rounded-lg text-xs font-bold border-white/10 hover:bg-white/10 text-white"
+                    onClick={(e) => { e.stopPropagation(); handleAddToQueue(video); }}
                   >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Add to Queue
+                    +Queue
                   </Button>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
 
