@@ -1,0 +1,668 @@
+NOOG MVP — Technical Specification
+Version: 1.0
+Date: March 2026
+Purpose: Complete spec for rebuilding the MVP. Design-agnostic — covers architecture, data, APIs, and behavior only.
+
+1. Platform Overview
+NOOG is a playlist-based adult video player that embeds videos from affiliate partner sites. It never hosts content. Revenue comes from affiliate commissions when users click through to partner sites.
+Core constraint: Videos play inside cross-origin iframes. The browser blocks all communication between NOOG's page and the iframe content. NOOG cannot detect play, pause, ended, or timeupdate events from embedded players. This has been tested and confirmed across all partner embeds (FapHouse, BoyfriendTV, Faptor, XHamster, XVideos, Pornhub). None broadcast postMessage events.
+Initial target audience: Gay male viewers.
+
+1.5 Current Live Platform (VidVault — Pre-NOOG)
+The following is the existing production system that NOOG is being rebuilt from. This documents what is already built and working.
+Stack (Current)
+LayerTechnologyFrontendReact 18 + TypeScript, ViteStylingTailwind CSS + shadcn/uiRoutingwouter (lightweight client-side)StateTanStack Query (React Query) v5IconsLucide ReactBackendExpress.js + TypeScriptDatabasePostgreSQL + Drizzle ORMAuthPassport.js (Local Strategy) + session cookies
+Supported Source Platforms (Current)
+The current system scrapes and proxies from 6 platforms:
+
+Gay0Day
+NeedGayPorn
+OnlyGayVideo
+GayHaus
+Faptor
+ZZGays
+
+Video Streaming — Proxy Approach (Current)
+Endpoint: GET /api/video-stream
+The backend extracts direct MP4 URLs from source platforms and proxies the video stream to bypass cross-origin restrictions. This gives users a native HTML5 <video> element experience with full playback control (play, pause, seek, ended events, timeupdate). Supports HTTP Range requests for seeking within videos.
+Key difference from NOOG target architecture: The current system scrapes and proxies MP4 streams directly. NOOG will switch to official affiliate embeds via iframes, which means losing native playback events but gaining legal legitimacy, affiliate revenue, and zero bandwidth costs.
+GoonLoop Theater Mode (Current — Working)
+
+Dedicated player route at /player
+Hands-free autoplay with automatic advance to next video in queue
+Timer controls: countdown based on video duration (+5s buffer), manual +30s / -30s adjustments, "Video ended?" quick-skip button
+Theater view hides all UI for lean-back experience
+
+Phone Remote Control (Current — Working)
+
+WebSocket-based sync via Socket.IO
+Unique session code + QR code generation for phone pairing
+Controls: play/pause, volume, seeking, queue management from secondary device
+
+Phone Remote — Target UX (NOOG Redesign)
+Concept: Spotify-style "browse + control" experience for video, not just a dumb remote. The phone becomes a full discovery surface where the user scrolls through content to swap out or add to the TV queue — while transport controls stay persistently accessible. Simpler and bigger than Spotify's controls, designed for one-handed, distracted use.
+Layout — Two Persistent Zones:
+Zone 1 — Sticky Transport Bar (bottom of screen, always visible):
+
+Fixed to bottom, never scrolls away
+Oversized touch targets (minimum 56px height, ideally 64px)
+Controls: Previous / Play-Pause / Next — large circular buttons, widely spaced
+Current video title + thumbnail strip above the buttons (tap to expand to full "now playing" view)
+Countdown timer showing seconds until auto-advance
+One-tap "Skip Now" button alongside the timer
+
+Zone 2 — Scrollable Browse Feed (everything above the transport bar):
+
+Vertical scroll feed of video cards — the user's primary discovery surface
+Each card: thumbnail, title, duration, source badge
+Two action buttons per card, large and obvious:
+
+"Play Next" — inserts at the front of the queue (swaps what's coming up)
+"Add to Queue" — appends to the end of the queue
+
+
+Category/tag filter pills at the top of the feed (scrollable horizontal row)
+Search bar at the very top (tap to expand, keyboard opens)
+Pull-to-refresh for fresh content
+
+Interaction Model:
+
+Scrolling the feed does NOT affect the transport bar — it stays locked at the bottom
+Tapping "Play Next" on any card sends a WebSocket event to the TV, card animates out with a confirmation toast ("Added — playing next")
+Tapping "Add to Queue" appends and shows position in queue ("Added — #7 in queue")
+Swiping a card left reveals a "Remove" action (for cards already in queue)
+The feed shows a subtle indicator on cards already in the current queue (e.g., purple dot or "In Queue" badge)
+
+Queue View (swipe-up or tab):
+
+Swipe up on the transport bar or tap a "Queue" tab to reveal the full queue list
+Drag-to-reorder handles on each item
+Swipe-to-remove on individual items
+"Clear Queue" button at the bottom
+Currently playing item highlighted at the top with animated progress indicator
+
+Key Differences from Spotify:
+
+Bigger buttons — Spotify optimizes for precision taps, NOOG optimizes for imprecise one-handed use
+No album art hero section — the video thumbnail is compact, not a full-screen takeover
+Video-specific actions — "Play Next" and "Add to Queue" are the primary interactions, not "Like" or "Share"
+Feed-first — the default view is the browse feed, not a "now playing" screen. Discovery is the primary use case while something is already playing on TV
+Countdown timer visible — Spotify doesn't show time-to-next, NOOG does because the timer is essential context for the auto-advance system
+
+Global Mini-Player (Current — Working)
+
+Persistent floating bar (z-index 30) across all pages
+Background playback continues while browsing
+Mini-queue management
+Quick-expand button to jump into full GoonLoop theater mode
+
+Playlist Management (Current — Working)
+
+User-created playlists persisted in PostgreSQL
+Add videos from search results or trending pages
+"Play All" and "Add All to Queue" actions on every playlist
+
+Security / Anti-Bot (Current)
+
+Backend requests use rotating browser-like headers
+Exponential backoff on 403 Forbidden errors from source sites
+Secure cookies with PostgreSQL-backed session storage
+
+UI (Current)
+
+Dark mode default via Tailwind CSS variables
+Custom animate-page-in CSS fade transitions on route changes
+Mobile-first responsive layout with safe-area support (notches, home bars)
+Streamlined sidebar navigation grouped by Main Actions and Tools
+
+
+2. Tech Stack (NOOG Target)
+LayerTechnologyNotesFrontendReact + TypeScriptSingle-page applicationStylingTailwind CSSUtility-first, dark themeState managementReact Context or ZustandLightweight, no Redux overheadBackendNode.js + ExpressREST API + WebSocket serverReal-timeSocket.IOPhone-TV sync, Rooms, all live eventsDatabasePostgreSQLUsers, playlists, clips, rooms, historyCacheRedisSession state, countdown timers, room stateAuthJWT (account) + session codes (device pairing)Dual auth modelAIAdult GPT APINatural language search, recommendationsHostingRailway or RenderContainer-based, auto-scalingCDNCloudflareStatic assets, edge caching, DDoSDomainnoog.tv (primary), getnoog.com (redirect).tv = ~$35/yr
+
+3. Video Embed System
+3.1 URL Resolution
+Some source sites use redirect URLs. The backend resolves them to extract the actual video ID.
+Resolution endpoint: GET /api/resolve-url?url=<encoded_url>
+Flow:
+
+Input: redirect URL (e.g., gaymaletube.com/out/?l=<base64blob>)
+Backend decodes the base64 blob, strips binary junk, extracts destination URL (e.g., fhgte.com/videos/4rZCDE)
+Returns the cleaned destination URL
+
+3.2 Embed URL Transform
+The getEmbedUrl(url) function transforms a resolved URL into an iframe-compatible embed URL.
+Transform rules:
+Source DomainInput PatternOutput Patternfaphouse.com / fhgte.com/videos/slug-{ID} or ?hash={ID}faphouse.com/embed/{ID}?autoplay=1&mute=1boyfriendtv.com / bfhub.com/videos/{ID}boyfriendtv.com/embed/{ID}?autoplay=1&mute=1faptor.com/videos/{ID}faptor.com/embed/{ID}?autoplay=1&mute=1pornhub.com/view_video.php?viewkey={ID}pornhub.com/embed/{ID}?autoplay=1&mute=1xhamster.com/videos/{slug}-{ID}xhamster.com/xembed.php?video={ID}&autoplay=1xvideos.com/video{ID}/xvideos.com/embedframe/{ID}
+Critical: Use /embed/ paths, never /videos/ paths. Watch page URLs loaded in iframes will not honor autoplay.
+Required iframe attributes:
+allow="autoplay; encrypted-media"
+Query parameters on all embeds:
+
+autoplay=1 — tells embedded player to start immediately
+mute=1 — required because browsers block unmuted autoplay
+
+3.3 Fallback
+If getEmbedUrl() has no matching transform rule for a domain, return the URL as-is (some sites work in iframes without transformation). If the site blocks iframing via X-Frame-Options, show an error state with option to open in new tab.
+
+4. Auto-Advance System
+4.1 Timer-Based Advance
+Since cross-origin iframes block playback events, auto-advance is timer-based.
+Algorithm:
+
+Each video has a duration field (string like "7:00" or "12:34")
+Parse to seconds: parseDuration("7:00") → 420
+When a video starts playing, set countdown = durationSeconds + bufferSeconds
+Default buffer: 5 seconds
+Countdown decrements every 1 second
+When countdown reaches 0: advance currentIndex to next video
+React re-renders, iframe gets new src with next embed URL
+If end of queue: wrap to index 0 (loop) or stop (based on user setting)
+
+4.2 Timer Limitations
+The timer cannot detect:
+
+If the user pauses inside the iframe
+If the user skips ahead inside the iframe
+If the video actually finished early or late
+If the listed duration is incorrect
+
+4.3 User Controls for Timer
+
+Manual skip: Previous / Next buttons bypass the timer
+Adjust buffer: Per-source configurable buffer (FapHouse might need +3s, BoyfriendTV might need +8s)
+"Video ended early?" button: Immediately skips to next
+"+30s / -30s" buttons: Adjust timer mid-playback
+Duration correction: Save corrected durations so timer is accurate on replay
+Pause countdown: Pause the countdown without pausing the video (for rewatching)
+Countdown display: Always visible, shows time until next video
+Auto-advance toggle: Turn timer off entirely for manual-only control
+
+
+5. Data Models
+5.1 User
+User {
+  id: UUID (primary key)
+  username: string (unique, anonymous-friendly)
+  email: string (optional, for account recovery)
+  password_hash: string
+  created_at: timestamp
+  updated_at: timestamp
+  preferences: JSONB {
+    default_buffer_seconds: number (default 5)
+    per_source_buffers: { [domain]: number }
+    auto_advance: boolean (default true)
+    queue_behavior: "loop" | "stop" | "shuffle"
+    session_mode: "quick" | "deep" | "auto"
+  }
+}
+5.2 Video
+Video {
+  id: UUID (primary key)
+  source_url: string (original URL before resolution)
+  embed_url: string (transformed embed URL)
+  video_id_on_source: string (ID extracted from source)
+  source_domain: string (e.g., "faphouse.com")
+  title: string
+  duration: string (e.g., "12:34")
+  duration_seconds: integer (parsed, e.g., 754)
+  corrected_duration_seconds: integer (nullable, user-reported correction)
+  tags: string[] (e.g., ["muscle", "outdoor", "jock"])
+  category: string
+  thumbnail_url: string (nullable)
+  created_at: timestamp
+}
+5.3 Playlist
+Playlist {
+  id: UUID (primary key)
+  user_id: UUID (foreign key → User)
+  name: string
+  description: string (nullable)
+  is_public: boolean (default false)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+PlaylistItem {
+  id: UUID (primary key)
+  playlist_id: UUID (foreign key → Playlist)
+  video_id: UUID (foreign key → Video)
+  position: integer (ordering)
+  added_by: UUID (nullable, for room attribution)
+  added_at: timestamp
+}
+5.4 Clip (Saved Timestamp Bookmark)
+Clip {
+  id: UUID (primary key)
+  user_id: UUID (foreign key → User)
+  video_id: UUID (foreign key → Video)
+  start_seconds: number
+  end_seconds: number
+  label: string (nullable, user-provided name)
+  created_at: timestamp
+}
+5.5 Watch History
+WatchHistory {
+  id: UUID (primary key)
+  user_id: UUID (foreign key → User)
+  video_id: UUID (foreign key → Video)
+  watched_at: timestamp
+  watch_duration_seconds: integer (how long timer ran)
+  source: string (which playlist/room)
+  completed: boolean (did timer reach 0)
+}
+5.6 Like
+Like {
+  id: UUID (primary key)
+  user_id: UUID (foreign key → User)
+  video_id: UUID (foreign key → Video)
+  created_at: timestamp
+  UNIQUE(user_id, video_id)
+}
+5.7 Room
+Room {
+  id: UUID (primary key)
+  code: string (unique, format: "NOOG-XXXX", 4 alphanumeric chars)
+  host_id: UUID (foreign key → User)
+  name: string (nullable)
+  is_public: boolean (default false)
+  max_participants: integer (default 20)
+  settings: JSONB {
+    vote_to_skip: boolean
+    skip_threshold: number (0.5 = majority)
+    chat_enabled: boolean
+    chat_on_tv: boolean
+    auto_approve_queue: boolean
+  }
+  status: "active" | "closed"
+  created_at: timestamp
+  closed_at: timestamp (nullable)
+}
+
+RoomParticipant {
+  id: UUID (primary key)
+  room_id: UUID (foreign key → Room)
+  user_id: UUID (nullable, for anonymous guests)
+  display_name: string
+  role: "host" | "dj" | "contributor" | "viewer"
+  joined_at: timestamp
+  left_at: timestamp (nullable)
+}
+
+RoomQueueItem {
+  id: UUID (primary key)
+  room_id: UUID (foreign key → Room)
+  video_id: UUID (foreign key → Video)
+  added_by: UUID (foreign key → RoomParticipant)
+  position: integer
+  played: boolean (default false)
+  skipped: boolean (default false)
+  skip_votes: integer (default 0)
+  added_at: timestamp
+}
+
+RoomMessage {
+  id: UUID (primary key)
+  room_id: UUID (foreign key → Room)
+  participant_id: UUID (foreign key → RoomParticipant)
+  content: string (max 200 chars)
+  type: "chat" | "reaction" | "system"
+  created_at: timestamp
+}
+
+6. REST API Endpoints
+6.1 Auth
+MethodPathDescriptionPOST/api/auth/registerCreate account (username, optional email, password)POST/api/auth/loginReturns JWT tokenPOST/api/auth/sessionCreate anonymous session (returns session token for device pairing)
+6.2 Videos
+MethodPathDescriptionGET/api/resolve-url?url=Resolve redirect URL to destinationPOST/api/videosAdd a video to the catalog (auto-resolves and transforms embed URL)GET/api/videos/:idGet video metadataGET/api/videos/search?q=Keyword search across title, tags, categoryPATCH/api/videos/:id/durationSubmit corrected duration
+6.3 Playlists
+MethodPathDescriptionGET/api/playlistsList user's playlistsPOST/api/playlistsCreate playlistGET/api/playlists/:idGet playlist with itemsPATCH/api/playlists/:idUpdate name, description, public flagDELETE/api/playlists/:idDelete playlistPOST/api/playlists/:id/itemsAdd video to playlistPATCH/api/playlists/:id/items/reorderReorder items (body: { positions: [{ id, position }] })DELETE/api/playlists/:id/items/:itemIdRemove item from playlistGET/api/playlists/publicBrowse public playlists
+6.4 Clips
+MethodPathDescriptionGET/api/clipsList user's clipsPOST/api/clipsSave a clip (video_id, start_seconds, end_seconds, label)DELETE/api/clips/:idDelete clip
+6.5 History & Likes
+MethodPathDescriptionGET/api/historyWatch history (paginated, filterable by source, date range)POST/api/historyLog a watch eventPOST/api/likes/:videoIdLike a videoDELETE/api/likes/:videoIdUnlike a videoGET/api/likesList liked videos
+6.6 Rooms
+MethodPathDescriptionPOST/api/roomsCreate room (returns room code)GET/api/rooms/:codeGet room infoPOST/api/rooms/:code/joinJoin roomPATCH/api/rooms/:code/settingsUpdate room settings (host only)PATCH/api/rooms/:code/participants/:id/roleChange participant role (host only)DELETE/api/rooms/:codeClose room (host only)GET/api/rooms/publicList public active rooms
+6.7 AI Search
+MethodPathDescriptionPOST/api/ai/searchNatural language query → returns video resultsPOST/api/ai/chatConversational AI assistant (multi-turn)POST/api/ai/recommendGet recommendations based on current session
+
+7. WebSocket Events (Socket.IO)
+7.1 Connection
+Client connects with session token or JWT in handshake auth:
+io("wss://api.noog.tv", { auth: { token: "..." } })
+7.2 Device Pairing (Remote Control)
+Session code format: NOOG-XXXX (4 uppercase alphanumeric characters)
+EventDirectionPayloadDescriptionsession:createTV → Server{ sessionCode }TV creates session, gets codesession:joinPhone → Server{ sessionCode }Phone joins by code or QR scansession:pairedServer → Both{ deviceId, role }Confirmation of pairingsession:transferPhone → Server{ from, to, timestamp }Handoff: transfer playback to another devicesession:disconnectEither → Server{}Unpair device
+7.3 Playback Control
+EventDirectionPayloadDescriptionplayer:playPhone → TV{}Resume playback / start timerplayer:pausePhone → TV{}Pause timerplayer:nextPhone → TV{}Skip to next videoplayer:prevPhone → TV{}Go to previous videoplayer:jumpPhone → TV{ index }Jump to specific queue positionplayer:shufflePhone → TV{}Shuffle remaining queueplayer:stateTV → Phone{ currentIndex, countdown, playing, videoId }Sync current state to phone
+7.4 Queue Management
+EventDirectionPayloadDescriptionqueue:addPhone → TV{ video, animation? }Add video to queue. animation: "flick" | "drop" | "none"queue:add-batchPhone → TV{ videos, animation? }Multi-Flick: add multiple at once. animation: "cascade"queue:removePhone → TV{ index }Remove video from queuequeue:reorderPhone → TV{ from, to }Move item from position to positionqueue:updatedTV → Phone{ queue }Full queue state syncqueue:addedTV → Phone{ video, position, addedBy }Confirmation + position info
+7.5 Iron Man Interactions
+EventDirectionPayloadDescriptionflick:sendPhone → Server{ video, targetDevice }Flick a video from phone to TVflick:arriveServer → TV{ video, animation: "flick" }TV plays arrival animationflick:confirmServer → Phone{ position }Phone gets haptic trigger + positiongrab:requestPhone → Server{ targetDevice }Pull current video info from TVgrab:responseServer → Phone{ video, currentTime }TV sends video info to phonesnap:bookmarkPhone → Server{ targetDevice }Shake gesture: instant bookmarksnap:confirmServer → Both{ video, clipId }Confirmation to both devices
+7.6 Room Events
+EventDirectionPayloadDescriptionroom:joinClient → Server{ roomCode, displayName }Join a roomroom:joinedServer → Client{ room, participants, queue }Full room state on joinroom:participant-joinedServer → Room{ participant }Broadcast: someone joinedroom:participant-leftServer → Room{ participantId }Broadcast: someone leftroom:queue-addClient → Server{ video }Add video to shared queue (if permitted)room:queue-updatedServer → Room{ queue }Broadcast: queue changedroom:advanceServer → Room{ nextIndex }Auto-advance to next video (host's timer drives this)room:skip-voteClient → Server{ queueItemId }Vote to skip current videoroom:skip-tallyServer → Room{ votes, threshold, skipped }Broadcast: vote count updatedroom:reactionClient → Server{ emoji }Send reactionroom:reactionsServer → Room{ reactions: [{ emoji, from }] }Broadcast: batch reactions (debounced 500ms)room:chatClient → Server{ content }Send chat messageroom:chat-messageServer → Room{ message }Broadcast: new chat messageroom:role-changeServer → Client{ participantId, newRole }Role updated by hostroom:closedServer → Room{}Room ended by hostroom:statsServer → Room{ stats }End-of-session stats broadcast
+7.7 Room Permissions Matrix
+ActionHostDJContributorViewerSkip / reorder queue✓✓✗✗Add to queue✓✓✓✗Remove from queue✓✓✗✗Pause / play✓✗✗✗Change roles✓✗✗✗Update settings✓✗✗✗Vote to skip✓✓✓✗Send reactions✓✓✓✓Send chat✓✓✓✗Close room✓✗✗✗
+
+8. Affiliate Integration
+8.1 FapCash (FapHouse)
+
+Sign up: fap.cash
+Contact: @zhekats on Telegram, affiliates@faphouse.com
+Commission: 25% revshare on subscriptions, 10% FanClub, 20% tokens
+Embeds: Ad-free, up to 6-minute previews, include link to full video with affiliate tag
+Video dumps: FapCash provides a dump constructor to generate video catalogs filtered by orientation, niche, quality, duration
+Embed format: faphouse.com/embed/{ID}?autoplay=1&mute=1
+Affiliate tag: Appended to the CTA link inside the embed (handled by FapCash system when you use your affiliate embed code)
+
+8.2 HubTraffic (Pornhub Network)
+
+Covers: Pornhub, YouPorn, RedTube, Tube8
+Model: CPM (cost per thousand impressions)
+Rates: $0.64–$3.50 CPM depending on geo and category
+Embed format: Standard embed URLs with partner tracking
+
+8.3 Chaturbate
+
+Model: 20% lifetime revshare on any user who registers through your link
+Integration: Embed live cam rooms alongside video content
+Recurring: Revenue continues as long as the referred user is active
+
+8.4 Tracking
+Every embed URL includes the affiliate tracking parameter. When a user clicks through from the embedded player to the partner site (e.g., to watch the full video), the affiliate cookie is set. NOOG earns commission on any resulting subscription, purchase, or registration.
+
+9. Playback Features Spec
+9.1 Scene Intelligence
+Purpose: Replace blind scrubbing with clickable scene blocks.
+Data model per video:
+scenes: [
+  { start: 0, end: 150, label: "Intro", thumbnail_url: "..." },
+  { start: 150, end: 315, label: "Scene 1", thumbnail_url: "..." },
+  { start: 315, end: 540, label: "Scene 2", thumbnail_url: "..." },
+]
+Display: Horizontal blocks below the player, proportionally sized by duration. Tapping a scene sets the video embed URL's t parameter (e.g., ?autoplay=1&mute=1&t=150) and reloads the iframe.
+Note: The t parameter works on some embeds (FapHouse) but not all. Where unsupported, scene markers are informational only.
+9.2 Mood Lanes
+Structure: Up to 3 parallel playlists (lanes) loaded simultaneously.
+SessionState {
+  lanes: [
+    { id: "lane-1", name: "Main", queue: Video[], currentIndex: number },
+    { id: "lane-2", name: "Alt", queue: Video[], currentIndex: number },
+    { id: "lane-3", name: "Wild", queue: Video[], currentIndex: number },
+  ],
+  activeLane: "lane-1"
+}
+Switching lanes changes which queue drives the player. Position in inactive lanes is preserved.
+9.3 Quick Fade
+Trigger: Double-tap, three-finger tap, or remote button press.
+Behavior:
+
+Iframe is hidden (not destroyed — preserves playback state)
+Clean dashboard overlay appears (NOOG logo, session stats, non-explicit)
+Timer pauses
+Same gesture again dismisses overlay, shows iframe, resumes timer
+
+Session stats on cool-down screen:
+
+Videos watched count
+Clips saved count
+Session duration
+Current queue position
+
+9.4 Clip Saving
+Flow:
+
+User activates clip mode
+Sets start time and end time (manual input or "mark start" / "mark end" buttons synced to countdown)
+Optional label
+Clip is saved to database
+On replay of the same video, clips are shown as highlighted regions on the scene timeline
+"Play All Clips" creates a temporary playlist that loads each clip's video at the clip's start timestamp
+
+Limitation: Since we can't control the embedded player's position precisely, clip playback sets the t parameter on the embed URL. The start is approximate.
+9.5 Pre-Queue (Auto-Generated Next Queue)
+Trigger: When current queue reaches the last video, NOOG generates a suggested next queue.
+Algorithm:
+
+Analyze tags, categories, and sources of videos watched in current session
+Query AI assistant or recommendation engine for 8–10 similar videos
+Present as "Your queue ended. We built one based on tonight's session."
+User can approve entire queue, remove individuals, or dismiss
+
+
+10. Gesture & Input Spec
+10.1 Mobile Touch Gestures
+GestureActionSwipe rightNext videoSwipe leftPrevious videoSwipe up (on video card)Add to favorites / Flick to TVSwipe downDismiss / close overlayDouble-tapQuick Fade toggleThree-finger tapQuick Fade toggle (alternate)Shake deviceSnap bookmark (save current video)Long press on video cardPreview / options menu
+10.2 Phone Remote (Volume Button Mapping)
+When phone is in remote mode:
+
+Volume Up = Next video
+Volume Down = Previous video
+
+Implementation: Capture volumechange events or use Media Session API to intercept hardware buttons.
+10.3 Desktop Keyboard Shortcuts
+KeyActionSpacePlay / Pause (toggle timer)→ (Right arrow)Next video← (Left arrow)Previous video↑ (Up arrow)Volume up (if controllable)↓ (Down arrow)Volume down (if controllable)SToggle sidebarTToggle theater / zone modeFToggle fullscreenQFocus quick-add search barCOpen clip makerLLike / unlike current videoMMute toggle (if controllable)ROpen remote / QR code panel1–5Switch sidebar tabsEscClose any overlay, exit theater, dismiss shelf?Show keyboard shortcut cheat sheet
+
+11. AI Assistant Integration
+11.1 Architecture
+Backend service: POST /api/ai/search and POST /api/ai/chat
+AI provider: Adult GPT API (or compatible uncensored LLM API)
+System prompt includes:
+
+NOOG platform context and capabilities
+Video catalog metadata (periodically synced)
+User's taste profile (tags, watch history patterns)
+Current session context (what's playing, what's in queue)
+
+11.2 Knowledge Base
+The AI assistant has access to:
+
+Full video catalog with metadata (title, tags, category, source, duration)
+User's watch history and liked videos
+Community data (popular playlists, trending videos)
+FAQ about NOOG features and how to use them
+
+11.3 Capabilities
+InputOutput"Something with slow buildup, two guys, outdoor"List of matching videos with "Add to Queue" actions"More like what's playing"Recommendations based on current video's tags"How do I create a room?"FAQ response with step-by-step"Add something chill"AI picks a video matching "chill" vibe, adds to queueVoice command via phoneSame as text, but via speech-to-text input
+
+12. Session & Device Pairing
+12.1 Session Code System
+Format: NOOG-XXXX where X is uppercase alphanumeric (A-Z, 0-9). Gives 1,679,616 possible codes.
+Lifecycle:
+
+TV generates a session code via POST /api/auth/session
+Code is stored in Redis with 24-hour TTL
+TV displays code on screen + QR code encoding https://noog.tv/join/NOOG-XXXX
+Phone scans QR or manually enters code
+Server creates Socket.IO room with both devices
+Session remains active until either device disconnects or TTL expires
+
+12.2 QR Code
+Content: URL https://noog.tv/join/{sessionCode}
+Opening the URL on phone:
+
+If logged in: joins as authenticated user (full remote, history synced)
+If not logged in: joins as anonymous guest (transport controls only)
+
+12.3 Two-Tier Access
+User TypeCapabilitiesAuthenticated (logged in)Full remote: browse, queue management, clips, likes, historyGuest (QR scan only)Transport controls only: play, pause, next, prev
+
+13. Room System Architecture
+13.1 How Rooms Extend the Remote
+The remote control system pairs one TV with one phone via Socket.IO. Rooms open the same socket room to multiple connections. State management is identical (queue, current index, play/pause state, countdown). The only addition: multiple clients can push events instead of just one controller.
+13.2 Room Lifecycle
+
+Host creates room → gets code (same format: NOOG-XXXX)
+Host shares code or QR
+Participants join via code
+Host's player is the "source of truth" for what's playing
+Timer runs on host's device (or server-side for reliability)
+All participants see the same current video via synced state
+Queue additions from participants are broadcast to all
+Host closes room → room:closed event → all participants disconnected
+
+13.3 Room State (Redis)
+room:{code} = {
+  id: UUID,
+  hostId: UUID,
+  queue: [{ videoId, addedBy, position, played, skipVotes }],
+  currentIndex: number,
+  countdown: number,
+  playing: boolean,
+  settings: { ... },
+  createdAt: timestamp
+}
+
+room:{code}:participants = Set<participantId>
+room:{code}:messages = List<message> (capped at 200)
+13.4 End-of-Session Stats
+Generated when host closes the room:
+RoomStats {
+  totalVideosPlayed: number
+  totalParticipants: number
+  totalDurationMinutes: number
+  mostWatchedAddedBy: participantId (whose picks ran longest)
+  mostSkippedAddedBy: participantId
+  reactionCount: number
+  topReaction: emoji
+}
+
+14. Browse-While-Watching
+14.1 The Shelf (TV-side)
+A collapsible panel at the bottom of the player screen. Video continues playing above/behind it.
+Behavior:
+
+Toggle open/closed via button or keyboard shortcut
+Contains horizontally scrollable row of video cards
+Category filter pills at top
+Each card has "Add to Queue" action
+Auto-hides after 5 seconds of no interaction (configurable)
+Does not pause or resize the video
+
+14.2 Phone Remote — Unified Browse + Control
+The phone remote is NOT two separate modes. It's a single unified view — like Spotify's mobile app but for video queuing. The user scrolls a discovery feed to find content while transport controls remain persistently pinned to the bottom. No mode switching, no tabs between "control" and "browse."
+Persistent Transport Bar (bottom-pinned):
+
+Fixed to bottom of viewport, never scrolls
+Oversized buttons (56–64px touch targets) for imprecise one-handed use
+Previous / Play-Pause / Next — large, widely spaced
+Current video thumbnail strip + title (tap to expand "now playing")
+Countdown timer with "Skip Now" shortcut
+Quick Fade button
+
+Scrollable Browse Feed (above transport bar):
+
+Vertical feed of video cards — primary discovery surface
+Each card shows thumbnail, title, duration, source badge
+Two oversized action buttons per card:
+
+"Play Next" — inserts at front of queue, sends queue:add with position: "next"
+"Add to Queue" — appends to end, sends queue:add with position: "end"
+
+
+Cards already in queue show a visual indicator (purple dot / "In Queue" badge)
+Category/tag filter pills (horizontal scroll) at top of feed
+Search bar at top (tap to expand)
+Pull-to-refresh for fresh content
+Shake to Suggest: shake phone → server returns 4–6 recommendations
+
+Queue View (swipe-up overlay):
+
+Swipe up on transport bar to reveal full queue
+Drag-to-reorder handles
+Swipe-to-remove on individual items
+Currently playing item highlighted at top
+"Clear Queue" action at bottom
+
+
+15. Total Recall Library
+15.1 Watch History
+Every video view is logged with: video ID, timestamp, duration watched, source (which playlist or room), and completion status.
+15.2 Query Capabilities
+
+Filter by source domain, date range, category, tag
+"Show me everything I watched from FapHouse in the last month that I watched >5 minutes"
+"Show me my most-rewatched videos" (sort by watch count)
+"Rewatch" queue: auto-populates with videos watched multiple times or clipped
+
+15.3 Personal Library
+
+Liked videos
+Saved playlists
+Followed curators (users with public playlists)
+Clips organized by video
+
+
+16. Monetization Spec
+16.1 Affiliate Revenue (Primary — MVP)
+SourceModelRateFapCash (FapHouse)RevShare25% subscriptions, 10% FanClub, 20% tokensHubTraffic (Pornhub network)CPM$0.64–$3.50 per 1000 impressionsChaturbateRevShare20% lifetime on referred users
+16.2 NOOG Premium (Post-MVP)
+Price: $5.99–$9.99/month
+Features:
+
+Unlimited mood lanes (free tier: 1 lane)
+Room hosting (free tier: join only)
+Detailed analytics (watch patterns, taste profile visualization)
+AI search priority (faster, more results)
+Extended clip storage
+Ad-free partner experience where possible
+
+16.3 Curator Tips (Post-MVP)
+Users tip playlist curators with platform tokens. NOOG takes 15–20% platform fee.
+
+17. Infrastructure Cost Estimates
+MAUServerDatabaseCDNAI APITotal/month1,000$50$30$20$50~$15010,000$100$60$20$300~$48025,000$200$100$30$500~$830100,000$600$300$80$1,500~$2,480
+These are extremely low because NOOG never hosts, transcodes, or serves video. All video bandwidth is borne by the partner sites.
+
+18. Legal & Compliance
+
+LLC: Wyoming or Delaware ($100–$500 formation)
+Content hosting: NOOG hosts zero content. All videos are partner embeds. No DMCA exposure.
+Age verification: Age gate on entry (date of birth or "I am 18+" confirmation). Monitor evolving regulations (UK Online Safety Act, EU Digital Services Act).
+Privacy: Standard privacy policy. No personally identifiable information shared with partners. Watch history and preferences stored encrypted.
+Terms of service: Users agree content is sourced from third-party partners. NOOG is not responsible for partner content.
+2257 compliance: Not applicable — NOOG does not produce or host content.
+
+
+19. Phased Build Order
+Phase 1 (Weeks 1–4): Core Player
+
+Video embed system (URL resolution + embed transforms)
+Playlist queue with auto-advance timer
+User accounts (register, login, JWT)
+CRUD for playlists, videos, likes
+Keyboard shortcuts
+FapCash affiliate integration
+Quick Fade
+Deploy to Railway + Cloudflare
+
+Phase 2 (Weeks 4–8): Multi-Device
+
+Socket.IO server
+Session code generation + QR pairing
+Remote control events (play, pause, next, prev, jump)
+Queue sync events (add, remove, reorder)
+Flick / Grab / Snap socket events
+Dual-mode phone remote
+Clip saving
+Chaturbate integration
+
+Phase 3 (Weeks 8–12): Social + AI
+
+Room creation, joining, permissions
+Room queue management
+Reactions + skip voting
+Chat sidebar
+AI assistant endpoint (search, recommend)
+Playlist sharing + public profiles
+Scene timeline data structure
+
+Phase 4 (Weeks 12–18): Growth
+
+Mood lanes
+NOOG Premium subscription
+Public rooms + discoverability
+Taste Engine (preference learning from history)
+Pre-Queue auto-generation
+Session transfer (Handoff)
+Voice Add via AI
+Watch history filtering + rewatch queue
