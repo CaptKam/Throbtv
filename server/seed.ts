@@ -73,8 +73,8 @@ function parseFeed(raw: string): FeedRow[] {
       embedDuration: parseInt(p[10]) || 0,
       date: p[11] || "",
       likes: parseInt(p[12]) || 0,
-      trailerUrl: p[13] || "",
-      resolution: p[14] || "",
+      trailerUrl: "",
+      resolution: p[13] || "",
     });
   }
   return results;
