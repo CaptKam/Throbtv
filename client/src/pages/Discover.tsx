@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, Reorder, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, SkipBack, SkipForward, Search,
-  ChevronUp, ChevronDown, ChevronRight, X,
+  ChevronUp, ChevronDown, ChevronRight, X, List,
   GripVertical, Trash2, ListMusic, Tv, Cast, LogOut
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +37,29 @@ export default function Discover() {
   const [videoProgress, setVideoProgress] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [mouseIdle, setMouseIdle] = useState(false);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
+
+  // Mouse idle detection — dim UI after 3s of no movement
+  useEffect(() => {
+    const resetIdle = () => {
+      setMouseIdle(false);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => setMouseIdle(true), 3000);
+    };
+    window.addEventListener("mousemove", resetIdle);
+    window.addEventListener("mousedown", resetIdle);
+    window.addEventListener("touchstart", resetIdle);
+    // Start the timer
+    idleTimerRef.current = setTimeout(() => setMouseIdle(true), 3000);
+    return () => {
+      window.removeEventListener("mousemove", resetIdle);
+      window.removeEventListener("mousedown", resetIdle);
+      window.removeEventListener("touchstart", resetIdle);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, []);
 
   // Fetch videos
   const { data, isLoading } = useQuery({
@@ -184,7 +207,7 @@ export default function Discover() {
   return (
     <>
       <style>{scopedStyles}</style>
-      <div className="throb-app">
+      <div className={`throb-app ${mouseIdle ? "mouse-idle" : ""}`}>
         {/* ======= VIDEO LAYER ======= */}
         <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
           {currentVideo ? (
@@ -283,17 +306,35 @@ export default function Discover() {
                   <div className="throb-grid">
                     {videos.map((v) => (
                       <div key={v.id} className="throb-card" onClick={() => playNow(v)}>
-                        <div className="throb-thumb">
+                        <div className="throb-thumb"
+                          onMouseEnter={(e) => {
+                            const vid = e.currentTarget.querySelector('video');
+                            if (vid) { vid.style.opacity = '1'; vid.play().catch(() => {}); }
+                          }}
+                          onMouseLeave={(e) => {
+                            const vid = e.currentTarget.querySelector('video');
+                            if (vid) { vid.style.opacity = '0'; vid.pause(); vid.currentTime = 0; }
+                          }}
+                        >
                           <img
                             src={v.thumbnailUrl || ""}
                             alt={v.title}
                             loading="lazy"
                           />
+                          {v.trailerUrl && (
+                            <video
+                              src={v.trailerUrl}
+                              className="throb-trailer-preview"
+                              muted loop playsInline preload="none"
+                              style={{ opacity: 0 }}
+                            />
+                          )}
                           <span className="throb-dur">{v.duration}</span>
                           <span className="throb-src">{v.sourceDomain?.replace(".com", "")}</span>
                           <div className="throb-thumb-hover">
                             <Play size={24} fill="white" />
                           </div>
+                          <div className="throb-play-overlay"><Play size={24} fill="currentColor" /></div>
                         </div>
                         <div className="throb-card-title">{v.title}</div>
                         <div className="throb-card-meta">{formatViews(v.views || 0)} views</div>
@@ -332,11 +373,22 @@ export default function Discover() {
             </div>
           </div>
 
-          {/* ======= STAGE 2: PEEK SHELF ======= */}
-          <div
-            className={`throb-peek ${stage < 2 ? "hidden" : ""}`}
-            style={{ display: stage === 3 ? "none" : undefined }}
-          >
+          {/* ======= SHELF TAB + PEEK SHELF ======= */}
+          <div className="throb-peek-wrapper">
+            {/* Shelf tab sits on top of peek shelf so it moves with it */}
+            <div className="throb-shelf-tab" onClick={cycleStage}>
+              <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
+                <ChevronUp size={14} />
+              </div>
+              <span className="throb-shelf-text">
+                {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
+              </span>
+              <div className="throb-shelf-line" />
+            </div>
+            <div
+              className={`throb-peek ${stage < 2 ? "hidden" : ""}`}
+              style={{ display: stage === 3 ? "none" : undefined }}
+            >
             <div className="throb-peek-top">
               <div className="throb-search-wrap">
                 <Search size={12} className="throb-search-icon" />
@@ -362,60 +414,132 @@ export default function Discover() {
             <div className="throb-peek-row" ref={peekRowRef}>
               {videos.slice(0, 20).map((v) => (
                 <div key={v.id} className="throb-pk-card" onClick={() => playNow(v)}>
-                  <div className="throb-pk-thumb">
+                  <div className="throb-pk-thumb"
+                    onMouseEnter={(e) => {
+                      const vid = e.currentTarget.querySelector('video');
+                      if (vid) { vid.style.opacity = '1'; vid.play().catch(() => {}); }
+                    }}
+                    onMouseLeave={(e) => {
+                      const vid = e.currentTarget.querySelector('video');
+                      if (vid) { vid.style.opacity = '0'; vid.pause(); vid.currentTime = 0; }
+                    }}
+                  >
                     <img src={v.thumbnailUrl || ""} alt={v.title} loading="lazy" />
+                    {v.trailerUrl && (
+                      <video
+                        src={v.trailerUrl}
+                        className="throb-trailer-preview"
+                        muted loop playsInline preload="none"
+                        style={{ opacity: 0 }}
+                      />
+                    )}
                     <span className="throb-dur">{v.duration}</span>
                     <span className="throb-src">{v.sourceDomain?.replace(".com", "")}</span>
+                    <div className="throb-play-overlay"><Play size={24} fill="currentColor" /></div>
                   </div>
                   <div className="throb-pk-title">{v.title}</div>
+                  <div className="throb-pk-actions">
+                    <button className="throb-pk-btn" onClick={(e) => { e.stopPropagation(); playNow(v); }}>
+                      <Play size={10} fill="currentColor" style={{ marginLeft: 1 }} /> Play
+                    </button>
+                    <button className="throb-pk-btn" onClick={(e) => { e.stopPropagation(); addToQueue(v); }}>
+                      + Queue
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+          </div>
 
-          {/* ======= TRANSPORT BAR (with shelf tab on top) ======= */}
+          {/* ======= TRANSPORT BAR ======= */}
           <div className="throb-transport">
-            {/* Shelf tab sits on top of transport */}
-            <div className="throb-shelf-tab" onClick={cycleStage}>
-              <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
-                <ChevronUp size={14} />
-              </div>
-              <span className="throb-shelf-text">
-                {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
-              </span>
-              <div className="throb-shelf-line" />
-            </div>
             <div className="throb-progress">
               <div className="throb-progress-fill" style={{ width: `${videoProgress}%` }} />
             </div>
             <div className="throb-transport-inner">
-              <div className="throb-now-thumb">
-                {currentVideo?.thumbnailUrl && (
-                  <img src={currentVideo.thumbnailUrl} alt="" />
-                )}
-              </div>
-              <div className="throb-now-info">
-                <div className="throb-now-title">{currentVideo?.title || "No video selected"}</div>
-                <div className="throb-now-sub">
-                  {currentVideo
-                    ? currentVideo.embedUrl && currentVideo.durationSeconds
-                      ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · ${currentVideo.sourceDomain || ""}`
-                      : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
-                    : "Browse to find videos"}
+              <div className="throb-transport-left">
+                <div className="throb-now-thumb">
+                  {currentVideo?.thumbnailUrl && (
+                    <img src={currentVideo.thumbnailUrl} alt="" />
+                  )}
+                </div>
+                <div className="throb-now-info">
+                  <div className="throb-now-title">{currentVideo?.title || "No video selected"}</div>
+                  <div className="throb-now-sub">
+                    {currentVideo
+                      ? currentVideo.embedUrl && currentVideo.durationSeconds
+                        ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · ${currentVideo.sourceDomain || ""}`
+                        : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
+                      : "Browse to find videos"}
+                  </div>
                 </div>
               </div>
-              <button className="throb-t-btn ghost" onClick={skipPrev}>
-                <SkipBack size={14} fill="currentColor" />
+              <div className="throb-transport-center">
+                <button className="throb-t-btn ghost" onClick={skipPrev}>
+                  <SkipBack size={16} fill="currentColor" />
+                </button>
+                <button className="throb-t-btn primary" onClick={() => setIsPlaying(!isPlaying)}>
+                  {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
+                </button>
+                <button className="throb-t-btn ghost" onClick={skipNext}>
+                  <SkipForward size={16} fill="currentColor" />
+                </button>
+              </div>
+              <div className="throb-transport-right">
+                <button className="throb-t-btn cast" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
+                  <Cast size={16} />
+                </button>
+                {queue.length > 0 && (
+                  <button
+                    className="throb-mobile-queue-btn"
+                    onClick={() => setMobileQueueOpen(!mobileQueueOpen)}
+                  >
+                    <List size={16} />
+                    <span className="throb-mobile-queue-count">{queue.length}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ======= MOBILE QUEUE SHEET ======= */}
+          <div className={`throb-mobile-queue ${mobileQueueOpen ? "open" : ""}`}>
+            <div className="throb-mobile-queue-head">
+              <span className="throb-mobile-queue-title">Queue ({queue.length})</span>
+              <button className="throb-close-btn" onClick={() => setMobileQueueOpen(false)}
+                style={{ width: 32, height: 32 }}>
+                <X size={14} />
               </button>
-              <button className="throb-t-btn primary" onClick={() => setIsPlaying(!isPlaying)}>
-                {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" style={{ marginLeft: 2 }} />}
-              </button>
-              <button className="throb-t-btn ghost" onClick={skipNext}>
-                <SkipForward size={14} fill="currentColor" />
-              </button>
-              <button className="throb-t-btn cast" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
-                <Cast size={14} />
-              </button>
+            </div>
+            <div className="throb-mobile-queue-list">
+              {queue.length === 0 ? (
+                <div className="throb-rail-empty">
+                  <List size={28} />
+                  <p>Queue is empty</p>
+                  <span>Tap +Queue on any video to add it</span>
+                </div>
+              ) : (
+                queue.map((v, i) => (
+                  <div key={v.id + "-mq-" + i} className="throb-rq" onClick={() => { playNow(v); setMobileQueueOpen(false); }}>
+                    <span className="throb-rq-n">{i + 1}</span>
+                    <div className="throb-rq-thumb">
+                      <img src={v.thumbnailUrl || ""} alt={v.title} />
+                      <span className="throb-rq-dur">{v.duration}</span>
+                    </div>
+                    <div className="throb-rq-info">
+                      <div className="throb-rq-title">{v.title}</div>
+                      <div className="throb-rq-sub">{v.sourceDomain}</div>
+                    </div>
+                    <button className="throb-rq-remove" style={{ opacity: 1 }} onClick={(e) => {
+                      e.stopPropagation();
+                      setQueue(q => q.filter((_, idx) => idx !== i));
+                    }}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -561,13 +685,15 @@ const scopedStyles = `
     transition: opacity 0.4s;
   }
   .throb-vid-title {
-    font-size: 15px; font-weight: 700;
-    color: rgba(255,255,255,0.7);
+    font-size: 16px; font-weight: 700;
+    color: rgba(255,255,255,0.85);
     text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+    transition: opacity 0.4s;
   }
   .throb-vid-sub {
-    font-size: 11px; color: rgba(255,255,255,0.35);
-    margin-top: 2px; text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+    font-size: 12px; color: rgba(255,255,255,0.5);
+    margin-top: 3px; text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+    transition: opacity 0.4s;
   }
 
   /* ---- CONTENT AREA ---- */
@@ -582,12 +708,12 @@ const scopedStyles = `
     display: flex; gap: 4px;
   }
   .throb-topbar-btn {
-    width: 32px; height: 32px; border-radius: 50%;
-    border: 1px solid rgba(148,163,184,0.1);
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid rgba(148,163,184,0.15);
     background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-    color: #64748b; cursor: pointer;
+    color: #94a3b8; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
+    transition: all 0.3s;
   }
   .throb-topbar-btn:hover { background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.2); }
 
@@ -597,83 +723,103 @@ const scopedStyles = `
     background: rgba(8,9,12,0.92); backdrop-filter: blur(24px);
     border-top: 1px solid rgba(148,163,184,0.06);
   }
-  .throb-progress { height: 3px; background: rgba(148,163,184,0.06); position: relative; }
+  .throb-progress { height: 4px; background: rgba(148,163,184,0.08); position: relative; }
   .throb-progress-fill {
     height: 100%; width: 0%; background: #ef4444; position: relative;
     transition: width 0.25s linear;
   }
   .throb-progress-fill::after {
-    content: ''; position: absolute; right: -5px; top: -4px;
-    width: 11px; height: 11px; border-radius: 50%;
-    background: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.6);
+    content: ''; position: absolute; right: -6px; top: -5px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.7);
   }
   .throb-transport-inner {
-    padding: 8px 16px 10px; display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px 12px; display: flex; align-items: center;
+    position: relative;
+  }
+  .throb-transport-left {
+    display: flex; align-items: center; gap: 10px;
+    flex: 1; min-width: 0;
+  }
+  .throb-transport-center {
+    display: flex; align-items: center; gap: 12px;
+    position: absolute; left: 50%; transform: translateX(-50%);
+  }
+  .throb-transport-right {
+    flex: 1; display: flex; justify-content: flex-end;
   }
   .throb-now-thumb {
-    width: 42px; height: 28px; border-radius: 4px;
+    width: 50px; height: 33px; border-radius: 5px;
     background: linear-gradient(135deg, rgba(239,68,68,0.15), #0a0c14);
     flex-shrink: 0; overflow: hidden;
   }
   .throb-now-thumb img { width: 100%; height: 100%; object-fit: cover; }
   .throb-now-info { flex: 1; min-width: 0; }
   .throb-now-title {
-    font-size: 12px; font-weight: 600; color: #e2e8f0;
+    font-size: 13px; font-weight: 600; color: #f1f5f9;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .throb-now-sub { font-size: 10px; color: #ef4444; }
+  .throb-now-sub { font-size: 11px; color: #ef4444; }
   .throb-t-btn {
-    width: 34px; height: 34px; border-radius: 50%;
+    width: 40px; height: 40px; border-radius: 50%;
     border: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
+    transition: all 0.3s;
   }
-  .throb-t-btn.ghost { background: transparent; color: #64748b; }
-  .throb-t-btn.ghost:hover { background: rgba(148,163,184,0.08); color: #94a3b8; }
+  .throb-t-btn.ghost { background: transparent; color: #94a3b8; }
+  .throb-t-btn.ghost:hover { background: rgba(148,163,184,0.1); color: #e2e8f0; }
   .throb-t-btn.primary {
     background: #ef4444; color: #fff;
-    box-shadow: 0 0 16px rgba(239,68,68,0.25);
-    width: 42px; height: 42px;
+    box-shadow: 0 0 20px rgba(239,68,68,0.3);
+    width: 48px; height: 48px;
   }
   .throb-t-btn.primary:hover { background: #dc2626; }
   .throb-t-btn.cast {
-    background: rgba(148,163,184,0.08); color: #64748b;
-    margin-left: 4px;
+    background: rgba(148,163,184,0.1); color: #94a3b8;
   }
   .throb-t-btn.cast:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
 
   /* ---- SHELF TAB ---- */
   .throb-shelf-tab {
-    position: absolute; top: -28px; left: 50%;
-    transform: translateX(-50%); z-index: 110;
-    display: flex; align-items: center; gap: 6px;
-    padding: 5px 16px;
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 auto; width: fit-content;
+    padding: 7px 20px;
     background: rgba(8,9,12,0.9); backdrop-filter: blur(12px);
-    border: 1px solid rgba(148,163,184,0.08); border-bottom: none;
-    border-radius: 10px 10px 0 0;
-    cursor: pointer; transition: all 0.2s; user-select: none;
+    border: 1px solid rgba(148,163,184,0.12); border-bottom: none;
+    border-radius: 12px 12px 0 0;
+    cursor: pointer; transition: all 0.3s; user-select: none;
+    z-index: 110; position: relative;
   }
   .throb-shelf-tab:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.15); }
-  .throb-shelf-tab:active { transform: translateX(-50%) scale(0.97); }
+  .throb-shelf-tab:active { transform: scale(0.97); }
   .throb-shelf-text {
-    font-family: 'Sora', sans-serif; font-size: 9px;
+    font-family: 'Sora', sans-serif; font-size: 11px;
     letter-spacing: 2px; text-transform: uppercase;
-    color: #64748b; font-weight: 600; transition: color 0.2s;
+    color: #94a3b8; font-weight: 600; transition: color 0.3s;
   }
   .throb-shelf-tab:hover .throb-shelf-text { color: #ef4444; }
   .throb-shelf-icon {
-    color: #555a64; transition: color 0.2s, transform 0.3s;
+    color: #8892a4; transition: color 0.3s, transform 0.3s;
   }
   .throb-shelf-tab:hover .throb-shelf-icon { color: #ef4444; }
   .throb-shelf-icon.flipped { transform: rotate(180deg); }
   .throb-shelf-line {
-    width: 28px; height: 3px; border-radius: 2px;
-    background: rgba(148,163,184,0.15);
+    width: 32px; height: 3px; border-radius: 2px;
+    background: rgba(148,163,184,0.2);
   }
+
+  /* ---- PEEK WRAPPER (tab + shelf move together) ---- */
+  .throb-peek-wrapper {
+    position: absolute; bottom: 68px; left: 0; right: 0; z-index: 90;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+    transform: translateY(0); opacity: 1;
+    pointer-events: none;
+  }
+  .throb-peek-wrapper .throb-shelf-tab { pointer-events: auto; }
+  .throb-peek-wrapper .throb-peek { pointer-events: auto; }
 
   /* ---- PEEK SHELF (Stage 2) ---- */
   .throb-peek {
-    position: absolute; bottom: 68px; left: 0; right: 0; z-index: 90;
     background: rgba(8,9,12,0.95); backdrop-filter: blur(20px);
     border-top: 1px solid rgba(148,163,184,0.06);
     border-radius: 16px 16px 0 0;
@@ -697,14 +843,15 @@ const scopedStyles = `
     transform: translateY(-50%); color: #555a64; pointer-events: none;
   }
   .throb-search {
-    width: 100%; height: 36px; border-radius: 18px;
-    border: 1px solid rgba(148,163,184,0.08);
-    background: rgba(148,163,184,0.04);
-    padding: 0 16px 0 36px;
-    color: #cbd5e1; font-size: 13px;
+    width: 100%; height: 42px; border-radius: 21px;
+    border: 1px solid rgba(148,163,184,0.12);
+    background: rgba(148,163,184,0.06);
+    padding: 0 18px 0 40px;
+    color: #e2e8f0; font-size: 14px;
     outline: none; font-family: 'Outfit', sans-serif;
+    transition: all 0.3s;
   }
-  .throb-search.sm { height: 32px; font-size: 12px; padding-left: 32px; }
+  .throb-search.sm { height: 36px; font-size: 13px; padding-left: 36px; }
   .throb-search:focus { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.1); }
 
   /* ---- CATEGORIES ---- */
@@ -716,15 +863,15 @@ const scopedStyles = `
   .throb-cats.sm { padding: 0 16px 8px; }
   .throb-cats::-webkit-scrollbar { display: none; }
   .throb-cat {
-    padding: 4px 12px; border-radius: 14px;
-    font-size: 10px; font-weight: 600; white-space: nowrap;
-    border: 1px solid rgba(148,163,184,0.08);
-    background: transparent; color: #64748b;
-    cursor: pointer; transition: all 0.15s;
+    padding: 6px 14px; border-radius: 16px;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+    border: 1px solid rgba(148,163,184,0.12);
+    background: transparent; color: #94a3b8;
+    cursor: pointer; transition: all 0.3s;
     font-family: 'Outfit', sans-serif;
   }
   .throb-cat.on { background: rgba(255,255,255,0.9); color: #000; border-color: transparent; }
-  .throb-cat:hover:not(.on) { background: rgba(148,163,184,0.06); color: #94a3b8; }
+  .throb-cat:hover:not(.on) { background: rgba(148,163,184,0.08); color: #e2e8f0; }
 
   /* ---- PEEK ROW ---- */
   .throb-peek-row {
@@ -743,9 +890,13 @@ const scopedStyles = `
     overflow: hidden; position: relative; background: #111;
   }
   .throb-pk-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .throb-pk-thumb .throb-trailer-preview {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; transition: opacity 0.3s; z-index: 1;
+  }
   .throb-pk-title {
-    font-size: 11px; font-weight: 600; color: #94a3b8;
-    margin-top: 4px; white-space: nowrap;
+    font-size: 12px; font-weight: 600; color: #cbd5e1;
+    margin-top: 5px; white-space: nowrap;
     overflow: hidden; text-overflow: ellipsis;
   }
 
@@ -765,12 +916,12 @@ const scopedStyles = `
     flex-shrink: 0;
   }
   .throb-close-btn {
-    width: 36px; height: 36px; border-radius: 50%;
-    border: 1px solid rgba(148,163,184,0.08);
-    background: rgba(148,163,184,0.04);
-    color: #64748b; cursor: pointer;
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid rgba(148,163,184,0.12);
+    background: rgba(148,163,184,0.06);
+    color: #94a3b8; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; flex-shrink: 0;
+    transition: all 0.3s; flex-shrink: 0;
   }
   .throb-close-btn:hover { background: rgba(239,68,68,0.08); color: #ef4444; border-color: rgba(239,68,68,0.15); }
 
@@ -794,6 +945,10 @@ const scopedStyles = `
   }
   .throb-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
   .throb-card:hover .throb-thumb img { transform: scale(1.05); }
+  .throb-thumb .throb-trailer-preview {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; transition: opacity 0.3s; z-index: 1;
+  }
   .throb-thumb-hover {
     position: absolute; inset: 0;
     background: rgba(0,0,0,0.4);
@@ -802,32 +957,32 @@ const scopedStyles = `
   }
   .throb-card:hover .throb-thumb-hover { opacity: 1; }
   .throb-dur {
-    position: absolute; bottom: 3px; right: 3px;
-    background: rgba(0,0,0,0.8); padding: 1px 5px;
-    border-radius: 3px; font-size: 9px; font-weight: 700; color: #fff;
+    position: absolute; bottom: 4px; right: 4px;
+    background: rgba(0,0,0,0.85); padding: 2px 6px;
+    border-radius: 4px; font-size: 10px; font-weight: 700; color: #fff;
   }
   .throb-src {
-    position: absolute; bottom: 3px; left: 3px;
-    background: rgba(239,68,68,0.85); padding: 1px 5px;
-    border-radius: 3px; font-size: 8px; font-weight: 700; color: #fff;
+    position: absolute; bottom: 4px; left: 4px;
+    background: rgba(239,68,68,0.85); padding: 2px 6px;
+    border-radius: 4px; font-size: 9px; font-weight: 700; color: #fff;
   }
   .throb-card-title {
-    font-size: 11px; font-weight: 600; color: #e2e8f0;
-    margin-top: 5px; line-height: 1.3;
+    font-size: 12px; font-weight: 600; color: #f1f5f9;
+    margin-top: 6px; line-height: 1.3;
     display: -webkit-box; -webkit-line-clamp: 2;
     -webkit-box-orient: vertical; overflow: hidden;
   }
-  .throb-card-meta { font-size: 10px; color: #555a64; margin-top: 2px; }
-  .throb-card-actions { display: flex; gap: 4px; margin-top: 5px; }
+  .throb-card-meta { font-size: 11px; color: #8892a4; margin-top: 2px; }
+  .throb-card-actions { display: flex; gap: 5px; margin-top: 6px; }
   .throb-card-btn {
-    flex: 1; padding: 5px 0; border-radius: 6px;
-    border: 1px solid rgba(148,163,184,0.08);
-    background: rgba(148,163,184,0.04);
-    color: #94a3b8; font-size: 10px; font-weight: 600;
-    cursor: pointer; transition: all 0.15s;
+    flex: 1; padding: 6px 0; border-radius: 7px;
+    border: 1px solid rgba(148,163,184,0.12);
+    background: rgba(148,163,184,0.06);
+    color: #cbd5e1; font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all 0.3s;
     font-family: 'Outfit', sans-serif;
   }
-  .throb-card-btn:hover { background: rgba(148,163,184,0.08); color: #e2e8f0; }
+  .throb-card-btn:hover { background: rgba(148,163,184,0.1); color: #f1f5f9; }
 
   /* ---- PAGINATION ---- */
   .throb-pagination {
@@ -835,16 +990,16 @@ const scopedStyles = `
     gap: 16px; margin-top: 24px; padding-bottom: 16px;
   }
   .throb-page-btn {
-    padding: 6px 16px; border-radius: 20px;
-    border: 1px solid rgba(148,163,184,0.1);
-    background: rgba(148,163,184,0.05);
-    color: #94a3b8; font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: all 0.15s;
+    padding: 8px 20px; border-radius: 22px;
+    border: 1px solid rgba(148,163,184,0.12);
+    background: rgba(148,163,184,0.06);
+    color: #cbd5e1; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.3s;
     font-family: 'Outfit', sans-serif;
   }
-  .throb-page-btn:hover:not(:disabled) { background: rgba(148,163,184,0.1); color: #e2e8f0; }
+  .throb-page-btn:hover:not(:disabled) { background: rgba(148,163,184,0.12); color: #f1f5f9; }
   .throb-page-btn:disabled { opacity: 0.3; cursor: default; }
-  .throb-page-info { font-size: 12px; color: #555a64; }
+  .throb-page-info { font-size: 13px; color: #8892a4; }
 
   /* ---- SKELETONS ---- */
   .throb-skeleton-thumb {
@@ -883,34 +1038,34 @@ const scopedStyles = `
   }
 
   .throb-rail-tab {
-    position: absolute; left: -36px; top: 50%;
+    position: absolute; left: -42px; top: 50%;
     transform: translateY(-50%); z-index: 25;
-    width: 36px;
+    width: 42px;
     display: flex; flex-direction: column; align-items: center;
-    gap: 4px; padding: 10px 4px;
+    gap: 5px; padding: 12px 5px;
     background: rgba(10,11,15,0.92); backdrop-filter: blur(12px);
-    border: 1px solid rgba(148,163,184,0.08); border-right: none;
-    border-radius: 10px 0 0 10px;
-    cursor: pointer; transition: all 0.2s; user-select: none;
+    border: 1px solid rgba(148,163,184,0.12); border-right: none;
+    border-radius: 12px 0 0 12px;
+    cursor: pointer; transition: all 0.3s; user-select: none;
   }
   .throb-rail-tab:hover { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.12); }
   .throb-rail-tab:active { transform: translateY(-50%) scale(0.96); }
   .throb-rail-tab-text {
-    font-family: 'Sora', sans-serif; font-size: 8px;
+    font-family: 'Sora', sans-serif; font-size: 9px;
     letter-spacing: 2px; text-transform: uppercase;
-    color: #64748b;
+    color: #94a3b8;
     writing-mode: vertical-lr; text-orientation: mixed;
     transform: rotate(180deg); transition: color 0.2s;
   }
   .throb-rail-tab:hover .throb-rail-tab-text { color: #ef4444; }
   .throb-rail-count {
-    font-size: 9px; font-weight: 700; color: #ef4444;
-    background: rgba(239,68,68,0.12);
-    width: 22px; height: 22px; border-radius: 50%;
+    font-size: 10px; font-weight: 700; color: #ef4444;
+    background: rgba(239,68,68,0.15);
+    width: 26px; height: 26px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
   }
   .throb-rail-chevron {
-    color: #555a64; transition: color 0.2s, transform 0.3s;
+    color: #8892a4; transition: color 0.3s, transform 0.3s;
   }
   .throb-rail-tab:hover .throb-rail-chevron { color: #ef4444; }
   .throb-rail-chevron.flip { transform: rotate(180deg); }
@@ -921,9 +1076,9 @@ const scopedStyles = `
     border-bottom: 1px solid rgba(148,163,184,0.06); flex-shrink: 0;
   }
   .throb-rail-title {
-    font-family: 'Sora', sans-serif; font-size: 10px;
+    font-family: 'Sora', sans-serif; font-size: 11px;
     letter-spacing: 2px; text-transform: uppercase;
-    color: #64748b; font-weight: 600;
+    color: #94a3b8; font-weight: 600;
   }
   .throb-rail-badge {
     font-size: 10px; color: #ef4444;
@@ -967,10 +1122,10 @@ const scopedStyles = `
     display: flex; justify-content: space-between; align-items: center;
   }
   .throb-rail-clear {
-    font-size: 9px; color: #64748b; background: none;
+    font-size: 10px; color: #94a3b8; background: none;
     border: none; cursor: pointer; text-transform: uppercase;
     letter-spacing: 1px; font-weight: 600;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Outfit', sans-serif; transition: color 0.3s;
   }
   .throb-rail-clear:hover { color: #ef4444; }
 
@@ -998,7 +1153,7 @@ const scopedStyles = `
   }
   .throb-rq:hover { background: rgba(148,163,184,0.04); }
   .throb-rq:active { cursor: grabbing; }
-  .throb-rq-n { width: 16px; text-align: center; font-size: 10px; color: #555a64; flex-shrink: 0; }
+  .throb-rq-n { width: 18px; text-align: center; font-size: 11px; color: #8892a4; flex-shrink: 0; }
   .throb-rq-thumb {
     width: 76px; min-width: 76px; aspect-ratio: 16/9;
     border-radius: 5px; overflow: hidden; position: relative;
@@ -1007,33 +1162,137 @@ const scopedStyles = `
   .throb-rq-thumb img { width: 100%; height: 100%; object-fit: cover; }
   .throb-rq-dur {
     position: absolute; bottom: 2px; right: 2px;
-    background: rgba(0,0,0,0.8); padding: 1px 4px;
-    border-radius: 2px; font-size: 8px; font-weight: 700; color: #fff;
+    background: rgba(0,0,0,0.85); padding: 2px 5px;
+    border-radius: 3px; font-size: 9px; font-weight: 700; color: #fff;
   }
   .throb-rq-info { flex: 1; min-width: 0; }
   .throb-rq-title {
-    font-size: 11px; font-weight: 500; color: #94a3b8;
+    font-size: 12px; font-weight: 500; color: #cbd5e1;
     line-height: 1.3; white-space: nowrap;
     overflow: hidden; text-overflow: ellipsis;
   }
-  .throb-rq-sub { font-size: 9px; color: #555a64; margin-top: 1px; }
+  .throb-rq-sub { font-size: 10px; color: #8892a4; margin-top: 1px; }
   .throb-rq-remove {
-    width: 20px; height: 20px; border-radius: 50%;
+    width: 24px; height: 24px; border-radius: 50%;
     border: none; background: transparent;
-    color: #555a64; cursor: pointer;
+    color: #8892a4; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    opacity: 0; transition: all 0.15s; flex-shrink: 0;
+    opacity: 0; transition: all 0.3s; flex-shrink: 0;
   }
   .throb-rq:hover .throb-rq-remove { opacity: 1; }
   .throb-rq-remove:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+  /* ---- PEEK CARD ACTIONS ---- */
+  .throb-pk-actions {
+    display: flex; gap: 4px; margin-top: 4px;
+  }
+  .throb-pk-btn {
+    flex: 1; padding: 5px 0; border-radius: 6px;
+    border: 1px solid rgba(148,163,184,0.12);
+    background: rgba(148,163,184,0.06);
+    color: #cbd5e1; font-size: 10px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 3px;
+  }
+  .throb-pk-btn:hover { background: rgba(148,163,184,0.12); color: #f1f5f9; }
+  .throb-pk-btn:active { transform: scale(0.95); background: rgba(239,68,68,0.15); color: #ef4444; }
+
+  /* ---- PLAY OVERLAY (visible on mobile, hover on desktop) ---- */
+  .throb-play-overlay {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.9);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s; z-index: 2;
+    pointer-events: none;
+  }
+  @media (max-width: 768px) {
+    .throb-play-overlay { opacity: 0.8; }
+  }
+  .throb-pk-thumb:hover .throb-play-overlay,
+  .throb-thumb:hover .throb-play-overlay { opacity: 1; }
+
+  /* ---- MOBILE QUEUE ---- */
+  .throb-mobile-queue-btn {
+    display: none; /* hidden on desktop */
+    width: 40px; height: 40px; border-radius: 50%;
+    border: none; cursor: pointer;
+    background: rgba(239,68,68,0.12); color: #f87171;
+    align-items: center; justify-content: center;
+    position: relative; transition: all 0.2s;
+  }
+  .throb-mobile-queue-btn:active { transform: scale(0.92); }
+  .throb-mobile-queue-count {
+    position: absolute; top: -2px; right: -2px;
+    background: #ef4444; color: #fff;
+    font-size: 9px; font-weight: 700;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(8,9,12,0.95);
+  }
+  .throb-mobile-queue {
+    display: none; /* hidden on desktop */
+    position: absolute; bottom: 80px; left: 8px; right: 8px;
+    max-height: 50vh; z-index: 200;
+    background: rgba(10,11,15,0.97); backdrop-filter: blur(20px);
+    border: 1px solid rgba(148,163,184,0.1);
+    border-radius: 16px; overflow: hidden;
+    transform: translateY(20px); opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    pointer-events: none; flex-direction: column;
+  }
+  .throb-mobile-queue.open {
+    transform: translateY(0); opacity: 1; pointer-events: auto;
+  }
+  .throb-mobile-queue-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(148,163,184,0.08);
+  }
+  .throb-mobile-queue-title {
+    font-family: 'Sora', sans-serif; font-size: 12px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: #94a3b8; font-weight: 600;
+  }
+  .throb-mobile-queue-list {
+    flex: 1; overflow-y: auto; padding: 4px 6px; max-height: 40vh;
+  }
+
+  /* ---- TOUCH ACTIVE STATES ---- */
+  .throb-card:active { transform: scale(0.97); }
+  .throb-pk-card:active { transform: scale(0.96); }
+  .throb-card-btn:active { transform: scale(0.93); background: rgba(239,68,68,0.12); color: #ef4444; }
+  .throb-t-btn:active { transform: scale(0.9); }
+  .throb-topbar-btn:active { transform: scale(0.9); }
+  .throb-cat:active { transform: scale(0.95); }
+  .throb-page-btn:active:not(:disabled) { transform: scale(0.95); }
+  .throb-shelf-tab:active { transform: scale(0.97); }
+  .throb-rq:active { background: rgba(148,163,184,0.08); }
+
+  /* ---- MOUSE IDLE DIMMING ---- */
+  .throb-app.mouse-idle .throb-transport { opacity: 0.4; }
+  .throb-app.mouse-idle .throb-shelf-tab { opacity: 0.3; }
+  .throb-app.mouse-idle .throb-topbar { opacity: 0.2; }
+  .throb-app.mouse-idle .throb-vid-info { opacity: 0.3; }
+  .throb-app.mouse-idle .throb-rail-tab { opacity: 0.3; }
+  .throb-transport { transition: opacity 0.6s ease; }
+  .throb-shelf-tab { transition: all 0.3s, opacity 0.6s ease; }
+  .throb-topbar { transition: opacity 0.6s ease; }
+  .throb-vid-info { transition: opacity 0.6s ease; }
+  .throb-rail-tab { transition: all 0.3s, opacity 0.6s ease; }
 
   /* ---- RESPONSIVE ---- */
   @media (max-width: 768px) {
     .throb-rail { display: none; }
     .throb-rail-tab { display: none; }
+    .throb-mobile-queue-btn { display: flex; }
+    .throb-mobile-queue { display: flex; }
     .throb-grid {
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 8px;
     }
+    .throb-thumb-hover { display: none; }
   }
 `;
