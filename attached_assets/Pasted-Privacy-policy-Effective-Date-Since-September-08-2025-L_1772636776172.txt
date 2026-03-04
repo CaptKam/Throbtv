@@ -1,0 +1,332 @@
+Privacy policy
+Effective Date: Since September 08, 2025
+
+Last Modified: September 08, 2025
+
+Previous Version: February 14, 2025
+
+The Company (referred to as the “Company”, “we”, “our” or “us”) as defined herein is the publisher and operator of the website www.faphouse.com including its subdomains https://studio.faphouse.com/ and https://blog.faphouse.com/, https://fap.cash, https://joinmy.fans/ (referred to as the “Website”).
+
+The Company is committed to protecting your privacy and handling your personal data in an open and transparent manner. The personal data that we collect and process will vary depending on how you use the Website.
+
+This privacy policy (referred to as the “Policy”):
+
+provides an overview of how the Company collects and processes your personal data and tells you about your rights under the EU General Data Protection Regulation (“GDPR”);
+is directed to natural persons who:
+(a) are visitors of the Website (referred to in this Policy as “Browsers”),
+(b) are individuals who have registered as members of the Website by creating their own personal account (referred to in this Policy as “Members”),
+(c) are registered users of the Website who created their own studio account (referred to in this Website as “Content Providers”), and
+(d) are registered as a participant in our Affiliate Program available at https://fap.cash (referred to in this Policy as “Participants of Affiliate Program”).
+Browsers, Members, Content Providers and Participants of Affiliate Program must be aged eighteen (18) years and over or must have attained the age of majority in their respective jurisdiction in order to be able to use the Website. All persons who do not meet these criteria are strictly forbidden from accessing or viewing the contents of the Website. We do not knowingly seek or collect any personal information from persons who have not attained the age of eighteen (18).
+
+covers website www.faphouse.com, and its subdomains - https://studio.faphouse.com/, https://blog.faphouse.com/, https://fap.cash, and https://joinmy.fans/.
+is part of the Website Terms and conditions of use available at https://faphouse.com/pages/terms.
+For the purposes of this Policy:
+
+when we refer to “personal data” or “personal information” we mean data which identifies or may identify you and which may include, for instance, your name, email address or IP address;
+when we refer to “processing” we mean the handling of your personal data by us, including collecting, protecting and storing your personal data; and
+when we refer to “sensitive data” we mean personal data which may reveal information about racial or ethnic origin, political opinions, religious beliefs, trade union activities, physical or mental health, sexual life, genetic or biometric data.
+In the text below you will find the following information:
+
+PERSONAL DATA THAT WE COLLECT AND PROCESS
+HOW WE COLLECT YOUR PERSONAL DATA
+WHO WE ARE
+IF YOU FAIL TO PROVIDE PERSONAL DATA
+AUTOMATED PERSONAL DATA COLLECTION
+WHY WE PROCESS YOUR PERSONAL DATA AND HOW WE USE IT
+WHAT IS OUR LEGAL BASIS FOR PROCESSING YOUR PERSONAL DATA
+WHO WE SHARE YOUR PERSONAL DATA WITH
+CONTENT PROVIDERS’ PROFILES
+SECURITY OF YOUR PERSONAL DATA
+INFORMATION WE TRANSFER
+MARKETING INFORMATION
+HOW LONG WE KEEP YOUR PERSONAL DATA FOR
+YOUR DATA PROTECTION RIGHTS
+HOW TO ACCESS OR MODIFY YOUR PERSONAL DATA
+OUR COMMUNICATION WITH YOU
+RIGHT TO COMPLAIN
+OUR POLICY TOWARDS MINORS
+THIRD-PARTY LINKS
+CALIFORNIA CONSUMER PRIVACY ACT NOTICE
+NOTICE REGARDING THE DIGITAL MILLENNIUM COPYRIGHT ACT (DMCA) POLICY
+COOKIES
+CHANGES TO THIS POLICY
+1. PERSONAL DATA THAT WE COLLECT AND PROCESS
+We collect different categories of personal data from you depending on your level of interaction with our Website. We limit the collection and processing of information to have only what is necessary to achieve one or more of our legitimate purposes as identified in this Policy.
+
+1.1. Personal data we collect and process from Browsers
+a) Technical data, including your Internet Protocol (IP) address, your browser type and version, time zone setting and location, browser plug-in types and versions, smart device information, mobile phone network information, operating system and platform and other technology on the devices you use to access the Website;
+b) Usage data, including information about how you use our Website including the services you viewed or searched for, page response times, download errors, length and number of visits and page interaction information (such as scrolling, clicks and mouse-overs) as well as the links you clicked on or used. We collect such information by using cookies. To learn more about our use of cookies or similar technology, please check our cookie policy at https://faphouse.com/pages/cookies-policy; and
+c) Communications and correspondence information, including your name (where you have voluntarily provided it to us) and details of any queries or complaints you have communicated to us either via our “Contact us” form, or via email, post, phone or otherwise.
+d) User-submitted data, that the Browser may submit to us from time to time, including any consents, permissions, or preferences provided.
+
+1.2. Personal data we collect and process from Members
+a) All personal data we collect from Browsers, set out in paragraph 1.1. above;
+b) Data necessary to create an account, including username or similar identifier, password and email address;
+c) Member-submitted data, including data provided to us at your discretion for a specific function, for instance your feedback, or any text, comments or other content you choose to provide to us;
+d) Communications, including information on how and what methods we use in order to communicate with you through electronic and verbal correspondence;
+e) Financial information, including, without limitation, your name, address, card number, card expiration date, card security number, account numbers, and/or other information that our third-party payment services providers may require to conduct your payment;
+f) Marketing data, including preferences in receiving marketing from us.
+
+1.3. Personal data we collect and process from Content Providers
+a) All personal data we collect from Browsers set out in paragraph 1.1. above;
+b) Identity and contact data, including your name and email address and other information requested during registration of your account in order to fill out your profile details;
+c) Consents, including any permissions, consents or preferences that you give to the Website;
+d) User-submitted data, including data collected when you voluntarily upload content on the Website, including, animations, images, videos, comments or other content or media you choose to upload on the Website;
+e) Financial data, including selected Payment method and necessary Payment Information;
+f) Marketing data, including preferences in receiving marketing from us, our affiliates and third-parties; and
+g) Copy of ID documents (national ID, national passport, international passport, citizenship card, state ID, driver’s license);
+h) A picture (photo), visual appearance;
+i) Individual Content Providers are also required to verify their age and identity with the help of our trusted third-party service provider(s). By proceeding with such verification via the third-party service provider, Individual Content Providers authorize us to transfer the personal data to the third party which is necessary for the purposes of confirming their legal age and identity and (if applicable) or other use cases specified in this Policy.
+
+1.4. Personal data we collect and process from Participants of Affiliate Program:
+a) All personal data we collect from Browsers set out in paragraph 1.1. above;
+b) Identity and contact data, including username, name, password, country, email address, other means of communication and etc.;
+c) Consents, including any permissions, consents or preferences that you give to the Website;
+d) Financial data, including selected Payment method and necessary Payment Information;
+e) User-submitted data, including data collected at your discretion for a specific function, for instance your contact information, address.
+
+We may also collect, use and share aggregated data such as statistical or demographic data for the purpose of customizing our marketing efforts or the use of our Website. Aggregated data may be derived from your personal data but is not considered personal data as this data does not directly or indirectly reveal your identity. For instance, we may aggregate your Usage Data to calculate the percentage of users accessing a specific Website feature, to generate statistics about our users, to calculate ad impressions served or clicked on or to publish visitor demographics. If we combine or connect aggregated data with your personal data so that it can directly or indirectly identify you, we will treat the combined data as personal data which shall be used in accordance with this Policy.
+
+2. HOW AND WHEN WE COLLECT YOUR PERSONAL DATA
+We obtain your personal data mainly through any information you provide directly to us through our Website. Below is a list of ways we collect your personal data:
+
+a) when you visit and/or use our Website;
+b) when you complete the registration steps in order to create an account;
+c) when you upload content to your studio account;
+d) when you take part in surveys or report a problem with our Website; or
+e) when you contact us via the Contact us contact form on the Website, email, post or otherwise.
+f) when you register as Participant of Affiliate Program and when you are taking part in our Affiliate Program.
+
+3. WHO WE ARE
+company name
+
+If you have any questions, comments and/or requests regarding this Policy or wish to obtain more details in relation to the personal data we process about you, please contact us via our Contact us form (available at https://faphouse.com/support/contact)
+
+4. IF YOU FAIL TO PROVIDE PERSONAL DATA
+Where we need to collect and process your personal data in order to provide you with our services and you fail to provide that data when requested, we may not be able to provide you with access to our Website and/or the services we offer. In this case, we may have to suspend your access to the Website or, if you are a Content Provider or Participant of Affiliate Program, prohibit any access to non-public areas of the Website or restrict the operation of your account and the services we provide to you.
+
+5. AUTOMATED PERSONAL DATA COLLECTION
+As you navigate through and interact with our Website, we will automatically collect Technical Data about your equipment, browsing actions and patterns. We collect these data by using cookies and other similar technologies, Please see our cookie policy for further details available at https://faphouse.com/pages/cookies-policy.
+
+6. WHY WE PROCESS YOUR PERSONAL DATA AND HOW WE USE IT
+We will only use and share your information where it is necessary for us to provide you with our lawful services in accordance with this Policy. We would like to ensure that you fully understand why your information may be used.
+
+6.1. We will most commonly use your personal data in the following circumstances:
+
+where we need to perform our services and provide them to you, as necessary in accordance with our Website’s Terms and conditions of use;
+where it is necessary for our legitimate interests (or those of a third party) and your interests and fundamental rights do not override those interests;
+where we need to comply with a legal obligation; and/or
+where you have given us your consent.
+6.2. Below, we describe these circumstances in further detail.
+
+6.2.1. Performance of our services to you
+a) Provision of services
+We may collect and process your personal data where it is necessary in order to present our Website and its contents to you, including any interactive features on our Website and to provide you with information or services that you request from us.
+Please note that if you do not agree to provide us with the requested information, it may not be possible for us to continue to operate your account and/or provide you with the services we provide to our Browsers, Members, Content Providers and Participants of Affiliate Program.
+
+b) Customer management (Content Providers and Participants of Affiliate Program only)
+We may collect and process your personal data where it is necessary in order to manage your account, to provide customer support and notices to you about your account and subscription, including expiration and renewal notices, and notices about changes to our Website or any services we offer or provide through it.
+
+6.2.2. Legitimate interests
+a) Customization of content
+We may collect and process your personal data where it is necessary in order to perform research and analysis about your use, or interest in, our Website content and/or services, so as to develop and display content and advertising tailored to your interests on our Website.
+
+b) Analytics
+We may collect and process your personal data where it is necessary in order to determine whether users of the Website are unique, or whether the same user is using the Website on multiple occasions, and to monitor aggregate metrics such as total number of visitors, pages viewed and demographic patterns.
+
+c) Functionality and security
+We may collect and process your personal data where it is necessary in order to diagnose or fix technology problems, and to detect, prevent and respond to actual or potential fraud, illegal activities, or intellectual property infringement.
+
+d) Other legitimate interests
+In addition to the above, we may process your personal data, to the extent required for our business needs in order to:
+
+develop new services on our Website as well as analyze and target new markets;
+protect our legal rights and interests (including legal claims and preparing our defense in litigation);
+monitor, maintain and improve internal business processes, information and data, technology and communication solutions and services;
+ensure network information security, including monitoring Browsers’, Members’ and/or Content Providers’ access to our information technology for the purpose of preventing cyber-attacks, unauthorized use of Website and prevention or detection of crime;
+send you relevant marketing information (including details of other services provided by us which we believe may be of interest to you, but only where you are a Content Provider);
+monitor the performance and effectiveness of our services and the Website;
+assess the quality of our customer services; and
+run promotions, contests, surveys and other features and events.
+6.2.3. For compliance with legal obligations
+When you visit and/or use and/or register in our Website (and throughout your relationship with us), we are required to comply with certain legal and regulatory obligations which may involve the processing of your personal data. This may include processing to:
+
+perform checks and comply with laws relating to fraud;
+identify other infringements of our Terms and conditions of use; and
+manage contentious regulatory matters, investigations and litigation.
+6.2.4. For verification of your legal age and or identity.
+When you create and verify your Individual Content Provider account, your biometric data is processed solely by our trusted service provider, Yoti. We do not receive biometric data from Yoti about our users. The only data we retrieve is a session result for each age verification session, indicating whether a user is above the set age threshold or not, or whether the ID of the user corresponds to the documents provided by the user. This session result may be shared with our trusted partners, as indicated in our processors list herein. Any biometric templates received through Age Estimation or Yoti IDV will be deleted within three (3) years after fulfilment of the initial purpose or the last interaction with the user, whichever occurs first. To learn more about Yoti's privacy practices, please refer to their relevant privacy notice available at https://www.yoti.com/privacy/.
+
+6.2.5. For marketing purposes
+We will ask for your consent when we wish to provide marketing information to you in relation to our services which we believe may be of interest and of benefit to you, but only where you are a Member of the Website.
+You have the right to revoke your consent at any time. However, any processing of personal data prior to the receipt of your revocation will not be affected.
+
+7. WHAT IS OUR LEGAL BASIS FOR PROCESSING YOUR PERSONAL DATA
+Please note that we process your personal data if one of the following applies:
+
+7.1. When you have given your consent (GDPR Article 6(1)(a)):
+
+we may request your consent for specific data processing activities. You maintain the right to revoke this permission, though any processing completed before revocation remains valid.
+7.2. Where it is necessary for the performance of a contract (GDPR Article 6(1)(b)), including:
+
+execution of the Terms and conditions of use and other contractual obligations, if applicable, with you
+storing and hosting your uploaded videos
+enabling platform users to view your content and sharing your videos with viewers
+handling financial transactions when relevant
+7.3. When complying with our legal obligations (GDPR Article 6(1)(c)):
+
+maintaining financial records for tax and auditing
+managing legal matters related to you, your account or content
+responding to and complying with official inquiries from authorities (judicial, administrative or law enforcing ones)
+implementing anti-fraud measures and complying with applicable anti-fraud laws
+age verification procedures
+For this purpose, please note the following regarding your personal data:
+
+a) Your biometric data is processed solely by our trusted service provider, Yoti. We do not receive any biometric data from Yoti about you. We only retrieve a session result for each age verification session, indicating whether a user is above the set age threshold or not. This session result may be shared with our trusted partners as indicated in our processors list herein.
+
+b) Any biometric templates received through Age Estimation or Yoti IDV will be deleted within three (3) years after fulfilment of the initial purpose or the last interaction with the user, whichever occurs first.
+
+c) To learn more about Yoti's privacy practices, please refer to their relevant privacy notice by clicking here: https://www.yoti.com/privacy/. We recommend reviewing their privacy notice to understand how your information is handled when using Yoti.
+
+7.4. When protecting the vital interests of any individual (GDPR Article 6(1)(d)):
+
+we may handle personal data in emergency situations to protect individuals from harm
+7.5. When it is necessary for the purposes of the legitimate interests (GDPR Article 6(1)(f)), including:
+
+service enhancement and maintenance
+innovation and feature development
+internal operations improvement
+communicating about related services
+marketing outreach
+terms enforcement
+content monitoring
+cybersecurity measures
+fraud prevention
+cooperation with authorities
+customer support
+legal protection
+performance analysis
+quality assurance
+7.6. If, when interacting with the Website and using all available features of the Website, you choose to voluntarily provide special categories of personal data, the processing of your special categories of personal data (when applicable) will be handled under these conditions:
+
+when you have provided your explicit consent (GDPR Article 9(2)(a))
+when you manifestly made your special categories of personal data publicly available (GDPR Article 9(2)(e))
+in defense of legal claims (GDPR Article 9(2)(f))
+8. WHO WE SHARE YOUR PERSONAL DATA WITH
+It is our policy not to use or share personal data about you in ways unrelated to those described in this Policy without also providing you with an opportunity to opt out or otherwise object to such unrelated uses. However, we may disclose personal data about you, or information regarding your use of the services or the Website to third parties for any of the reasons set out hereinabove, or if we are legally required to do so, or if we are authorized under our contractual and statutory obligations. When we disclose your personal data to service providers, we will ensure that they are bound by a contract requiring them to comply with their GDPR obligations. Under the circumstances referred to above, recipients of personal data may be, for example:
+
+8.1. other companies which belong to the same undertaking to the extent this is necessary for the purposes set out in this Policy and to enable you to have access to certain features;
+8.2. service providers such as digital payment processing companies; You can view the list of our third-party service providers by clicking here
+8.3. governmental and regulatory bodies, including law enforcement authorities, in connection with enquiries, proceedings or investigations by such parties or in order to enable the Company to comply with its legal and regulatory requirements. We specifically reserve the right to disclose any and all information to law enforcement in the event that a crime is committed or suspected or if we are compelled to do so by lawful criminal, civil or administrative process, discovery requests, subpoenas, court orders or writs;
+8.4. buyers or other legal successors in the event of a merger, divestiture, restructuring, reorganization, dissolution or other sale or transfer of some or all of our assets, whether as a going concern or as part of bankruptcy, liquidation or similar proceeding, in which personal information held by us about our Browsers and/or Members and/or Content Providers and/or Participants of Affiliate Program is among the assets transferred. Should such a sale or transfer occur, we will use reasonable efforts to ensure that the entity to which we transfer your personal data uses it in a manner that is consistent with this Policy; and/or
+8.5. our legal or other professional consultants.
+We may also disclose aggregated information about our users, and information that does not identify any individual, without restriction. We may also share aggregated information with third-parties for conducting general business analysis. This information does not contain any personal data and may be used to develop content and services that we hope you and other users will find of interest.
+
+Please note that we have never sold and will never sell your personal data to third parties.
+
+9. CONTENT PROVIDERS’ PROFILES
+Content Providers should be aware that some of the information directly provided on the Website when they create an account is public and can be viewed by other Browsers, Members, Content Providers and/or Participants of Affiliate Program of the Website, unless otherwise stated. Even if a Content Provider’s profile does not contain any personal information, there is a possibility of identification by others through other information on the Content Provider’s profile. Accordingly, Content Providers should understand that they are in control of all of the information they upload on the Website and/or display on their profile and are fully responsible for any consequences arising out of such information.
+
+10. SECURITY OF YOUR PERSONAL DATA
+We take appropriate security measures (including physical, electronic and procedural measures) to safeguard your personal data from unauthorized access and disclosure. For instance, only authorized employees are permitted to access personal data, and they may do so only for permitted business functions. In addition, we use encryption in the transmission of your personal data between your system and ours, and we use firewalls to help prevent unauthorized persons from gaining access to your personal data. However, please be advised that we cannot fully eliminate security risks associated with the storage and transmission of personal data as we cannot guarantee that our security measures will prevent third-party hackers from illegally obtaining this information.
+You are responsible for maintaining the secrecy of your unique password and account information at all times. We are not responsible for circumventions of any privacy settings or security measures contained on the Website.
+
+11. INFORMATION WE TRANSFER
+Some of our external third parties are based outside the European Economic Area (“EEA”) so the processing of your personal data will involve a transfer of data outside the EEA.
+
+Whenever we transfer your data outside the EEA, we ensure a similar degree of protection is afforded to it by ensuring at least one of the following safeguards is implemented:
+
+a) We will only transfer your personal data to countries that have been deemed to provide an adequate level of protection for personal data by the European Commission.
+b) Where we use service providers outside the EEA, we may use specific contracts approved by the European Commission which give personal data the same protection it has in the European Union.
+c) Where we use providers based in the US, we may transfer data to them if they are part of the Privacy Shield which requires them to provide similar protection to personal data shared between the European Union and the US.
+We may additionally, in rare occasions, transfer your personal data to a party outside the EEA where we have your prior explicit consent to do so or where such transfer is necessary for the provision of our services to you.
+
+12. MARKETING INFORMATION
+We may process your personal data so as to inform you about existing and/or future services that may be of interest to you by sending you periodic announcements with details on existing and/or new services and/or programs.
+You have the right to object at any time to the processing of your personal data for marketing purposes, by contacting us via our Contact us form (available at https://faphouse.com/support/contact) or by clicking at the opt-out link at the bottom of any marketing emails we send you.
+We can only use your personal data to promote our services to you if we have your explicit consent to do so, or in certain cases such as for example when you are a Content Provider of our Website, if we consider that it is in our legitimate interest to do so. You may also occasionally receive marketing communications from our affiliates, but only provided you have given your explicit consent in receiving such communications.
+Even if you inform us that you no longer wish to receive marketing material, you will still receive from us system notices and other information specifically related to your account from time to time.
+
+13. HOW LONG WE KEEP YOUR PERSONAL DATA FOR
+We will only keep your personal data for as long as necessary to fulfill the purposes we collected it for, including for the purposes of satisfying any legal, accounting or reporting requirements. We may retain your personal data for a longer period in the event of a complaint or if we reasonably believe there is a prospect of litigation in respect of our relationship with you.
+To determine the appropriate retention period for personal data, we consider the amount, nature and sensitivity of the personal data, the potential risk of harm from unauthorized use or disclosure of your personal data, the purposes for which we process your personal data and whether we can achieve those purposes through other means, and the applicable legal requirements.
+Where we no longer need to process your personal data for purposes set out in this Policy, we will delete your personal data from our systems. However, we may keep your data for longer if we cannot delete it for legal, regulatory or technical reasons. If we do, we will make sure that your privacy is protected and that your data is only used for those purposes.
+If you have questions about our data retention practices, please contact us electronically via our Contact us form (available at https://faphouse.com/support/contact)
+
+14. YOUR DATA PROTECTION RIGHTS
+We want to make sure you are aware of your rights in relation to the personal data we process about you. We have described those rights and the circumstances in which they apply further below.
+
+14.1. Access: This enables you to get access or receive a copy of the personal data that we hold about you and to check that we are lawfully processing it.
+14.2. Correction: If you believe that any of the information that we hold about you is inaccurate or incomplete, you have a right to request that we correct the inaccurate personal information.
+14.3. Erasure: You may request that we delete your personal information if you believe that: a. we no longer need to process your information for the purposes for which it was provided; b. we have requested your permission to process your personal information and you wish to withdraw your consent; or c. we are not using your information in a lawful manner.
+
+14.4. Right to object: You have the right to object to the processing of your personal data where we are relying on a legitimate interest and there is something about your particular situation which makes you want to object to processing on this ground. If you exercise your right to object, we will no longer process your personal data unless we can demonstrate compelling legitimate grounds for the processing which override your interests, rights and freedom or for the establishment, exercise and defense of legal claims.
+You also have the right to object where we are processing your personal data for direct marketing purposes. This also includes profiling in as much as it is related to direct marketing.
+If you object to processing for direct marketing purposes, then we shall stop the processing of your personal data for such purposes.
+Depending on the circumstances, we may need to restrict or cease processing your personal data altogether or, where requested, delete your personal data. Please note that if you object us processing your personal data, we may have to suspend the services we provide to you.
+
+14.5. Restriction: You have the right to request the restriction of processing of your personal data. This enables you to ask us to restrict the processing of your personal data if:
+a. it is not accurate; or
+b. it has been used unlawfully but you do not want us to delete it; or
+c. it is not relevant any more, but you want us to keep it for use in possible legal claims; or
+d. you have already asked us to stop using your personal data but you are waiting for us to confirm if we have legitimate grounds to use your personal data.
+Please note that if you request us to restrict processing of your personal data, we may have to suspend the services we provide to you.
+
+14.6. Right to portability: Where we have requested your permission to process your personal data or you have provided us with information for the purposes of entering into a contract with us, you have the right to receive the personal data you provided to us in a portable format. You may also request us to provide it directly to a third party, if technically feasible. We are not responsible for any such third party’s use of your account information, which will be governed by their agreement with you and any privacy statement they provided to you.
+
+If we ask for your consent to use your personal data, you can withdraw your consent at any time. Please note that in case of a withdrawal of your consent you may no longer be able to use several functionalities of our Website and our services.
+Please note that some requests to delete certain personal data will require the deletion of your account as a Content Provider and/or Participant of Affiliate Program as the provision of Content Provider accounts and/or Participant of Affiliate Program accounts is inextricably linked to the use of certain personal data (e.g. your email address and username). Also note that it is possible that we require additional information from you in order to verify your authorization to make the request and to honor your request.
+
+To exercise any of your rights, or if you have any other questions about our use of your personal data, please contact us electronically via our Contact us form (available at https://faphouse.com/support/contact) or by sending as a letter via our postal address.
+We endeavor to address all your requests promptly.
+
+15. HOW TO ACCESS OR MODIFY YOUR PERSONAL DATA
+We remain dedicated to the protection of your data and we want to be clear about the type of information collected, helping you make choices about your privacy.
+
+You may:
+
+a. access/modify the information provided during registration – please refer to the profile editing page;
+b. choose whether your profile/uploaded content is visible to everyone, or to other Content Providers only;
+c. block cookies, including cookies associated with our services, by activating or deactivating the related cookies on your browser. Please note, however, that if you choose to disable all cookies (including essential cookies) you may not be able to access all or part of our Website.
+16. OUR COMMUNICATION WITH YOU
+If you have any questions about this Policy or our information-handling practices, please contact us electronically via our Contact us form (available at https://faphouse.com/support/contact) or by sending as a letter via our postal address.
+
+17. RIGHT TO COMPLAIN
+If you have any questions about this Policy, or wish to lodge a complaint about how your personal data is used by the Company, you may contact us electronically via our Contact us form (available at https://faphouse.com/support/contact) or by sending as a letter via our postal address.
+Upon receipt of your question, request or complaint, we will investigate it and respond to you within a reasonable time.
+You also have the right to complain to the data protection supervisory authority of the country in which you reside, provided that such country is a Member State of the European Union or is located within the EEA.
+
+18. OUR POLICY TOWARDS MINORS
+Our Website is not directed to individuals under the age of eighteen (18) or the applicable age of majority in the jurisdiction from which the Website is accessed and we do not knowingly collect personal data from minors. If you become aware that your child has provided us with personal data, please contact us electronically via our Contact us form (available at https://faphouse.com/support/contact). If we become aware that a minor has provided us with personal data, we will take steps to remove such information and terminate that person’s account immediately.
+
+19. THIRD-PARTY LINKS
+Our Website may include links to third-party websites, plug-ins and applications. Clicking on those links or enabling those connections may allow third parties to collect or share data about you. We do not control these third-party websites and are not responsible for their privacy statements. We specifically disclaim responsibility for their content, privacy practices and terms of use, and we make no endorsements or representations about their accuracy, content or thoroughness. When you leave our Website, we encourage you to read the Policy of every website you visit.
+
+20. CALIFORNIA CONSUMER PRIVACY ACT NOTICE
+As of January 1, 2020, the California Consumer Privacy Act of 2018 ("CCPA") provides California residents ("Consumer(s)") certain rights with respect to their personal information, as this term is defined under the CCPA. In addition to the rights we state under this Policy and subject to the exceptions found under the CCPA, Consumers have the right to:
+
+Opt-out of the sale of their personal information, should we sell their personal information;
+Be informed of certain information concerning our collection and use of their personal information;
+Request that we delete certain personal information we collected from them;
+Appoint an agent to exercise their rights provided for by the CCPA, provided that a duly executed notarized power of attorney is presented and provided that the agent has information deemed sufficient to allow us to verify the identity of the Consumer in question and to locate his/her information in our systems;
+Not be subjected to discrimination for the exercise of these rights. We will not deny California residents the use of our service, neither will we provide a different level or quality or services for exercising any of their CCPA rights, unless as permitted under the CCPA.
+This Website does not sell nor has it sold in the past 12 months personal information to third parties for monetary or other valuable considerations. We may however disclose certain personal information with third parties, service providers and entities within our corporate group in order to enable them to perform certain services on our behalf and namely to make the Website work properly. Regardless, we respect the California residents' right to exclude personal information from such sharing arrangements and to thereby opt-out of any future sale of their personal information. If the CCPA is applicable to you and you would like to record such preference, please contact us via our Contact us form (available at https://faphouse.com/support/contact)
+
+21. NOTICE REGARDING THE DIGITAL MILLENNIUM COPYRIGHT ACT (DMCA) POLICY
+Although we are not subject to U.S. laws and regulations, we have chosen to voluntarily adhere to the highest standards of intellectual property protection and voluntarily comply with the Digital Millennium Copyright Act ("DMCA"). In order to comply with the DMCA and other applicable intellectual property laws, we have adopted this Copyright Infringement / Digital Millennium Copyright Act (DMCA) Policy (available at https://faphouse.com/pages/dmca-policy) regarding the handling of DMCA notices and counter-notices.
+
+Please be informed that
+
+if a valid Notification of Claimed Copyright Infringement is received by us, the copyright owner’s (claimant’s) name will be provided to the uploader of the allegedly infringing content. We reserve the right to forward all information provided in a Notifications of Claimed Copyright Infringement to the uploader of the allegedly infringing content;
+if we receive a valid Counter-notification in response to a Notification of Claimed Copyright Infringement, then the Counter-notification (and any personal data contained therein) will be provided to the claimant/copyright owner as part of the Counter-notice under this Policy.
+by submitting a Notification of Claimed Copyright Infringement and/or Counter-notice, you consent to having your information revealed in the abovementioned way.
+For more information, please check out our Copyright Infringement / Digital Millennium Copyright Act (DMCA) Policy (available at https://faphouse.com/pages/dmca-policy).
+
+22. COOKIES
+As we have briefly mentioned in this Policy, our Website uses small files known as cookies to make it work better in order to improve your experience.
+To find out more about how we use cookies, please see our cookie policy at https://faphouse.com/pages/cookies-policy.
+
+23. CHANGES TO THIS POLICY
+We reserve the right to update, revise, amend and/or modify this Policy at any time in order to reflect any changes to the way in which we process your personal data or changing legal requirements.
+Although we will notify you when major changes are made to this Policy, you are expected to periodically review the most up-to-date version found at https://faphouse.com/pages/privacy-policy so you are aware of any changes. The date of the latest version of the Policy will appear at the top of the webpage hosting the policy.
