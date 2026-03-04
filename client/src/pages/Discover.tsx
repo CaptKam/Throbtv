@@ -102,9 +102,10 @@ export default function Discover() {
               {nowPlaying.embedUrl ? (
                 <iframe
                   src={nowPlaying.embedUrl}
-                  className="w-full h-full"
-                  allow="autoplay; encrypted-media"
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media; fullscreen"
                   allowFullScreen
+                  referrerPolicy="origin"
                 />
               ) : (
                 <img src={nowPlaying.thumbnailUrl || ""} className="w-full h-full object-contain opacity-60" />
@@ -127,7 +128,7 @@ export default function Discover() {
               </Button>
               <Button 
                 size="icon" 
-                className="w-20 h-20 rounded-full bg-primary text-white hover:bg-primary/80 shadow-[0_0_30px_-5px_rgba(147,51,234,0.4)] transition-transform hover:scale-105"
+                className="w-20 h-20 rounded-full bg-primary text-white hover:bg-primary/80 shadow-[0_0_30px_-5px_rgba(239,68,68,0.4)] transition-transform hover:scale-105"
                 onClick={() => setIsPlaying(!isPlaying)}
               >
                 {isPlaying ? <Pause className="w-10 h-10 fill-current" /> : <Play className="w-10 h-10 fill-current ml-2" />}
@@ -404,7 +405,7 @@ export default function Discover() {
                   {nowPlaying && (
                     <div className="mb-8">
                       <div className="text-sm font-semibold text-primary mb-3 uppercase tracking-wider">Now Playing</div>
-                      <div className="flex items-center gap-4 bg-primary/10 border border-primary/20 rounded-2xl p-4 shadow-[0_0_30px_-10px_rgba(147,51,234,0.3)]">
+                      <div className="flex items-center gap-4 bg-primary/10 border border-primary/20 rounded-2xl p-4 shadow-[0_0_30px_-10px_rgba(239,68,68,0.3)]">
                         <div className="relative w-28 aspect-video rounded-lg overflow-hidden shrink-0">
                           <img src={nowPlaying.thumbnailUrl || ""} className="w-full h-full object-cover opacity-80" />
                           {isPlaying && (

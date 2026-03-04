@@ -125,7 +125,7 @@ export default function Remote() {
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-white/5 pt-safe">
           <div className="px-4 py-3 flex items-center gap-3">
             <div className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-red-800 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-red-700 flex items-center justify-center">
                 <Play className="w-4 h-4 text-white fill-white ml-0.5" />
               </div>
               <span className="text-lg font-black tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>

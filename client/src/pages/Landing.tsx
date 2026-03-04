@@ -55,7 +55,7 @@ export default function Landing() {
 
       <nav className="relative z-10 w-full px-6 py-6 flex justify-between items-center max-w-7xl mx-auto">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-red-800 flex items-center justify-center shadow-lg shadow-primary/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-red-700 flex items-center justify-center shadow-lg shadow-primary/20">
             <Play className="w-5 h-5 text-white fill-white ml-0.5" />
           </div>
           <span className="text-2xl font-black tracking-tight tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
@@ -79,7 +79,7 @@ export default function Landing() {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-primary-foreground/80 mb-6 backdrop-blur-md"
           >
             <Sparkles className="w-4 h-4 text-primary" />
-            <span>The ultimate lean-back experience</span>
+            <span>hands free. mind gone.</span>
           </motion.div>
           
           <motion.h1 
@@ -89,7 +89,7 @@ export default function Landing() {
             className="text-5xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/60"
           >
             Curate your perfect <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-red-300">video queue.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-red-400">video queue.</span>
           </motion.h1>
           
           <motion.p 
@@ -206,7 +206,7 @@ export default function Landing() {
                 <Button 
                   type="submit" 
                   disabled={isLoading}
-                  className="w-full h-12 mt-4 text-base font-semibold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-[0_0_20px_-5px_rgba(147,51,234,0.5)] transition-all"
+                  className="w-full h-12 mt-4 text-base font-semibold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-[0_0_20px_-5px_rgba(239,68,68,0.5)] transition-all"
                   data-testid="button-submit"
                 >
                   {isLoading ? (
