@@ -110,7 +110,7 @@ export default function Theater() {
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-purple-800 flex items-center justify-center">
                 <Play className="w-7 h-7 text-white fill-white ml-1" />
               </div>
-              <span className="text-4xl font-black tracking-tighter">Throb<span style={{ color: '#ef4444' }}>.TV</span></span>
+              <span className="text-4xl font-black tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
             </div>
             <div className="text-muted-foreground text-lg">Session paused</div>
             <div className="mt-8 grid grid-cols-2 gap-8 text-center">
@@ -135,7 +135,7 @@ export default function Theater() {
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-purple-800 flex items-center justify-center shadow-lg shadow-primary/30">
               <Play className="w-6 h-6 text-white fill-white ml-0.5" />
             </div>
-            <span className="text-3xl font-black tracking-tighter">Throb<span style={{ color: '#ef4444' }}>.TV</span></span>
+            <span className="text-3xl font-black tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
           </div>
 
           {!isConnected ? (
