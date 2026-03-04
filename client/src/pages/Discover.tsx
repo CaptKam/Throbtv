@@ -1,14 +1,22 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, Reorder } from "framer-motion";
 import { 
   Play, Pause, SkipBack, SkipForward, Search, 
   Clock, Plus, FastForward, CheckCircle2,
-  Tv, ListMusic
+  Tv, ListMusic, GripVertical, Trash2, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 // Mock Data
 const CATEGORIES = ["Trending", "New", "Muscular", "Amateur", "Studio", "Solo", "Collabs"];
@@ -60,10 +68,11 @@ export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("Trending");
   const [isPlaying, setIsPlaying] = useState(true);
-  const [queue, setQueue] = useState<typeof MOCK_VIDEOS>([]);
+  const [queue, setQueue] = useState<typeof MOCK_VIDEOS>([MOCK_VIDEOS[1], MOCK_VIDEOS[2], MOCK_VIDEOS[3]]);
   const { toast } = useToast();
 
   const handlePlayNext = (video: typeof MOCK_VIDEOS[0]) => {
+    setQueue([video, ...queue]);
     toast({
       title: "Added to Up Next",
       description: `"${video.title}" will play next`,
@@ -78,6 +87,10 @@ export default function Discover() {
       description: `"${video.title}" is #${queue.length + 1} in queue`,
       action: <ListMusic className="w-5 h-5 text-primary" />
     });
+  };
+  
+  const removeFromQueue = (id: string) => {
+    setQueue(queue.filter(v => v.id !== id));
   };
 
   return (
@@ -188,59 +201,146 @@ export default function Discover() {
       </div>
 
       {/* Zone 1: Sticky Transport Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-t border-white/10 pb-safe shadow-[0_-20px_40px_-20px_rgba(0,0,0,0.8)]">
-        
-        {/* Progress/Timer Bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-white/5">
-          <div className="h-full bg-primary w-1/3 relative">
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+      <Drawer>
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-t border-white/10 pb-safe shadow-[0_-20px_40px_-20px_rgba(0,0,0,0.8)]">
+          
+          {/* Progress/Timer Bar */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-white/5">
+            <div className="h-full bg-primary w-1/3 relative">
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+            </div>
+          </div>
+
+          <div className="max-w-md mx-auto px-4 py-3">
+            {/* Now Playing Info & Drawer Trigger */}
+            <DrawerTrigger asChild>
+              <div className="flex items-center justify-between mb-4 cursor-pointer group">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="w-12 h-12 rounded-xl bg-muted overflow-hidden shrink-0 shadow-lg group-hover:ring-2 ring-primary/50 transition-all">
+                    <img src={MOCK_VIDEOS[0].thumbnail} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="truncate">
+                    <div className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">{MOCK_VIDEOS[0].title}</div>
+                    <div className="text-xs text-primary font-medium mt-0.5">Playing on TV</div>
+                  </div>
+                </div>
+                
+                {/* Auto-advance Timer */}
+                <div className="flex items-center gap-2 shrink-0 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+                  <span className="text-sm font-mono font-medium text-white">04:12</span>
+                  <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                </div>
+              </div>
+            </DrawerTrigger>
+
+            {/* Transport Controls */}
+            <div className="flex items-center justify-between px-2">
+              <Button variant="ghost" size="icon" className="w-14 h-14 rounded-full text-muted-foreground hover:text-white hover:bg-white/10">
+                <SkipBack className="w-7 h-7 fill-current" />
+              </Button>
+              
+              <Button 
+                size="icon" 
+                className="w-20 h-20 rounded-full bg-white text-black hover:bg-gray-200 shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] transition-transform hover:scale-105"
+                onClick={() => setIsPlaying(!isPlaying)}
+              >
+                {isPlaying ? (
+                  <Pause className="w-8 h-8 fill-current" />
+                ) : (
+                  <Play className="w-8 h-8 fill-current ml-1" />
+                )}
+              </Button>
+              
+              <Button variant="ghost" size="icon" className="w-14 h-14 rounded-full text-muted-foreground hover:text-white hover:bg-white/10">
+                <SkipForward className="w-7 h-7 fill-current" />
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div className="max-w-md mx-auto px-4 py-3">
-          {/* Now Playing Info */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-12 h-12 rounded-xl bg-muted overflow-hidden shrink-0 shadow-lg">
-                <img src={MOCK_VIDEOS[0].thumbnail} className="w-full h-full object-cover" />
-              </div>
-              <div className="truncate">
-                <div className="text-sm font-bold text-white truncate">{MOCK_VIDEOS[0].title}</div>
-                <div className="text-xs text-primary font-medium mt-0.5">Playing on TV</div>
+        <DrawerContent className="bg-background/95 backdrop-blur-xl border-white/10 h-[85vh]">
+          <DrawerHeader className="border-b border-white/10 pb-4">
+            <div className="flex items-center justify-between">
+              <DrawerTitle className="text-xl font-bold">Up Next</DrawerTitle>
+              <DrawerClose asChild>
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-white hover:bg-white/10">
+                  <X className="w-5 h-5" />
+                </Button>
+              </DrawerClose>
+            </div>
+          </DrawerHeader>
+          
+          <ScrollArea className="flex-1 p-4">
+            <div className="mb-6">
+              <div className="text-sm font-semibold text-primary mb-3 uppercase tracking-wider">Now Playing</div>
+              <div className="flex items-center gap-4 bg-primary/10 border border-primary/20 rounded-2xl p-3 shadow-[0_0_20px_-5px_rgba(147,51,234,0.3)]">
+                <div className="relative w-24 aspect-video rounded-lg overflow-hidden shrink-0">
+                  <img src={MOCK_VIDEOS[0].thumbnail} className="w-full h-full object-cover opacity-80" />
+                  {isPlaying && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <div className="flex gap-1">
+                        <motion.div animate={{ height: [8, 16, 8] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-1 bg-primary rounded-full" />
+                        <motion.div animate={{ height: [12, 20, 12] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }} className="w-1 bg-primary rounded-full" />
+                        <motion.div animate={{ height: [8, 16, 8] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }} className="w-1 bg-primary rounded-full" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-white truncate text-base">{MOCK_VIDEOS[0].title}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{MOCK_VIDEOS[0].source}</div>
+                </div>
               </div>
             </div>
-            
-            {/* Auto-advance Timer */}
-            <div className="flex items-center gap-2 shrink-0 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
-              <span className="text-sm font-mono font-medium text-white">04:12</span>
-              <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-            </div>
-          </div>
 
-          {/* Transport Controls */}
-          <div className="flex items-center justify-between px-2">
-            <Button variant="ghost" size="icon" className="w-14 h-14 rounded-full text-muted-foreground hover:text-white hover:bg-white/10">
-              <SkipBack className="w-7 h-7 fill-current" />
-            </Button>
-            
-            <Button 
-              size="icon" 
-              className="w-20 h-20 rounded-full bg-white text-black hover:bg-gray-200 shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] transition-transform hover:scale-105"
-              onClick={() => setIsPlaying(!isPlaying)}
-            >
-              {isPlaying ? (
-                <Pause className="w-8 h-8 fill-current" />
-              ) : (
-                <Play className="w-8 h-8 fill-current ml-1" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">In Queue ({queue.length})</div>
+              {queue.length > 0 && (
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-white h-auto py-1" onClick={() => setQueue([])}>
+                  Clear
+                </Button>
               )}
-            </Button>
-            
-            <Button variant="ghost" size="icon" className="w-14 h-14 rounded-full text-muted-foreground hover:text-white hover:bg-white/10">
-              <SkipForward className="w-7 h-7 fill-current" />
-            </Button>
-          </div>
-        </div>
-      </div>
+            </div>
+
+            <Reorder.Group axis="y" values={queue} onReorder={setQueue} className="space-y-3 pb-20">
+              {queue.map((video) => (
+                <Reorder.Item key={video.id} value={video} className="flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl p-3 cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors">
+                  <div className="text-muted-foreground cursor-grab shrink-0">
+                    <GripVertical className="w-5 h-5" />
+                  </div>
+                  <div className="w-20 aspect-video rounded-lg overflow-hidden shrink-0 relative">
+                    <img src={video.thumbnail} className="w-full h-full object-cover" />
+                    <div className="absolute bottom-1 right-1 bg-black/60 px-1 rounded text-[10px] font-medium text-white">{video.duration}</div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-white truncate">{video.title}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{video.source}</div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="shrink-0 h-10 w-10 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromQueue(video.id);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </Reorder.Item>
+              ))}
+              
+              {queue.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <ListMusic className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p>Your queue is empty.</p>
+                  <p className="text-sm mt-1">Add videos from the feed.</p>
+                </div>
+              )}
+            </Reorder.Group>
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

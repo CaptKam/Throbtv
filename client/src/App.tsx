@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Landing from "@/pages/Landing";
 import Discover from "@/pages/Discover";
 import NotFound from "@/pages/not-found";
+import { GlobalMiniPlayer } from "@/components/layout/GlobalMiniPlayer";
 
 function Router() {
   return (
@@ -23,9 +24,11 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <GlobalMiniPlayer />
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
 
 export default App;
+
