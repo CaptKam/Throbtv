@@ -36,7 +36,7 @@ function cleanupExpiredSessions() {
 
 export function setupSocket(httpServer: HttpServer) {
   const io = new Server(httpServer, {
-    cors: { origin: "*", methods: ["GET", "POST"] },
+    cors: { origin: process.env.NODE_ENV === "production" ? false : "*", methods: ["GET", "POST"] },
     path: "/socket.io",
   });
 
