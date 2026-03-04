@@ -60,6 +60,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Ensure DB schema is up to date before any queries run
+  const pg = await import("pg");
+  const migrationPool = new pg.default.Pool({ connectionString: process.env.DATABASE_URL });
+  await migrationPool.query(`ALTER TABLE videos ADD COLUMN IF NOT EXISTS trailer_url text`);
+  await migrationPool.end();
+
   const { seedVideos } = await import("./seed");
   await seedVideos().catch(err => console.error("Seed error:", err));
 
