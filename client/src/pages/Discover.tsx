@@ -1294,37 +1294,5 @@ const scopedStyles = `
       gap: 8px;
     }
     .throb-thumb-hover { display: none; }
-
-    /* Mobile transport: stack vertically so play/skip buttons are always visible */
-    .throb-transport-inner {
-      flex-wrap: wrap; justify-content: center; gap: 6px;
-      padding: 8px 12px 10px;
-    }
-    .throb-transport-left {
-      flex: 1 1 100%; min-width: 0;
-    }
-    .throb-transport-center {
-      position: static; transform: none;
-      order: 2; flex: 0 0 auto;
-    }
-    .throb-transport-right {
-      order: 3; flex: 0 0 auto;
-    }
-    .throb-t-btn { width: 44px; height: 44px; }
-    .throb-t-btn.primary { width: 52px; height: 52px; }
-    .throb-t-btn.primary svg { width: 24px; height: 24px; }
-    .throb-t-btn.ghost svg { width: 20px; height: 20px; }
-
-    /* Shelf tab: bigger on mobile and pinned above transport */
-    .throb-shelf-tab {
-      padding: 10px 28px;
-    }
-    .throb-shelf-text {
-      font-size: 13px; letter-spacing: 2.5px;
-    }
-    .throb-shelf-icon svg { width: 18px; height: 18px; }
-    .throb-peek-wrapper {
-      bottom: 110px;
-    }
   }
 `;
