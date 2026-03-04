@@ -140,14 +140,17 @@ export async function seedVideos() {
   }
 
   if (count > 0) {
-    // Check if existing videos have trailer URLs; if not, re-seed to add them
     const [sample] = await db.select({ trailerUrl: videos.trailerUrl }).from(videos).limit(1);
-    if (sample?.trailerUrl) {
-      console.log(`Database already has ${count} videos with trailer URLs, skipping seed.`);
+    if (sample?.trailerUrl && count >= feedVideos.length) {
+      console.log(`Database already has ${count} videos (feed has ${feedVideos.length}), skipping seed.`);
       await pool.end();
       return;
     }
-    console.log("Re-seeding to add trailer URLs to existing videos...");
+    if (!sample?.trailerUrl) {
+      console.log("Re-seeding to add trailer URLs to existing videos...");
+    } else {
+      console.log(`Database has ${count} videos but feed has ${feedVideos.length}. Re-seeding to sync...`);
+    }
     await db.delete(videos);
   }
 
