@@ -155,7 +155,7 @@ export async function seedVideos() {
   }
 
   const rows = feedVideos.map((v) => ({
-    sourceUrl: v.sourceUrl,
+    sourceUrl: v.sourceUrl + (v.sourceUrl.includes("?") ? "&" : "?") + "utm_content=throb.tv",
     embedUrl: extractEmbedUrl(v.embedHtml),
     videoIdOnSource: extractVideoId(v.sourceUrl) || v.feedId,
     sourceDomain: extractDomain(v.sourceUrl),
