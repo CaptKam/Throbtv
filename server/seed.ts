@@ -81,6 +81,9 @@ export async function seedVideos() {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
   const db = drizzle(pool);
 
+  // Ensure trailer_url column exists (handles first run after schema update)
+  await db.execute(sql`ALTER TABLE videos ADD COLUMN IF NOT EXISTS trailer_url text`);
+
   const existing = await db.select({ count: sql<number>`count(*)` }).from(videos);
   const count = Number(existing[0].count);
 
