@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, Reorder, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, SkipBack, SkipForward, Search,
-  ChevronUp, ChevronDown, ChevronRight, X,
+  ChevronUp, ChevronDown, ChevronRight, X, List,
   GripVertical, Trash2, ListMusic, Tv, Cast, LogOut
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +39,7 @@ export default function Discover() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [mouseIdle, setMouseIdle] = useState(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
 
   // Mouse idle detection — dim UI after 3s of no movement
   useEffect(() => {
@@ -333,6 +334,7 @@ export default function Discover() {
                           <div className="throb-thumb-hover">
                             <Play size={24} fill="white" />
                           </div>
+                          <div className="throb-play-overlay"><Play size={24} fill="currentColor" /></div>
                         </div>
                         <div className="throb-card-title">{v.title}</div>
                         <div className="throb-card-meta">{formatViews(v.views || 0)} views</div>
@@ -433,8 +435,17 @@ export default function Discover() {
                     )}
                     <span className="throb-dur">{v.duration}</span>
                     <span className="throb-src">{v.sourceDomain?.replace(".com", "")}</span>
+                    <div className="throb-play-overlay"><Play size={24} fill="currentColor" /></div>
                   </div>
                   <div className="throb-pk-title">{v.title}</div>
+                  <div className="throb-pk-actions">
+                    <button className="throb-pk-btn" onClick={(e) => { e.stopPropagation(); playNow(v); }}>
+                      <Play size={10} fill="currentColor" style={{ marginLeft: 1 }} /> Play
+                    </button>
+                    <button className="throb-pk-btn" onClick={(e) => { e.stopPropagation(); addToQueue(v); }}>
+                      + Queue
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -479,7 +490,56 @@ export default function Discover() {
                 <button className="throb-t-btn cast" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
                   <Cast size={16} />
                 </button>
+                {queue.length > 0 && (
+                  <button
+                    className="throb-mobile-queue-btn"
+                    onClick={() => setMobileQueueOpen(!mobileQueueOpen)}
+                  >
+                    <List size={16} />
+                    <span className="throb-mobile-queue-count">{queue.length}</span>
+                  </button>
+                )}
               </div>
+            </div>
+          </div>
+
+          {/* ======= MOBILE QUEUE SHEET ======= */}
+          <div className={`throb-mobile-queue ${mobileQueueOpen ? "open" : ""}`}>
+            <div className="throb-mobile-queue-head">
+              <span className="throb-mobile-queue-title">Queue ({queue.length})</span>
+              <button className="throb-close-btn" onClick={() => setMobileQueueOpen(false)}
+                style={{ width: 32, height: 32 }}>
+                <X size={14} />
+              </button>
+            </div>
+            <div className="throb-mobile-queue-list">
+              {queue.length === 0 ? (
+                <div className="throb-rail-empty">
+                  <List size={28} />
+                  <p>Queue is empty</p>
+                  <span>Tap +Queue on any video to add it</span>
+                </div>
+              ) : (
+                queue.map((v, i) => (
+                  <div key={v.id + "-mq-" + i} className="throb-rq" onClick={() => { playNow(v); setMobileQueueOpen(false); }}>
+                    <span className="throb-rq-n">{i + 1}</span>
+                    <div className="throb-rq-thumb">
+                      <img src={v.thumbnailUrl || ""} alt={v.title} />
+                      <span className="throb-rq-dur">{v.duration}</span>
+                    </div>
+                    <div className="throb-rq-info">
+                      <div className="throb-rq-title">{v.title}</div>
+                      <div className="throb-rq-sub">{v.sourceDomain}</div>
+                    </div>
+                    <button className="throb-rq-remove" style={{ opacity: 1 }} onClick={(e) => {
+                      e.stopPropagation();
+                      setQueue(q => q.filter((_, idx) => idx !== i));
+                    }}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -1122,6 +1182,95 @@ const scopedStyles = `
   .throb-rq:hover .throb-rq-remove { opacity: 1; }
   .throb-rq-remove:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
 
+  /* ---- PEEK CARD ACTIONS ---- */
+  .throb-pk-actions {
+    display: flex; gap: 4px; margin-top: 4px;
+  }
+  .throb-pk-btn {
+    flex: 1; padding: 5px 0; border-radius: 6px;
+    border: 1px solid rgba(148,163,184,0.12);
+    background: rgba(148,163,184,0.06);
+    color: #cbd5e1; font-size: 10px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 3px;
+  }
+  .throb-pk-btn:hover { background: rgba(148,163,184,0.12); color: #f1f5f9; }
+  .throb-pk-btn:active { transform: scale(0.95); background: rgba(239,68,68,0.15); color: #ef4444; }
+
+  /* ---- PLAY OVERLAY (visible on mobile, hover on desktop) ---- */
+  .throb-play-overlay {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.9);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s; z-index: 2;
+    pointer-events: none;
+  }
+  @media (max-width: 768px) {
+    .throb-play-overlay { opacity: 0.8; }
+  }
+  .throb-pk-thumb:hover .throb-play-overlay,
+  .throb-thumb:hover .throb-play-overlay { opacity: 1; }
+
+  /* ---- MOBILE QUEUE ---- */
+  .throb-mobile-queue-btn {
+    display: none; /* hidden on desktop */
+    width: 40px; height: 40px; border-radius: 50%;
+    border: none; cursor: pointer;
+    background: rgba(239,68,68,0.12); color: #f87171;
+    align-items: center; justify-content: center;
+    position: relative; transition: all 0.2s;
+  }
+  .throb-mobile-queue-btn:active { transform: scale(0.92); }
+  .throb-mobile-queue-count {
+    position: absolute; top: -2px; right: -2px;
+    background: #ef4444; color: #fff;
+    font-size: 9px; font-weight: 700;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(8,9,12,0.95);
+  }
+  .throb-mobile-queue {
+    display: none; /* hidden on desktop */
+    position: absolute; bottom: 80px; left: 8px; right: 8px;
+    max-height: 50vh; z-index: 200;
+    background: rgba(10,11,15,0.97); backdrop-filter: blur(20px);
+    border: 1px solid rgba(148,163,184,0.1);
+    border-radius: 16px; overflow: hidden;
+    transform: translateY(20px); opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    pointer-events: none; flex-direction: column;
+  }
+  .throb-mobile-queue.open {
+    transform: translateY(0); opacity: 1; pointer-events: auto;
+  }
+  .throb-mobile-queue-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(148,163,184,0.08);
+  }
+  .throb-mobile-queue-title {
+    font-family: 'Sora', sans-serif; font-size: 12px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: #94a3b8; font-weight: 600;
+  }
+  .throb-mobile-queue-list {
+    flex: 1; overflow-y: auto; padding: 4px 6px; max-height: 40vh;
+  }
+
+  /* ---- TOUCH ACTIVE STATES ---- */
+  .throb-card:active { transform: scale(0.97); }
+  .throb-pk-card:active { transform: scale(0.96); }
+  .throb-card-btn:active { transform: scale(0.93); background: rgba(239,68,68,0.12); color: #ef4444; }
+  .throb-t-btn:active { transform: scale(0.9); }
+  .throb-topbar-btn:active { transform: scale(0.9); }
+  .throb-cat:active { transform: scale(0.95); }
+  .throb-page-btn:active:not(:disabled) { transform: scale(0.95); }
+  .throb-shelf-tab:active { transform: scale(0.97); }
+  .throb-rq:active { background: rgba(148,163,184,0.08); }
+
   /* ---- MOUSE IDLE DIMMING ---- */
   .throb-app.mouse-idle .throb-transport { opacity: 0.4; }
   .throb-app.mouse-idle .throb-shelf-tab { opacity: 0.3; }
@@ -1138,9 +1287,12 @@ const scopedStyles = `
   @media (max-width: 768px) {
     .throb-rail { display: none; }
     .throb-rail-tab { display: none; }
+    .throb-mobile-queue-btn { display: flex; }
+    .throb-mobile-queue { display: flex; }
     .throb-grid {
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 8px;
     }
+    .throb-thumb-hover { display: none; }
   }
 `;
