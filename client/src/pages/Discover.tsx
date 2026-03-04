@@ -175,9 +175,6 @@ export default function Discover() {
         <div className="throb-content">
           {/* Top bar */}
           <div className="throb-topbar">
-            <button className="throb-topbar-btn" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
-              <Cast size={16} />
-            </button>
             <button className="throb-topbar-btn" onClick={() => logout.mutate()} title="Logout">
               <LogOut size={16} />
             </button>
@@ -354,6 +351,9 @@ export default function Discover() {
               </button>
               <button className="throb-t-btn ghost" onClick={skipNext}>
                 <SkipForward size={14} fill="currentColor" />
+              </button>
+              <button className="throb-t-btn cast" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
+                <Cast size={14} />
               </button>
             </div>
           </div>
@@ -574,6 +574,11 @@ const scopedStyles = `
     width: 42px; height: 42px;
   }
   .throb-t-btn.primary:hover { background: #dc2626; }
+  .throb-t-btn.cast {
+    background: rgba(148,163,184,0.08); color: #64748b;
+    margin-left: 4px;
+  }
+  .throb-t-btn.cast:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
 
   /* ---- SHELF TAB ---- */
   .throb-shelf-tab {
