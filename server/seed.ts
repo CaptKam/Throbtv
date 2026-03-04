@@ -134,9 +134,15 @@ export async function seedVideos() {
   }
 
   if (count > 0) {
-    console.log(`Database already has ${count} videos, skipping seed.`);
-    await pool.end();
-    return;
+    // Check if existing videos have trailer URLs; if not, re-seed to add them
+    const [sample] = await db.select({ trailerUrl: videos.trailerUrl }).from(videos).limit(1);
+    if (sample?.trailerUrl) {
+      console.log(`Database already has ${count} videos with trailer URLs, skipping seed.`);
+      await pool.end();
+      return;
+    }
+    console.log("Re-seeding to add trailer URLs to existing videos...");
+    await db.delete(videos);
   }
 
   const rows = feedVideos.map((v) => ({
@@ -150,6 +156,7 @@ export async function seedVideos() {
     tags: v.categories.length > 0 ? v.categories : ["Gay"],
     category: v.categories[0] || "Gay",
     thumbnailUrl: v.thumbnails[0] || "",
+    trailerUrl: v.trailerUrl || "",
     views: v.likes * 100 + Math.floor(Math.random() * 5000),
   }));
 

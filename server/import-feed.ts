@@ -122,6 +122,7 @@ export async function importFeedFromFile(filePath: string) {
       tags: v.categories.length > 0 ? v.categories : ["Gay"],
       category: v.categories[0] || "Gay",
       thumbnailUrl: v.thumbnails[0] || "",
+      trailerUrl: v.trailerUrl || "",
       views: v.likes * 100 + Math.floor(Math.random() * 5000),
     };
   });
