@@ -1,22 +1,14 @@
 import { useState } from "react";
-import { motion, Reorder } from "framer-motion";
+import { motion, Reorder, AnimatePresence } from "framer-motion";
 import { 
   Play, Pause, SkipBack, SkipForward, Search, 
   Clock, Plus, FastForward, CheckCircle2,
-  Tv, ListMusic, GripVertical, Trash2, X
+  Tv, ListMusic, GripVertical, Trash2, X, ChevronUp, ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 
 // Mock Data
 const CATEGORIES = ["Trending", "New", "Muscular", "Amateur", "Studio", "Solo", "Collabs"];
@@ -68,6 +60,7 @@ export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("Trending");
   const [isPlaying, setIsPlaying] = useState(true);
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [queue, setQueue] = useState<typeof MOCK_VIDEOS>([MOCK_VIDEOS[1], MOCK_VIDEOS[2], MOCK_VIDEOS[3]]);
   const { toast } = useToast();
 
@@ -201,146 +194,208 @@ export default function Discover() {
       </div>
 
       {/* Zone 1: Sticky Transport Bar */}
-      <Drawer>
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-t border-white/10 pb-safe shadow-[0_-20px_40px_-20px_rgba(0,0,0,0.8)]">
-          
-          {/* Progress/Timer Bar */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-white/5">
-            <div className="h-full bg-primary w-1/3 relative">
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-            </div>
-          </div>
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-2xl border-t border-white/10 pb-safe shadow-[0_-20px_40px_-20px_rgba(0,0,0,0.8)]">
+        
+        <button 
+          onClick={() => setIsQueueOpen(!isQueueOpen)}
+          className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-xl border border-white/10 border-b-0 rounded-t-xl px-6 py-1.5 flex flex-col items-center cursor-pointer hover:bg-black transition-colors"
+        >
+          {isQueueOpen ? (
+            <ChevronDown className="w-5 h-5 text-muted-foreground" />
+          ) : (
+            <ChevronUp className="w-5 h-5 text-muted-foreground" />
+          )}
+        </button>
 
-          <div className="max-w-md mx-auto px-4 py-3">
-            {/* Now Playing Info & Drawer Trigger */}
-            <DrawerTrigger asChild>
-              <div className="flex items-center justify-between mb-4 cursor-pointer group">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="w-12 h-12 rounded-xl bg-muted overflow-hidden shrink-0 shadow-lg group-hover:ring-2 ring-primary/50 transition-all">
-                    <img src={MOCK_VIDEOS[0].thumbnail} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="truncate">
-                    <div className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">{MOCK_VIDEOS[0].title}</div>
-                    <div className="text-xs text-primary font-medium mt-0.5">Playing on TV</div>
-                  </div>
-                </div>
-                
-                {/* Auto-advance Timer */}
-                <div className="flex items-center gap-2 shrink-0 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
-                  <span className="text-sm font-mono font-medium text-white">04:12</span>
-                  <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                </div>
-              </div>
-            </DrawerTrigger>
-
-            {/* Transport Controls */}
-            <div className="flex items-center justify-between px-2">
-              <Button variant="ghost" size="icon" className="w-14 h-14 rounded-full text-muted-foreground hover:text-white hover:bg-white/10">
-                <SkipBack className="w-7 h-7 fill-current" />
-              </Button>
-              
-              <Button 
-                size="icon" 
-                className="w-20 h-20 rounded-full bg-white text-black hover:bg-gray-200 shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] transition-transform hover:scale-105"
-                onClick={() => setIsPlaying(!isPlaying)}
-              >
-                {isPlaying ? (
-                  <Pause className="w-8 h-8 fill-current" />
-                ) : (
-                  <Play className="w-8 h-8 fill-current ml-1" />
-                )}
-              </Button>
-              
-              <Button variant="ghost" size="icon" className="w-14 h-14 rounded-full text-muted-foreground hover:text-white hover:bg-white/10">
-                <SkipForward className="w-7 h-7 fill-current" />
-              </Button>
-            </div>
+        {/* Progress/Timer Bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-white/5">
+          <div className="h-full bg-primary w-1/3 relative">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
           </div>
         </div>
 
-        <DrawerContent className="bg-background/95 backdrop-blur-xl border-white/10 h-[85vh]">
-          <DrawerHeader className="border-b border-white/10 pb-4">
-            <div className="flex items-center justify-between">
-              <DrawerTitle className="text-xl font-bold">Up Next</DrawerTitle>
-              <DrawerClose asChild>
-                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-white hover:bg-white/10">
-                  <X className="w-5 h-5" />
-                </Button>
-              </DrawerClose>
-            </div>
-          </DrawerHeader>
-          
-          <ScrollArea className="flex-1 p-4">
-            <div className="mb-6">
-              <div className="text-sm font-semibold text-primary mb-3 uppercase tracking-wider">Now Playing</div>
-              <div className="flex items-center gap-4 bg-primary/10 border border-primary/20 rounded-2xl p-3 shadow-[0_0_20px_-5px_rgba(147,51,234,0.3)]">
-                <div className="relative w-24 aspect-video rounded-lg overflow-hidden shrink-0">
-                  <img src={MOCK_VIDEOS[0].thumbnail} className="w-full h-full object-cover opacity-80" />
-                  {isPlaying && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                      <div className="flex gap-1">
-                        <motion.div animate={{ height: [8, 16, 8] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-1 bg-primary rounded-full" />
-                        <motion.div animate={{ height: [12, 20, 12] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }} className="w-1 bg-primary rounded-full" />
-                        <motion.div animate={{ height: [8, 16, 8] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }} className="w-1 bg-primary rounded-full" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-white truncate text-base">{MOCK_VIDEOS[0].title}</div>
-                  <div className="text-sm text-muted-foreground mt-1">{MOCK_VIDEOS[0].source}</div>
-                </div>
+        <div className="max-w-md mx-auto px-4 py-3">
+          {/* Now Playing Info & Drawer Trigger */}
+          <div 
+            onClick={() => setIsQueueOpen(true)}
+            className="flex items-center justify-between mb-4 cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="w-12 h-12 rounded-xl bg-muted overflow-hidden shrink-0 shadow-lg group-hover:ring-2 ring-primary/50 transition-all">
+                <img src={MOCK_VIDEOS[0].thumbnail} className="w-full h-full object-cover" />
+              </div>
+              <div className="truncate">
+                <div className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">{MOCK_VIDEOS[0].title}</div>
+                <div className="text-xs text-primary font-medium mt-0.5">Playing on TV</div>
               </div>
             </div>
-
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">In Queue ({queue.length})</div>
-              {queue.length > 0 && (
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-white h-auto py-1" onClick={() => setQueue([])}>
-                  Clear
-                </Button>
-              )}
+            
+            {/* Auto-advance Timer */}
+            <div className="flex items-center gap-2 shrink-0 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+              <span className="text-sm font-mono font-medium text-white">04:12</span>
+              <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
             </div>
+          </div>
 
-            <Reorder.Group axis="y" values={queue} onReorder={setQueue} className="space-y-3 pb-20">
-              {queue.map((video) => (
-                <Reorder.Item key={video.id} value={video} className="flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl p-3 cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors">
-                  <div className="text-muted-foreground cursor-grab shrink-0">
-                    <GripVertical className="w-5 h-5" />
-                  </div>
-                  <div className="w-20 aspect-video rounded-lg overflow-hidden shrink-0 relative">
-                    <img src={video.thumbnail} className="w-full h-full object-cover" />
-                    <div className="absolute bottom-1 right-1 bg-black/60 px-1 rounded text-[10px] font-medium text-white">{video.duration}</div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm text-white truncate">{video.title}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{video.source}</div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="shrink-0 h-10 w-10 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFromQueue(video.id);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </Reorder.Item>
-              ))}
-              
-              {queue.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <ListMusic className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p>Your queue is empty.</p>
-                  <p className="text-sm mt-1">Add videos from the feed.</p>
-                </div>
+          {/* Transport Controls */}
+          <div className="flex items-center justify-center gap-2 sm:gap-4 px-2">
+            <Button variant="ghost" size="icon" className="w-12 h-12 rounded-full text-muted-foreground hover:text-white hover:bg-white/10">
+              <SkipBack className="w-6 h-6 fill-current" />
+            </Button>
+            
+            <Button 
+              size="icon" 
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white text-black hover:bg-gray-200 shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] transition-transform hover:scale-105 mx-2"
+              onClick={() => setIsPlaying(!isPlaying)}
+            >
+              {isPlaying ? (
+                <Pause className="w-7 h-7 sm:w-8 sm:h-8 fill-current" />
+              ) : (
+                <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-current ml-1" />
               )}
-            </Reorder.Group>
-          </ScrollArea>
-        </DrawerContent>
-      </Drawer>
+            </Button>
+            
+            <Button variant="ghost" size="icon" className="w-12 h-12 rounded-full text-muted-foreground hover:text-white hover:bg-white/10">
+              <SkipForward className="w-6 h-6 fill-current" />
+            </Button>
+
+            {/* Explicit Queue Button */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="w-12 h-12 rounded-full text-primary hover:text-primary hover:bg-primary/10 ml-auto"
+              onClick={() => setIsQueueOpen(true)}
+            >
+              <div className="relative">
+                <ListMusic className="w-6 h-6" />
+                {queue.length > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white">
+                    {queue.length}
+                  </span>
+                )}
+              </div>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Custom Queue Slide-up Panel */}
+      <AnimatePresence>
+        {isQueueOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsQueueOpen(false)}
+              className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+            />
+            
+            {/* Panel */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-2xl border-t border-white/10 rounded-t-3xl h-[85vh] flex flex-col shadow-2xl"
+            >
+              <div className="flex justify-center p-3 w-full shrink-0 cursor-pointer" onClick={() => setIsQueueOpen(false)}>
+                <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+              </div>
+              
+              <div className="flex items-center justify-between px-6 pb-4 border-b border-white/10 shrink-0">
+                <h2 className="text-xl font-bold">Up Next</h2>
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-white hover:bg-white/10" onClick={() => setIsQueueOpen(false)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              
+              <ScrollArea className="flex-1 p-6">
+                <div className="max-w-2xl mx-auto">
+                  <div className="mb-8">
+                    <div className="text-sm font-semibold text-primary mb-3 uppercase tracking-wider">Now Playing</div>
+                    <div className="flex items-center gap-4 bg-primary/10 border border-primary/20 rounded-2xl p-4 shadow-[0_0_30px_-10px_rgba(147,51,234,0.3)]">
+                      <div className="relative w-28 aspect-video rounded-lg overflow-hidden shrink-0">
+                        <img src={MOCK_VIDEOS[0].thumbnail} className="w-full h-full object-cover opacity-80" />
+                        {isPlaying && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                            <div className="flex gap-1">
+                              <motion.div animate={{ height: [8, 16, 8] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-1.5 bg-primary rounded-full" />
+                              <motion.div animate={{ height: [12, 20, 12] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }} className="w-1.5 bg-primary rounded-full" />
+                              <motion.div animate={{ height: [8, 16, 8] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }} className="w-1.5 bg-primary rounded-full" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-white truncate text-lg">{MOCK_VIDEOS[0].title}</div>
+                        <div className="text-sm text-muted-foreground mt-1">{MOCK_VIDEOS[0].source}</div>
+                        <div className="mt-2 text-xs font-mono text-primary font-medium bg-primary/20 inline-block px-2 py-1 rounded">
+                          Ends in 04:12
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">In Queue ({queue.length})</div>
+                    {queue.length > 0 && (
+                      <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-white h-auto py-1.5 px-3 rounded-full hover:bg-white/10" onClick={() => setQueue([])}>
+                        Clear Queue
+                      </Button>
+                    )}
+                  </div>
+
+                  <Reorder.Group axis="y" values={queue} onReorder={setQueue} className="space-y-3 pb-24">
+                    {queue.map((video, idx) => (
+                      <Reorder.Item key={`${video.id}-${idx}`} value={video} className="flex items-center gap-4 bg-white/5 border border-white/5 rounded-2xl p-3 cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors group">
+                        <div className="text-muted-foreground cursor-grab shrink-0 px-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                          <GripVertical className="w-5 h-5" />
+                        </div>
+                        <div className="w-24 aspect-video rounded-lg overflow-hidden shrink-0 relative shadow-md">
+                          <img src={video.thumbnail} className="w-full h-full object-cover" />
+                          <div className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold text-white">{video.duration}</div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-white truncate text-base">{video.title}</div>
+                          <div className="text-sm text-muted-foreground mt-1">{video.source}</div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="shrink-0 h-10 w-10 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromQueue(video.id);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </Reorder.Item>
+                    ))}
+                    
+                    {queue.length === 0 && (
+                      <div className="text-center py-16 text-muted-foreground bg-white/5 rounded-3xl border border-dashed border-white/10">
+                        <ListMusic className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        <p className="text-lg font-medium text-white/60">Your queue is empty</p>
+                        <p className="text-sm mt-2">Find something great to watch from the feed.</p>
+                        <Button 
+                          variant="outline" 
+                          className="mt-6 rounded-full border-white/10 bg-white/5 hover:bg-white/10"
+                          onClick={() => setIsQueueOpen(false)}
+                        >
+                          Return to Feed
+                        </Button>
+                      </div>
+                    )}
+                  </Reorder.Group>
+                </div>
+              </ScrollArea>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
