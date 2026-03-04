@@ -332,11 +332,22 @@ export default function Discover() {
             </div>
           </div>
 
-          {/* ======= STAGE 2: PEEK SHELF ======= */}
-          <div
-            className={`throb-peek ${stage < 2 ? "hidden" : ""}`}
-            style={{ display: stage === 3 ? "none" : undefined }}
-          >
+          {/* ======= SHELF TAB + PEEK SHELF ======= */}
+          <div className="throb-peek-wrapper">
+            {/* Shelf tab sits on top of peek shelf so it moves with it */}
+            <div className="throb-shelf-tab" onClick={cycleStage}>
+              <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
+                <ChevronUp size={14} />
+              </div>
+              <span className="throb-shelf-text">
+                {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
+              </span>
+              <div className="throb-shelf-line" />
+            </div>
+            <div
+              className={`throb-peek ${stage < 2 ? "hidden" : ""}`}
+              style={{ display: stage === 3 ? "none" : undefined }}
+            >
             <div className="throb-peek-top">
               <div className="throb-search-wrap">
                 <Search size={12} className="throb-search-icon" />
@@ -372,19 +383,10 @@ export default function Discover() {
               ))}
             </div>
           </div>
+          </div>
 
-          {/* ======= TRANSPORT BAR (with shelf tab on top) ======= */}
+          {/* ======= TRANSPORT BAR ======= */}
           <div className="throb-transport">
-            {/* Shelf tab sits on top of transport */}
-            <div className="throb-shelf-tab" onClick={cycleStage}>
-              <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
-                <ChevronUp size={14} />
-              </div>
-              <span className="throb-shelf-text">
-                {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
-              </span>
-              <div className="throb-shelf-line" />
-            </div>
             <div className="throb-progress">
               <div className="throb-progress-fill" style={{ width: `${videoProgress}%` }} />
             </div>
@@ -644,17 +646,17 @@ const scopedStyles = `
 
   /* ---- SHELF TAB ---- */
   .throb-shelf-tab {
-    position: absolute; top: -28px; left: 50%;
-    transform: translateX(-50%); z-index: 110;
     display: flex; align-items: center; gap: 6px;
+    margin: 0 auto; width: fit-content;
     padding: 5px 16px;
     background: rgba(8,9,12,0.9); backdrop-filter: blur(12px);
     border: 1px solid rgba(148,163,184,0.08); border-bottom: none;
     border-radius: 10px 10px 0 0;
     cursor: pointer; transition: all 0.2s; user-select: none;
+    z-index: 110; position: relative;
   }
   .throb-shelf-tab:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.15); }
-  .throb-shelf-tab:active { transform: translateX(-50%) scale(0.97); }
+  .throb-shelf-tab:active { transform: scale(0.97); }
   .throb-shelf-text {
     font-family: 'Sora', sans-serif; font-size: 9px;
     letter-spacing: 2px; text-transform: uppercase;
@@ -671,9 +673,18 @@ const scopedStyles = `
     background: rgba(148,163,184,0.15);
   }
 
+  /* ---- PEEK WRAPPER (tab + shelf move together) ---- */
+  .throb-peek-wrapper {
+    position: absolute; bottom: 68px; left: 0; right: 0; z-index: 90;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+    transform: translateY(0); opacity: 1;
+    pointer-events: none;
+  }
+  .throb-peek-wrapper .throb-shelf-tab { pointer-events: auto; }
+  .throb-peek-wrapper .throb-peek { pointer-events: auto; }
+
   /* ---- PEEK SHELF (Stage 2) ---- */
   .throb-peek {
-    position: absolute; bottom: 68px; left: 0; right: 0; z-index: 90;
     background: rgba(8,9,12,0.95); backdrop-filter: blur(20px);
     border-top: 1px solid rgba(148,163,184,0.06);
     border-radius: 16px 16px 0 0;
