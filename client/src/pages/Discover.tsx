@@ -332,6 +332,21 @@ export default function Discover() {
             </div>
           </div>
 
+          {/* ======= SHELF TAB (always visible, above peek) ======= */}
+          <div
+            className="throb-shelf-tab"
+            onClick={cycleStage}
+            style={{ display: stage === 3 ? "none" : undefined }}
+          >
+            <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
+              <ChevronUp size={14} />
+            </div>
+            <span className="throb-shelf-text">
+              {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
+            </span>
+            <div className="throb-shelf-line" />
+          </div>
+
           {/* ======= STAGE 2: PEEK SHELF ======= */}
           <div
             className={`throb-peek ${stage < 2 ? "hidden" : ""}`}
@@ -373,24 +388,8 @@ export default function Discover() {
             </div>
           </div>
 
-          {/* ======= TRANSPORT BAR (with shelf tab on top) ======= */}
+          {/* ======= TRANSPORT BAR ======= */}
           <div className="throb-transport">
-            {/* Top controls: shelf tab + cast button */}
-            <div className="throb-transport-top">
-              <div className="throb-shelf-tab" onClick={cycleStage}>
-                <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
-                  <ChevronUp size={14} />
-                </div>
-                <span className="throb-shelf-text">
-                  {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
-                </span>
-                <div className="throb-shelf-line" />
-              </div>
-              <button className="throb-cast-top" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
-                <Cast size={13} />
-                <span>TV</span>
-              </button>
-            </div>
             <div className="throb-progress">
               <div className="throb-progress-fill" style={{ width: `${videoProgress}%` }} />
             </div>
@@ -418,6 +417,9 @@ export default function Discover() {
               </button>
               <button className="throb-t-btn ghost" onClick={skipNext}>
                 <SkipForward size={14} fill="currentColor" />
+              </button>
+              <button className="throb-t-btn cast" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
+                <Cast size={14} />
               </button>
             </div>
           </div>
@@ -639,30 +641,16 @@ const scopedStyles = `
     width: 42px; height: 42px;
   }
   .throb-t-btn.primary:hover { background: #dc2626; }
-  /* ---- TRANSPORT TOP (shelf tab + cast) ---- */
-  .throb-transport-top {
-    position: absolute; top: -28px; left: 0; right: 0;
-    display: flex; align-items: flex-end; justify-content: center;
-    z-index: 110; pointer-events: none;
+  .throb-t-btn.cast {
+    background: rgba(148,163,184,0.08); color: #64748b;
+    margin-left: 4px;
   }
-  .throb-transport-top > * { pointer-events: auto; }
+  .throb-t-btn.cast:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
 
-  .throb-cast-top {
-    position: absolute; right: 12px; bottom: 0;
-    display: flex; align-items: center; gap: 4px;
-    padding: 5px 12px;
-    background: rgba(8,9,12,0.9); backdrop-filter: blur(12px);
-    border: 1px solid rgba(148,163,184,0.08); border-bottom: none;
-    border-radius: 10px 10px 0 0;
-    color: #64748b; font-size: 9px; font-weight: 600;
-    letter-spacing: 1px; text-transform: uppercase;
-    font-family: 'Sora', sans-serif;
-    cursor: pointer; transition: all 0.2s; user-select: none;
-  }
-  .throb-cast-top:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.15); color: #ef4444; }
-
-  /* ---- SHELF TAB ---- */
+  /* ---- SHELF TAB (above peek shelf) ---- */
   .throb-shelf-tab {
+    position: absolute; bottom: 68px; left: 50%;
+    transform: translateX(-50%); z-index: 95;
     display: flex; align-items: center; gap: 6px;
     padding: 5px 16px;
     background: rgba(8,9,12,0.9); backdrop-filter: blur(12px);
@@ -671,7 +659,7 @@ const scopedStyles = `
     cursor: pointer; transition: all 0.2s; user-select: none;
   }
   .throb-shelf-tab:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.15); }
-  .throb-shelf-tab:active { transform: scale(0.97); }
+  .throb-shelf-tab:active { transform: translateX(-50%) scale(0.97); }
   .throb-shelf-text {
     font-family: 'Sora', sans-serif; font-size: 9px;
     letter-spacing: 2px; text-transform: uppercase;
@@ -694,7 +682,7 @@ const scopedStyles = `
     background: rgba(8,9,12,0.95); backdrop-filter: blur(20px);
     border-top: 1px solid rgba(148,163,184,0.06);
     border-radius: 16px 16px 0 0;
-    padding-top: 28px; padding-bottom: 10px;
+    padding-top: 8px; padding-bottom: 10px;
     transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
     transform: translateY(0); opacity: 1;
   }
