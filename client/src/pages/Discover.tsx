@@ -375,15 +375,21 @@ export default function Discover() {
 
           {/* ======= TRANSPORT BAR (with shelf tab on top) ======= */}
           <div className="throb-transport">
-            {/* Shelf tab sits on top of transport */}
-            <div className="throb-shelf-tab" onClick={cycleStage}>
-              <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
-                <ChevronUp size={14} />
+            {/* Top controls: shelf tab + cast button */}
+            <div className="throb-transport-top">
+              <div className="throb-shelf-tab" onClick={cycleStage}>
+                <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
+                  <ChevronUp size={14} />
+                </div>
+                <span className="throb-shelf-text">
+                  {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
+                </span>
+                <div className="throb-shelf-line" />
               </div>
-              <span className="throb-shelf-text">
-                {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
-              </span>
-              <div className="throb-shelf-line" />
+              <button className="throb-cast-top" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
+                <Cast size={13} />
+                <span>TV</span>
+              </button>
             </div>
             <div className="throb-progress">
               <div className="throb-progress-fill" style={{ width: `${videoProgress}%` }} />
@@ -412,9 +418,6 @@ export default function Discover() {
               </button>
               <button className="throb-t-btn ghost" onClick={skipNext}>
                 <SkipForward size={14} fill="currentColor" />
-              </button>
-              <button className="throb-t-btn cast" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
-                <Cast size={14} />
               </button>
             </div>
           </div>
@@ -636,16 +639,30 @@ const scopedStyles = `
     width: 42px; height: 42px;
   }
   .throb-t-btn.primary:hover { background: #dc2626; }
-  .throb-t-btn.cast {
-    background: rgba(148,163,184,0.08); color: #64748b;
-    margin-left: 4px;
+  /* ---- TRANSPORT TOP (shelf tab + cast) ---- */
+  .throb-transport-top {
+    position: absolute; top: -28px; left: 0; right: 0;
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 110; pointer-events: none;
   }
-  .throb-t-btn.cast:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
+  .throb-transport-top > * { pointer-events: auto; }
+
+  .throb-cast-top {
+    position: absolute; right: 12px; bottom: 0;
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 12px;
+    background: rgba(8,9,12,0.9); backdrop-filter: blur(12px);
+    border: 1px solid rgba(148,163,184,0.08); border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    color: #64748b; font-size: 9px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer; transition: all 0.2s; user-select: none;
+  }
+  .throb-cast-top:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.15); color: #ef4444; }
 
   /* ---- SHELF TAB ---- */
   .throb-shelf-tab {
-    position: absolute; top: -28px; left: 50%;
-    transform: translateX(-50%); z-index: 110;
     display: flex; align-items: center; gap: 6px;
     padding: 5px 16px;
     background: rgba(8,9,12,0.9); backdrop-filter: blur(12px);
@@ -654,7 +671,7 @@ const scopedStyles = `
     cursor: pointer; transition: all 0.2s; user-select: none;
   }
   .throb-shelf-tab:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.15); }
-  .throb-shelf-tab:active { transform: translateX(-50%) scale(0.97); }
+  .throb-shelf-tab:active { transform: scale(0.97); }
   .throb-shelf-text {
     font-family: 'Sora', sans-serif; font-size: 9px;
     letter-spacing: 2px; text-transform: uppercase;
