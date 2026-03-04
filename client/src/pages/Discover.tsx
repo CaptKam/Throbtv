@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { Video } from "@shared/schema";
 
-const CATEGORIES = ["All", "Trending", "New", "Muscular", "Amateur", "Studio", "Solo", "Collabs", "Verified"];
+const CATEGORIES = ["All", "Amateur", "Twink", "Black", "Man", "Masturbation", "Big Cock", "Asian", "Beach", "Gay Porn", "Bareback", "Mature", "Latino", "3D"];
 
 export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");

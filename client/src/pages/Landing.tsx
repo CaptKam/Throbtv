@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Play, Sparkles, Mail, Lock, ArrowRight, ChevronRight } from "lucide-react";
@@ -16,10 +16,9 @@ export default function Landing() {
   const { toast } = useToast();
   const { login, register, isAuthenticated } = useAuth();
 
-  if (isAuthenticated) {
-    setLocation("/discover");
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) setLocation("/discover");
+  }, [isAuthenticated, setLocation]);
 
   const isLoading = login.isPending || register.isPending;
 

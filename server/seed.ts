@@ -2,71 +2,82 @@ import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { videos } from "../shared/schema";
 import { sql } from "drizzle-orm";
+import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
 
-const SOURCES = ["FapHouse", "BoyfriendTV", "Faptor", "GayHaus", "OnlyGayVideo", "XHamster"];
-const CATEGORIES = ["Trending", "New", "Muscular", "Amateur", "Studio", "Solo", "Collabs", "Verified"];
-const TAGS = ["muscle", "solo", "amateur", "jock", "outdoor", "gym", "studio", "twink", "bear", "hunk", "daddy", "college", "massage", "casting", "compilation"];
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const FEED_FILE = path.resolve(__dirname, "../attached_assets/fapcash_gay_feed.txt");
+const FEED_URL = "https://fap.cash/content/dump?camp=Test%20&ai=qAZ&forient=gay&fcats=!&fres=all&fperiod=all&furls=c1&fthumbs=ssmall&ftcnt=25&ford=dt&fembed=code&fdelim=%7C&fformat=csv&fowner=all&ftsize=small&emb=on&vid=on&url=on&thumb=on&title=on&titles=on&desc=on&cats=on&pstarts=on&sname=on&orient=on&dur=on&embdur=on&dt=on&likes=on&trailer=on&res=on";
 
-const TITLES = [
-  "Intense Gym Session with Personal Trainer",
-  "Beach House Weekend Highlights",
-  "Late Night Casting Call",
-  "Morning Stretch Routine",
-  "Pool Party After Hours",
-  "Locker Room Confidential",
-  "Campus Dorm Room Encounter",
-  "Downtown Studio Shoot",
-  "Mountain Cabin Getaway",
-  "Private Sauna Session",
-  "Rooftop Sunset Workout",
-  "Warehouse Photoshoot BTS",
-  "Hotel Suite Surprise",
-  "Boxing Gym Sparring",
-  "Lake House Summer",
-  "Barber Shop After Close",
-  "Yoga Retreat Day 3",
-  "Road Trip Pit Stop",
-  "Backstage at the Club",
-  "Firehouse Calendar Shoot",
-  "Surf Instructor Lesson",
-  "Ranch Hand Duties",
-  "Auto Shop After Hours",
-  "Penthouse City Views",
-  "Construction Site Break",
-  "Outdoor Shower Scene",
-  "Massage Therapy Session",
-  "Lifeguard Off Duty",
-  "Office After Everyone Left",
-  "Midnight Swim",
-  "Personal Training Client",
-  "Roommate Situation",
-  "First Day at the Gym",
-  "Camping Trip Highlights",
-  "Studio Apartment Scene",
-  "Delivery Driver Stops By",
-  "Moving Day Help",
-  "Neighbor Comes Over",
-  "Weekend at the Lake",
-  "Late Night Study Session",
-];
-
-function randomFrom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+function extractEmbedUrl(embedHtml: string): string {
+  const match = embedHtml.match(/src="([^"]+)"/);
+  return match ? match[1] : "";
 }
 
-function randomTags(): string[] {
-  const count = Math.floor(Math.random() * 3) + 2;
-  const shuffled = [...TAGS].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
 }
 
-function randomDuration(): { duration: string; durationSeconds: number } {
-  const mins = Math.floor(Math.random() * 25) + 5;
-  const secs = Math.floor(Math.random() * 60);
-  return {
-    duration: `${mins}:${String(secs).padStart(2, "0")}`,
-    durationSeconds: mins * 60 + secs,
-  };
+function extractDomain(url: string): string {
+  try { return new URL(url).hostname; } catch { return ""; }
+}
+
+function extractVideoId(url: string): string {
+  try {
+    const parts = new URL(url).pathname.split("/").filter(Boolean);
+    return parts[parts.length - 1] || "";
+  } catch { return ""; }
+}
+
+interface FeedRow {
+  feedId: string;
+  embedHtml: string;
+  sourceUrl: string;
+  thumbnails: string[];
+  title: string;
+  description: string;
+  categories: string[];
+  pornstars: string;
+  studio: string;
+  duration: number;
+  embedDuration: number;
+  date: string;
+  likes: number;
+  trailerUrl: string;
+  resolution: string;
+}
+
+function parseFeed(raw: string): FeedRow[] {
+  const lines = raw.split("\n").filter(l => l.trim());
+  const results: FeedRow[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.match(/^\d+\|/)) continue;
+    const p = line.split("|");
+    if (p.length < 16) continue;
+    results.push({
+      feedId: p[0],
+      embedHtml: p[1],
+      sourceUrl: p[2],
+      thumbnails: (p[3] || "").split(";").filter(Boolean),
+      title: p[4] || "Untitled",
+      description: p[5] || "",
+      categories: (p[6] || "").split(";").filter(Boolean),
+      pornstars: p[7] || "",
+      studio: p[8] || "",
+      duration: parseInt(p[9]) || 0,
+      embedDuration: parseInt(p[10]) || 0,
+      date: p[11] || "",
+      likes: parseInt(p[12]) || 0,
+      trailerUrl: p[13] || "",
+      resolution: p[14] || "",
+    });
+  }
+  return results;
 }
 
 export async function seedVideos() {
@@ -74,35 +85,77 @@ export async function seedVideos() {
   const db = drizzle(pool);
 
   const existing = await db.select({ count: sql<number>`count(*)` }).from(videos);
-  if (Number(existing[0].count) > 0) {
-    console.log(`Database already has ${existing[0].count} videos, skipping seed.`);
+  const count = Number(existing[0].count);
+
+  let raw: string | null = null;
+
+  if (fs.existsSync(FEED_FILE)) {
+    raw = fs.readFileSync(FEED_FILE, "utf-8");
+    console.log(`Found cached feed file (${raw.length} bytes)`);
+  }
+
+  if (!raw || raw.length < 100) {
+    if (count > 0) {
+      console.log(`Database has ${count} videos, no feed file found, skipping seed.`);
+      await pool.end();
+      return;
+    }
+    console.log("No feed file found and DB empty. Attempting live fetch...");
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120000);
+      const res = await fetch(FEED_URL, {
+        signal: controller.signal,
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; NOOG/1.0)" },
+      });
+      clearTimeout(timeout);
+      if (res.ok) {
+        raw = await res.text();
+        fs.mkdirSync(path.dirname(FEED_FILE), { recursive: true });
+        fs.writeFileSync(FEED_FILE, raw);
+        console.log(`Fetched and cached feed (${raw.length} bytes)`);
+      }
+    } catch (err) {
+      console.log("Feed fetch failed, skipping seed:", err);
+      await pool.end();
+      return;
+    }
+  }
+
+  if (!raw) {
     await pool.end();
     return;
   }
 
-  const rows = [];
-  for (let i = 0; i < 200; i++) {
-    const source = randomFrom(SOURCES);
-    const { duration, durationSeconds } = randomDuration();
-    const title = randomFrom(TITLES);
-    const videoId = String(100000 + i);
+  const feedVideos = parseFeed(raw);
+  console.log(`Parsed ${feedVideos.length} videos from affiliate feed`);
 
-    rows.push({
-      sourceUrl: `https://${source.toLowerCase().replace(/\s/g, "")}.com/videos/${videoId}`,
-      embedUrl: `https://${source.toLowerCase().replace(/\s/g, "")}.com/embed/${videoId}?autoplay=1&mute=1`,
-      videoIdOnSource: videoId,
-      sourceDomain: `${source.toLowerCase().replace(/\s/g, "")}.com`,
-      title: `${title} - ${source}`,
-      duration,
-      durationSeconds,
-      tags: randomTags(),
-      category: randomFrom(CATEGORIES),
-      thumbnailUrl: `https://picsum.photos/seed/${videoId}/640/360`,
-      views: Math.floor(Math.random() * 50000) + 500,
-    });
+  if (feedVideos.length === 0) {
+    console.log("No valid rows parsed from feed, skipping.");
+    await pool.end();
+    return;
   }
 
+  if (count > 0) {
+    await db.delete(videos);
+    console.log("Cleared old mock videos");
+  }
+
+  const rows = feedVideos.map((v) => ({
+    sourceUrl: v.sourceUrl,
+    embedUrl: extractEmbedUrl(v.embedHtml),
+    videoIdOnSource: extractVideoId(v.sourceUrl) || v.feedId,
+    sourceDomain: extractDomain(v.sourceUrl),
+    title: v.title,
+    duration: formatDuration(v.duration),
+    durationSeconds: v.duration,
+    tags: v.categories.length > 0 ? v.categories : ["Gay"],
+    category: v.categories[0] || "Gay",
+    thumbnailUrl: v.thumbnails[0] || "",
+    views: v.likes * 100 + Math.floor(Math.random() * 5000),
+  }));
+
   await db.insert(videos).values(rows);
-  console.log(`Seeded ${rows.length} videos`);
+  console.log(`Seeded ${rows.length} real affiliate videos from fap.cash`);
   await pool.end();
 }
