@@ -5,7 +5,7 @@ A premium dark-themed adult gay video tube platform with video discovery, queue 
 
 ## Tech Stack
 - **Frontend**: React 18 + Vite, Tailwind CSS v4, Framer Motion, TanStack Query, Wouter, shadcn/ui
-- **Backend**: Express.js, PostgreSQL, Drizzle ORM, bcrypt, express-session (connect-pg-simple)
+- **Backend**: Express.js, PostgreSQL, Drizzle ORM, bcrypt, express-session (connect-pg-simple), Resend (email)
 - **Fonts**: Outfit (display) + Inter (body)
 
 ## Architecture
@@ -44,6 +44,7 @@ A premium dark-themed adult gay video tube platform with video discovery, queue 
 - `server/storage.ts` — Drizzle-based storage implementation
 - `server/seed.ts` — Parses fap.cash CSV feed and seeds DB (100 real gay videos)
 - `server/import-feed.ts` — Standalone feed import module
+- `server/resend.ts` — Resend email client (Replit integration, never cache client)
 - `shared/schema.ts` — Drizzle schema + Zod types
 
 ## WebSocket Architecture
