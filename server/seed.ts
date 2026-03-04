@@ -134,8 +134,9 @@ export async function seedVideos() {
   }
 
   if (count > 0) {
-    await db.delete(videos);
-    console.log("Cleared old mock videos");
+    console.log(`Database already has ${count} videos, skipping seed.`);
+    await pool.end();
+    return;
   }
 
   const rows = feedVideos.map((v) => ({
