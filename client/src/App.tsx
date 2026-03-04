@@ -7,6 +7,7 @@ import Landing from "@/pages/Landing";
 import Discover from "@/pages/Discover";
 import Theater from "@/pages/Theater";
 import Remote from "@/pages/Remote";
+import Legal from "@/pages/Legal";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +17,8 @@ function Router() {
       <Route path="/discover" component={Discover} />
       <Route path="/theater" component={Theater} />
       <Route path="/remote/:sessionCode" component={Remote} />
+      <Route path="/legal/:page" component={Legal} />
+      <Route path="/legal">{() => { window.location.replace("/legal/terms"); return null; }}</Route>
       <Route component={NotFound} />
     </Switch>
   );

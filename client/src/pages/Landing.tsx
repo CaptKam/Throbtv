@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { motion } from "framer-motion";
 import { Play, Sparkles, Mail, Lock, ArrowRight, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -224,7 +224,7 @@ export default function Landing() {
               </form>
 
               <div className="mt-8 text-center text-xs text-muted-foreground">
-                By continuing, you agree to our <a href="#" className="text-white hover:underline">Terms of Service</a> and <a href="#" className="text-white hover:underline">Privacy Policy</a>.
+                By continuing, you agree to our <Link href="/legal/terms" className="text-white hover:underline">Terms of Service</Link> and <Link href="/legal/privacy" className="text-white hover:underline">Privacy Policy</Link>.
               </div>
             </div>
           </div>
