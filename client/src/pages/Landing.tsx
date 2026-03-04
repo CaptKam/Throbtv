@@ -1,53 +1,59 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Play, Sparkles, Mail, Lock, ArrowRight, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import heroBg from "@/assets/images/hero-bg.png";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Landing() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { login, register, isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    setLocation("/discover");
+    return null;
+  }
+
+  const isLoading = login.isPending || register.isPending;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate auth
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: isLogin ? "Welcome back!" : "Account created successfully",
-        description: "Redirecting to your queue...",
-      });
-      setLocation("/discover");
-    }, 1500);
+    const mutation = isLogin ? login : register;
+    mutation.mutate(
+      { email, password },
+      {
+        onSuccess: () => {
+          toast({
+            title: isLogin ? "Welcome back!" : "Account created successfully",
+            description: "Redirecting to your queue...",
+          });
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      }
+    );
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/30">
-      {/* Background with image and overlay */}
       <div className="fixed inset-0 z-0">
-        <img 
-          src={heroBg} 
-          alt="Abstract dark background" 
-          className="w-full h-full object-cover opacity-40 mix-blend-luminosity"
-        />
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background"></div>
-        
-        {/* Subtle animated glowing orbs */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] -z-10 mix-blend-screen animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-blue-900/20 rounded-full blur-[150px] -z-10 mix-blend-screen animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      {/* Navbar */}
       <nav className="relative z-10 w-full px-6 py-6 flex justify-between items-center max-w-7xl mx-auto">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-800 flex items-center justify-center shadow-lg shadow-primary/20">
@@ -55,7 +61,6 @@ export default function Landing() {
           </div>
           <span className="text-2xl font-black tracking-tight tracking-tighter">NOOG</span>
         </div>
-        
         <div className="flex gap-4">
           <Button variant="ghost" className="text-muted-foreground hover:text-foreground hidden sm:flex">
             How it works
@@ -66,10 +71,7 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="relative z-10 flex-1 flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto px-6 py-12 gap-16 lg:gap-24 w-full">
-        
-        {/* Left Column: Copy */}
         <div className="flex-1 flex flex-col items-start text-left">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -114,7 +116,6 @@ export default function Landing() {
             </Button>
           </motion.div>
 
-          {/* Social Proof / Stats */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -133,7 +134,6 @@ export default function Landing() {
           </motion.div>
         </div>
 
-        {/* Right Column: Auth Card */}
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -148,6 +148,7 @@ export default function Landing() {
                 <button 
                   onClick={() => setIsLogin(true)}
                   className={`text-lg font-semibold pb-2 transition-colors relative ${isLogin ? 'text-white' : 'text-muted-foreground hover:text-white/80'}`}
+                  data-testid="tab-login"
                 >
                   Log In
                   {isLogin && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
@@ -155,6 +156,7 @@ export default function Landing() {
                 <button 
                   onClick={() => setIsLogin(false)}
                   className={`text-lg font-semibold pb-2 transition-colors relative ${!isLogin ? 'text-white' : 'text-muted-foreground hover:text-white/80'}`}
+                  data-testid="tab-signup"
                 >
                   Sign Up
                   {!isLogin && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
@@ -174,6 +176,7 @@ export default function Landing() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10 h-12 bg-black/50 border-white/10 focus-visible:ring-primary text-white placeholder:text-muted-foreground/50 rounded-xl"
+                      data-testid="input-email"
                     />
                   </div>
                 </div>
@@ -191,10 +194,12 @@ export default function Landing() {
                       id="password" 
                       type="password" 
                       required
+                      minLength={6}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10 h-12 bg-black/50 border-white/10 focus-visible:ring-primary text-white placeholder:text-muted-foreground/50 rounded-xl"
+                      data-testid="input-password"
                     />
                   </div>
                 </div>
@@ -203,6 +208,7 @@ export default function Landing() {
                   type="submit" 
                   disabled={isLoading}
                   className="w-full h-12 mt-4 text-base font-semibold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-[0_0_20px_-5px_rgba(147,51,234,0.5)] transition-all"
+                  data-testid="button-submit"
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
