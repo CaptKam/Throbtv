@@ -2,7 +2,7 @@ import { useParams, Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const SITE_NAME = "Throb.TV";
+const SITE_NAME = "throb.tv";
 const CONTACT_EMAIL = "legal@throb.tv";
 const EFFECTIVE_DATE = "March 4, 2026";
 
@@ -317,7 +317,7 @@ export default function Legal() {
           <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground" data-testid="link-back-home">
               <ArrowLeft className="w-4 h-4" />
-              Back to Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span>
+              Back to throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>tv</span>
             </Button>
           </Link>
         </div>

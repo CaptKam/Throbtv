@@ -58,7 +58,7 @@ export default function Landing() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-red-700 flex items-center justify-center shadow-lg shadow-primary/20">
             <Play className="w-5 h-5 text-white fill-white ml-0.5" />
           </div>
-          <span className="text-2xl font-black tracking-tight tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
+          <span className="text-2xl font-black tracking-tight tracking-tighter">throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>tv</span></span>
         </div>
         <div className="flex gap-4">
           <Button variant="ghost" className="text-muted-foreground hover:text-foreground hidden sm:flex">
@@ -216,7 +216,7 @@ export default function Landing() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center w-full relative">
-                      <span>{isLogin ? <>Continue to Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></> : "Create Account"}</span>
+                      <span>{isLogin ? <>Continue to throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>tv</span></> : "Create Account"}</span>
                       <ChevronRight className="w-5 h-5 absolute right-2" />
                     </div>
                   )}
