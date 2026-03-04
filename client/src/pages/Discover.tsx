@@ -447,33 +447,39 @@ export default function Discover() {
               <div className="throb-progress-fill" style={{ width: `${videoProgress}%` }} />
             </div>
             <div className="throb-transport-inner">
-              <div className="throb-now-thumb">
-                {currentVideo?.thumbnailUrl && (
-                  <img src={currentVideo.thumbnailUrl} alt="" />
-                )}
-              </div>
-              <div className="throb-now-info">
-                <div className="throb-now-title">{currentVideo?.title || "No video selected"}</div>
-                <div className="throb-now-sub">
-                  {currentVideo
-                    ? currentVideo.embedUrl && currentVideo.durationSeconds
-                      ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · ${currentVideo.sourceDomain || ""}`
-                      : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
-                    : "Browse to find videos"}
+              <div className="throb-transport-left">
+                <div className="throb-now-thumb">
+                  {currentVideo?.thumbnailUrl && (
+                    <img src={currentVideo.thumbnailUrl} alt="" />
+                  )}
+                </div>
+                <div className="throb-now-info">
+                  <div className="throb-now-title">{currentVideo?.title || "No video selected"}</div>
+                  <div className="throb-now-sub">
+                    {currentVideo
+                      ? currentVideo.embedUrl && currentVideo.durationSeconds
+                        ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · ${currentVideo.sourceDomain || ""}`
+                        : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
+                      : "Browse to find videos"}
+                  </div>
                 </div>
               </div>
-              <button className="throb-t-btn ghost" onClick={skipPrev}>
-                <SkipBack size={14} fill="currentColor" />
-              </button>
-              <button className="throb-t-btn primary" onClick={() => setIsPlaying(!isPlaying)}>
-                {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" style={{ marginLeft: 2 }} />}
-              </button>
-              <button className="throb-t-btn ghost" onClick={skipNext}>
-                <SkipForward size={14} fill="currentColor" />
-              </button>
-              <button className="throb-t-btn cast" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
-                <Cast size={14} />
-              </button>
+              <div className="throb-transport-center">
+                <button className="throb-t-btn ghost" onClick={skipPrev}>
+                  <SkipBack size={16} fill="currentColor" />
+                </button>
+                <button className="throb-t-btn primary" onClick={() => setIsPlaying(!isPlaying)}>
+                  {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
+                </button>
+                <button className="throb-t-btn ghost" onClick={skipNext}>
+                  <SkipForward size={16} fill="currentColor" />
+                </button>
+              </div>
+              <div className="throb-transport-right">
+                <button className="throb-t-btn cast" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
+                  <Cast size={16} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -668,7 +674,19 @@ const scopedStyles = `
     background: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.7);
   }
   .throb-transport-inner {
-    padding: 10px 16px 12px; display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px 12px; display: flex; align-items: center;
+    position: relative;
+  }
+  .throb-transport-left {
+    display: flex; align-items: center; gap: 10px;
+    flex: 1; min-width: 0;
+  }
+  .throb-transport-center {
+    display: flex; align-items: center; gap: 12px;
+    position: absolute; left: 50%; transform: translateX(-50%);
+  }
+  .throb-transport-right {
+    flex: 1; display: flex; justify-content: flex-end;
   }
   .throb-now-thumb {
     width: 50px; height: 33px; border-radius: 5px;
@@ -698,7 +716,6 @@ const scopedStyles = `
   .throb-t-btn.primary:hover { background: #dc2626; }
   .throb-t-btn.cast {
     background: rgba(148,163,184,0.1); color: #94a3b8;
-    margin-left: 4px;
   }
   .throb-t-btn.cast:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
 
