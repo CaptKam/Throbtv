@@ -4,7 +4,7 @@ import { motion, Reorder, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, SkipBack, SkipForward, Search,
   ChevronUp, ChevronDown, ChevronRight, X, List,
-  GripVertical, Trash2, ListMusic, Tv, Cast, LogOut
+  GripVertical, Trash2, ListMusic, Tv, Cast, LogOut, ExternalLink
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -238,6 +238,17 @@ export default function Discover() {
               <div className="throb-vid-title">{currentVideo.title}</div>
               <div className="throb-vid-sub">
                 {currentVideo.sourceDomain} · {currentVideo.duration}
+                {currentVideo.sourceUrl && (
+                  <a
+                    href={currentVideo.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="throb-full-link"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Watch Full <ExternalLink size={11} />
+                  </a>
+                )}
               </div>
             </div>
           )}
@@ -669,6 +680,11 @@ const scopedStyles = `
     margin-top: 3px; text-shadow: 0 1px 6px rgba(0,0,0,0.8);
     transition: opacity 0.4s;
   }
+  .throb-full-link {
+    margin-left: 10px; color: rgba(255,255,255,0.35); text-decoration: none;
+    font-size: 11px; transition: color 0.2s; display: inline-flex; align-items: center; gap: 3px;
+  }
+  .throb-full-link:hover { color: rgba(255,255,255,0.8); }
 
   /* ---- CONTENT AREA ---- */
   .throb-content {
