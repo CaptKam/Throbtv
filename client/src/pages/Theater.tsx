@@ -107,7 +107,7 @@ export default function Theater() {
             onClick={() => setQuickFade(false)}
           >
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-purple-800 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-red-800 flex items-center justify-center">
                 <Play className="w-7 h-7 text-white fill-white ml-1" />
               </div>
               <span className="text-4xl font-black tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
@@ -132,7 +132,7 @@ export default function Theater() {
       {!currentVideo && (
         <div className="flex flex-col items-center justify-center gap-8 p-8 max-w-lg text-center">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-purple-800 flex items-center justify-center shadow-lg shadow-primary/30">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-red-800 flex items-center justify-center shadow-lg shadow-primary/30">
               <Play className="w-6 h-6 text-white fill-white ml-0.5" />
             </div>
             <span className="text-3xl font-black tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
@@ -151,7 +151,7 @@ export default function Theater() {
 
               {pairingUrl && !isPaired && (
                 <div className="relative group">
-                  <div className="absolute -inset-3 bg-gradient-to-r from-primary to-purple-600 rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition" />
+                  <div className="absolute -inset-3 bg-gradient-to-r from-primary to-red-600 rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition" />
                   <div className="relative bg-white p-6 rounded-2xl shadow-2xl">
                     <QRCodeSVG
                       value={pairingUrl}

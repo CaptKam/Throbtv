@@ -55,7 +55,7 @@ export default function Landing() {
 
       <nav className="relative z-10 w-full px-6 py-6 flex justify-between items-center max-w-7xl mx-auto">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-800 flex items-center justify-center shadow-lg shadow-primary/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-red-800 flex items-center justify-center shadow-lg shadow-primary/20">
             <Play className="w-5 h-5 text-white fill-white ml-0.5" />
           </div>
           <span className="text-2xl font-black tracking-tight tracking-tighter">Throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>TV</span></span>
@@ -89,7 +89,7 @@ export default function Landing() {
             className="text-5xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/60"
           >
             Curate your perfect <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">video queue.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-red-300">video queue.</span>
           </motion.h1>
           
           <motion.p 
@@ -140,7 +140,7 @@ export default function Landing() {
           className="w-full max-w-md"
         >
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-red-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
             <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
               
               <div className="flex gap-4 mb-8">

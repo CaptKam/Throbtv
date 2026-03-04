@@ -55,9 +55,15 @@ A premium dark-themed adult gay video tube platform with video discovery, queue 
 - Queue operations (`add`, `remove`, `reorder`, `clear`) update server state and broadcast to all
 - Disconnect handling: phone sets `isPaired=false` on TV disconnect; Theater resets `sessionCreated` on connection loss for auto-recovery
 
-## Design Tokens
-- Primary: deep purple `hsl(270 76% 53%)`
-- Background: near-black
+## Design Tokens (Brand V3 — Ice Monochrome + Signal Red)
+- BG: #08090c `hsl(225 20% 4%)`
+- Surface: #0e1014 `hsl(220 18% 7%)`
+- Tint: #14181e `hsl(216 20% 10%)`
+- Ice: #94a3b8 `hsl(215 20% 65%)`
+- Text: #cbd5e1 `hsl(213 27% 84%)`
+- Red (primary): #ef4444 `hsl(0 84% 60%)`
+- Logo: throb.tv (Outfit 800, lowercase, red .tv, gray period)
+- Tagline: "hands free. mind gone."
 - Color vars use raw `H S% L%` format in CSS variables (Tailwind v4)
 
 ## Video Categories (from feed)
