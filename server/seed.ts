@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 const FEED_FILE = path.resolve(process.cwd(), "attached_assets/fapcash_gay_feed.txt");
-const FEED_URL = "https://fap.cash/content/dump?camp=Test%20&ai=qAZ&forient=gay&fcats=!&fres=all&fperiod=all&furls=c1&fthumbs=ssmall&ftcnt=25&ford=dt&fembed=code&fdelim=%7C&fformat=csv&fowner=all&ftsize=small&emb=on&vid=on&url=on&thumb=on&title=on&titles=on&desc=on&cats=on&pstarts=on&sname=on&orient=on&dur=on&embdur=on&dt=on&likes=on&trailer=on&res=on";
+const FEED_URL = "https://fap.cash/content/dump?ai=qAZ&forient=gay&fcats=!.319090.319162.424137.319164.424140.424143&fres=all&fperiod=day&furls=all&fthumbs=small&ftcnt=1&ford=dt&fembed=code&fdelim=%7C&fformat=csv&fowner=all&ftsize=small&emb=on&vid=on&url=on&thumb=on&title=on&titles=on&desc=on&cats=on&pstarts=on&sname=on&orient=on&dur=on&embdur=on&dt=on&likes=on&res=on";
 
 function extractEmbedUrl(embedHtml: string): string {
   const match = embedHtml.match(/src="([^"]+)"/);
