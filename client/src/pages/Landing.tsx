@@ -27,8 +27,7 @@ export default function Landing() {
         title: isLogin ? "Welcome back!" : "Account created successfully",
         description: "Redirecting to your queue...",
       });
-      // In a real app we'd redirect to /app or /discover
-      // setLocation("/discover");
+      setLocation("/discover");
     }, 1500);
   };
 
