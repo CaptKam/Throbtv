@@ -33,6 +33,8 @@ export default function Discover() {
   const { toast } = useToast();
   const { logout } = useAuth();
   const peekRowRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoProgress, setVideoProgress] = useState(0);
 
   // Fetch videos
   const { data, isLoading } = useQuery({
@@ -119,6 +121,19 @@ export default function Discover() {
 
   const cycleStage = () => setStage(s => (s >= 3 ? 1 : s + 1) as 1 | 2 | 3);
 
+  // Video progress tracking
+  const handleTimeUpdate = useCallback(() => {
+    const vid = videoRef.current;
+    if (vid && vid.duration > 0) {
+      setVideoProgress((vid.currentTime / vid.duration) * 100);
+    }
+  }, []);
+
+  // Reset progress when video changes
+  useEffect(() => {
+    setVideoProgress(0);
+  }, [currentVideo?.id]);
+
   const formatViews = (n: number) => {
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
     if (n >= 1000) return `${Math.floor(n / 1000)}K`;
@@ -134,10 +149,12 @@ export default function Discover() {
           {currentVideo ? (
             currentVideo.trailerUrl ? (
               <video
+                ref={videoRef}
                 key={currentVideo.id}
                 src={currentVideo.trailerUrl}
                 className="throb-video-el"
                 autoPlay loop muted playsInline
+                onTimeUpdate={handleTimeUpdate}
               />
             ) : currentVideo.embedUrl ? (
               <iframe
@@ -318,21 +335,20 @@ export default function Discover() {
             </div>
           </div>
 
-          {/* ======= SHELF TAB ======= */}
-          <div className="throb-shelf-tab" onClick={cycleStage}>
-            <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
-              <ChevronUp size={14} />
-            </div>
-            <span className="throb-shelf-text">
-              {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
-            </span>
-            <div className="throb-shelf-line" />
-          </div>
-
-          {/* ======= TRANSPORT BAR ======= */}
+          {/* ======= TRANSPORT BAR (with shelf tab on top) ======= */}
           <div className="throb-transport">
+            {/* Shelf tab sits on top of transport */}
+            <div className="throb-shelf-tab" onClick={cycleStage}>
+              <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
+                <ChevronUp size={14} />
+              </div>
+              <span className="throb-shelf-text">
+                {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
+              </span>
+              <div className="throb-shelf-line" />
+            </div>
             <div className="throb-progress">
-              <div className="throb-progress-fill" />
+              <div className="throb-progress-fill" style={{ width: `${videoProgress}%` }} />
             </div>
             <div className="throb-transport-inner">
               <div className="throb-now-thumb">
@@ -538,7 +554,8 @@ const scopedStyles = `
   }
   .throb-progress { height: 3px; background: rgba(148,163,184,0.06); position: relative; }
   .throb-progress-fill {
-    height: 100%; width: 35%; background: #ef4444; position: relative;
+    height: 100%; width: 0%; background: #ef4444; position: relative;
+    transition: width 0.25s linear;
   }
   .throb-progress-fill::after {
     content: ''; position: absolute; right: -5px; top: -4px;
@@ -577,7 +594,7 @@ const scopedStyles = `
 
   /* ---- SHELF TAB ---- */
   .throb-shelf-tab {
-    position: absolute; bottom: 68px; left: 50%;
+    position: absolute; top: -28px; left: 50%;
     transform: translateX(-50%); z-index: 110;
     display: flex; align-items: center; gap: 6px;
     padding: 5px 16px;
@@ -805,8 +822,14 @@ const scopedStyles = `
     position: relative;
   }
   .throb-rail.shut {
-    width: 0; min-width: 0; opacity: 0;
-    border-left: none; overflow: hidden;
+    width: 0; min-width: 0;
+    border-left: none;
+  }
+  .throb-rail.shut .throb-rail-head,
+  .throb-rail.shut .throb-rail-now,
+  .throb-rail.shut .throb-rail-divider,
+  .throb-rail.shut .throb-rail-list {
+    opacity: 0; pointer-events: none; overflow: hidden;
   }
 
   .throb-rail-tab {
