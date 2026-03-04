@@ -1,4 +1,4 @@
-# NOOG — Adult Gay Video Platform
+# Throb.TV — Adult Gay Video Platform
 
 ## Overview
 A premium dark-themed adult gay video tube platform with video discovery, queue management, full-screen playback, and GoonLoop lean-back experience.
@@ -39,7 +39,7 @@ A premium dark-themed adult gay video tube platform with video discovery, queue 
 - `client/src/pages/Remote.tsx` — Phone remote: browse grid, search, queue management, transport controls (synced via WebSocket)
 - `client/src/hooks/use-auth.ts` — Auth hook (login/register/logout/me)
 - `client/src/hooks/use-socket.ts` — WebSocket hook for TV/phone state sync (connection, pairing, queue, playback)
-- `server/socket.ts` — Socket.IO server: NOOG-XXXX session codes, room pairing, relays player/queue events. Server is authoritative for player state (next/prev/jump/skip update session state). Uses `io.to()` broadcast for all player commands so sender stays in sync.
+- `server/socket.ts` — Socket.IO server: THROB-XXXX session codes, room pairing, relays player/queue events. Server is authoritative for player state (next/prev/jump/skip update session state). Uses `io.to()` broadcast for all player commands so sender stays in sync.
 - `server/routes.ts` — API routes (auth, videos, playlists, likes, history)
 - `server/storage.ts` — Drizzle-based storage implementation
 - `server/seed.ts` — Parses fap.cash CSV feed and seeds DB (100 real gay videos)
@@ -47,7 +47,7 @@ A premium dark-themed adult gay video tube platform with video discovery, queue 
 - `shared/schema.ts` — Drizzle schema + Zod types
 
 ## WebSocket Architecture
-- Session codes: `NOOG-XXXX` (alphanumeric), stored in-memory Map with 12h expiry
+- Session codes: `THROB-XXXX` (alphanumeric), stored in-memory Map with 12h expiry
 - Theater creates session → displays QR encoding `/remote/{code}` → phone scans and joins
 - Player commands (`play`, `pause`, `next`, `prev`, `jump`, `skip-now`, `adjust-timer`) broadcast to all room members via `io.to(code).emit()` — sender receives its own events for consistent state
 - `player:state` uses `socket.to()` (excludes sender) since TV sends timer ticks the phone needs but doesn't need echoed back

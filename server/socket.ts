@@ -17,7 +17,7 @@ const sessions = new Map<string, SessionRoom>();
 
 function generateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "NOOG-";
+  let code = "THROB-";
   for (let i = 0; i < 4; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
   }

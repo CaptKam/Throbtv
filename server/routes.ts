@@ -31,7 +31,7 @@ export async function registerRoutes(
   app.use(
     session({
       store: new PgSession({ pool: sessionPool, createTableIfMissing: true }),
-      secret: process.env.SESSION_SECRET || "noog-dev-secret-change-in-prod",
+      secret: process.env.SESSION_SECRET || "throb-dev-secret-change-in-prod",
       resave: false,
       saveUninitialized: false,
       cookie: {
