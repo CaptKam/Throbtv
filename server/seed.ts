@@ -5,16 +5,26 @@ import { sql } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 
-const FEED_FILE = path.resolve(process.cwd(), "attached_assets/fapcash_gay_feed.txt");
-const FEED_URL = "https://fap.cash/content/dump?ai=qAZ&forient=gay&fcats=!.319090.319162.424137.319164.424140.424143&fres=all&fperiod=day&furls=all&fthumbs=small&ftcnt=1&ford=dt&fembed=code&fdelim=%7C&fformat=csv&fowner=all&ftsize=small&emb=on&vid=on&url=on&thumb=on&title=on&titles=on&desc=on&cats=on&pstarts=on&sname=on&orient=on&dur=on&embdur=on&dt=on&likes=on&res=on";
+const GAY_FEED_FILE = path.resolve(process.cwd(), "attached_assets/fapcash_gay_feed.txt");
+const LONG_FEED_FILE = path.resolve(process.cwd(), "attached_assets/long_embeds_1772671578853.csv");
+
+function appendUtm(url: string): string {
+  if (!url) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}utm_content=throb.tv`;
+}
 
 function extractEmbedUrl(embedHtml: string): string {
   const match = embedHtml.match(/src="([^"]+)"/);
   if (!match) return "";
   let url = match[1];
   url = url.replace("fh.video/embed/", "faphouse.com/embed/");
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}utm_content=throb.tv`;
+  return appendUtm(url);
+}
+
+function fixEmbedDomain(url: string): string {
+  if (!url) return "";
+  return appendUtm(url.replace("fh.video/embed/", "faphouse.com/embed/"));
 }
 
 function formatDuration(seconds: number): string {
@@ -34,143 +44,157 @@ function extractVideoId(url: string): string {
   } catch { return ""; }
 }
 
-interface FeedRow {
-  feedId: string;
-  embedHtml: string;
+interface VideoRow {
   sourceUrl: string;
-  thumbnails: string[];
+  embedUrl: string;
+  videoIdOnSource: string;
+  sourceDomain: string;
   title: string;
-  description: string;
-  categories: string[];
-  pornstars: string;
-  studio: string;
-  duration: number;
-  embedDuration: number;
-  date: string;
-  likes: number;
+  duration: string;
+  durationSeconds: number;
+  tags: string[];
+  category: string;
+  thumbnailUrl: string;
   trailerUrl: string;
-  resolution: string;
+  views: number;
 }
 
-function parseFeed(raw: string): FeedRow[] {
+function parseGayFeed(raw: string): VideoRow[] {
   const lines = raw.split("\n").filter(l => l.trim());
-  const results: FeedRow[] = [];
+  const results: VideoRow[] = [];
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line.match(/^\d+\|/)) continue;
     const p = line.split("|");
-    if (p.length < 16) continue;
+    if (p.length < 14) continue;
+    const duration = parseInt(p[9]) || 0;
+    const categories = (p[6] || "").split(";").filter(Boolean);
     results.push({
-      feedId: p[0],
-      embedHtml: p[1],
-      sourceUrl: p[2],
-      thumbnails: (p[3] || "").split(";").filter(Boolean),
+      sourceUrl: appendUtm(p[2]),
+      embedUrl: extractEmbedUrl(p[1]),
+      videoIdOnSource: extractVideoId(p[2]) || p[0],
+      sourceDomain: extractDomain(p[2]),
       title: p[4] || "Untitled",
-      description: p[5] || "",
-      categories: (p[6] || "").split(";").filter(Boolean),
-      pornstars: p[7] || "",
-      studio: p[8] || "",
-      duration: parseInt(p[9]) || 0,
-      embedDuration: parseInt(p[10]) || 0,
-      date: p[11] || "",
-      likes: parseInt(p[12]) || 0,
+      duration: formatDuration(duration),
+      durationSeconds: duration,
+      tags: categories.length > 0 ? categories : ["Gay"],
+      category: categories[0] || "Gay",
+      thumbnailUrl: (p[3] || "").split(";")[0] || "",
       trailerUrl: "",
-      resolution: p[13] || "",
+      views: (parseInt(p[12]) || 0) * 100 + Math.floor(Math.random() * 5000),
     });
   }
   return results;
+}
+
+function parseLongFeed(raw: string): VideoRow[] {
+  const lines = raw.split("\n").filter(l => l.trim());
+  const results: VideoRow[] = [];
+  for (const line of lines) {
+    if (!line.match(/^\d+\|/)) continue;
+    const p = line.split("|");
+    if (p.length < 15) continue;
+    const durationSeconds = parseInt(p[12]) || 0;
+    const embedDuration = parseInt(p[15]) || 0;
+    const actualDuration = durationSeconds > 0 ? durationSeconds : embedDuration;
+    const categories = (p[7] || "").split(";").filter(Boolean);
+    const trailerUrl = (p[14] || "").trim();
+    results.push({
+      sourceUrl: appendUtm(p[3]),
+      embedUrl: fixEmbedDomain(p[2]),
+      videoIdOnSource: extractVideoId(p[3]) || p[0],
+      sourceDomain: extractDomain(p[3]),
+      title: p[4] || "Untitled",
+      duration: formatDuration(actualDuration),
+      durationSeconds: actualDuration,
+      tags: categories.length > 0 ? categories : ["Straight"],
+      category: categories[0] || "Straight",
+      thumbnailUrl: p[6] || "",
+      trailerUrl: trailerUrl.startsWith("http") ? trailerUrl : "",
+      views: (parseInt(p[13]) || 0) * 100 + Math.floor(Math.random() * 5000),
+    });
+  }
+  return results;
+}
+
+const BATCH_SIZE = 500;
+
+async function insertBatched(db: ReturnType<typeof drizzle>, rows: VideoRow[]) {
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
+    await db.insert(videos).values(batch);
+    if (rows.length > BATCH_SIZE) {
+      console.log(`  Inserted ${Math.min(i + BATCH_SIZE, rows.length)}/${rows.length}...`);
+    }
+  }
 }
 
 export async function seedVideos() {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
   const db = drizzle(pool);
 
-  // Ensure trailer_url column exists (handles first run after schema update)
   await db.execute(sql`ALTER TABLE videos ADD COLUMN IF NOT EXISTS trailer_url text`);
 
   const existing = await db.select({ count: sql<number>`count(*)` }).from(videos);
   const count = Number(existing[0].count);
 
-  let raw: string | null = null;
+  const hasGayFeed = fs.existsSync(GAY_FEED_FILE);
+  const hasLongFeed = fs.existsSync(LONG_FEED_FILE);
 
-  if (fs.existsSync(FEED_FILE)) {
-    raw = fs.readFileSync(FEED_FILE, "utf-8");
-    console.log(`Found cached feed file (${raw.length} bytes)`);
-  }
-
-  if (!raw || raw.length < 100) {
+  if (!hasGayFeed && !hasLongFeed) {
     if (count > 0) {
-      console.log(`Database has ${count} videos, no feed file found, skipping seed.`);
-      await pool.end();
-      return;
-    }
-    console.log("No feed file found and DB empty. Attempting live fetch...");
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 120000);
-      const res = await fetch(FEED_URL, {
-        signal: controller.signal,
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; Throb.TV/1.0)" },
-      });
-      clearTimeout(timeout);
-      if (res.ok) {
-        raw = await res.text();
-        fs.mkdirSync(path.dirname(FEED_FILE), { recursive: true });
-        fs.writeFileSync(FEED_FILE, raw);
-        console.log(`Fetched and cached feed (${raw.length} bytes)`);
-      }
-    } catch (err) {
-      console.log("Feed fetch failed, skipping seed:", err);
-      await pool.end();
-      return;
-    }
-  }
-
-  if (!raw) {
-    await pool.end();
-    return;
-  }
-
-  const feedVideos = parseFeed(raw);
-  console.log(`Parsed ${feedVideos.length} videos from affiliate feed`);
-
-  if (feedVideos.length === 0) {
-    console.log("No valid rows parsed from feed, skipping.");
-    await pool.end();
-    return;
-  }
-
-  if (count > 0) {
-    const [sample] = await db.select({ trailerUrl: videos.trailerUrl }).from(videos).limit(1);
-    if (sample?.trailerUrl && count >= feedVideos.length) {
-      console.log(`Database already has ${count} videos (feed has ${feedVideos.length}), skipping seed.`);
-      await pool.end();
-      return;
-    }
-    if (!sample?.trailerUrl) {
-      console.log("Re-seeding to add trailer URLs to existing videos...");
+      console.log(`Database has ${count} videos, no feed files found, skipping seed.`);
     } else {
-      console.log(`Database has ${count} videos but feed has ${feedVideos.length}. Re-seeding to sync...`);
+      console.log("No feed files found and DB empty.");
     }
-    await db.delete(videos);
+    await pool.end();
+    return;
   }
 
-  const rows = feedVideos.map((v) => ({
-    sourceUrl: v.sourceUrl + (v.sourceUrl.includes("?") ? "&" : "?") + "utm_content=throb.tv",
-    embedUrl: extractEmbedUrl(v.embedHtml),
-    videoIdOnSource: extractVideoId(v.sourceUrl) || v.feedId,
-    sourceDomain: extractDomain(v.sourceUrl),
-    title: v.title,
-    duration: formatDuration(v.duration),
-    durationSeconds: v.duration,
-    tags: v.categories.length > 0 ? v.categories : ["Gay"],
-    category: v.categories[0] || "Gay",
-    thumbnailUrl: v.thumbnails[0] || "",
-    trailerUrl: v.trailerUrl || "",
-    views: v.likes * 100 + Math.floor(Math.random() * 5000),
-  }));
+  let gayRows: VideoRow[] = [];
+  let longRows: VideoRow[] = [];
 
-  await db.insert(videos).values(rows);
-  console.log(`Seeded ${rows.length} real affiliate videos from fap.cash`);
+  if (hasGayFeed) {
+    const raw = fs.readFileSync(GAY_FEED_FILE, "utf-8");
+    console.log(`Found gay feed file (${raw.length} bytes)`);
+    gayRows = parseGayFeed(raw);
+    console.log(`Parsed ${gayRows.length} gay videos`);
+  }
+
+  if (hasLongFeed) {
+    const raw = fs.readFileSync(LONG_FEED_FILE, "utf-8");
+    console.log(`Found long feed file (${raw.length} bytes)`);
+    longRows = parseLongFeed(raw);
+    console.log(`Parsed ${longRows.length} straight/mixed videos`);
+  }
+
+  const totalFeed = gayRows.length + longRows.length;
+
+  if (totalFeed === 0) {
+    console.log("No valid rows parsed from feeds, skipping.");
+    await pool.end();
+    return;
+  }
+
+  if (count >= totalFeed) {
+    console.log(`Database already has ${count} videos (feeds have ${totalFeed}), skipping seed.`);
+    await pool.end();
+    return;
+  }
+
+  console.log(`Database has ${count} videos, feeds have ${totalFeed}. Re-seeding...`);
+  await db.delete(videos);
+
+  if (gayRows.length > 0) {
+    console.log(`Inserting ${gayRows.length} gay videos...`);
+    await insertBatched(db, gayRows);
+  }
+
+  if (longRows.length > 0) {
+    console.log(`Inserting ${longRows.length} straight/mixed videos...`);
+    await insertBatched(db, longRows);
+  }
+
+  console.log(`Seeded ${totalFeed} total videos from fap.cash feeds`);
   await pool.end();
 }

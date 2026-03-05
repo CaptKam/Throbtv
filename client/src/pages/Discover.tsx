@@ -416,8 +416,25 @@ export default function Discover() {
             <div className="throb-peek-row" ref={peekRowRef}>
               {videos.slice(0, 20).map((v) => (
                 <div key={v.id} className="throb-pk-card" onClick={() => playNow(v)}>
-                  <div className="throb-pk-thumb">
+                  <div className="throb-pk-thumb"
+                    onMouseEnter={(e) => {
+                      const vid = e.currentTarget.querySelector('video');
+                      if (vid) { vid.style.opacity = '1'; vid.play().catch(() => {}); }
+                    }}
+                    onMouseLeave={(e) => {
+                      const vid = e.currentTarget.querySelector('video');
+                      if (vid) { vid.style.opacity = '0'; vid.pause(); vid.currentTime = 0; }
+                    }}
+                  >
                     <img src={v.thumbnailUrl || ""} alt={v.title} loading="lazy" />
+                    {v.trailerUrl && v.trailerUrl.startsWith("http") && (
+                      <video
+                        src={v.trailerUrl}
+                        className="throb-trailer-preview"
+                        muted loop playsInline preload="none"
+                        style={{ opacity: 0 }}
+                      />
+                    )}
                     <span className="throb-dur">{v.duration}</span>
                     <span className="throb-src">{v.sourceDomain?.replace(".com", "")}</span>
                     <div className="throb-play-overlay"><Play size={24} fill="currentColor" /></div>
