@@ -153,7 +153,6 @@ export default function Discover() {
   const { toast } = useToast();
   const { logout } = useAuth();
   const peekRowRef = useRef<HTMLDivElement>(null);
-  const [videoProgress, setVideoProgress] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [mouseIdle, setMouseIdle] = useState(false);
@@ -233,7 +232,6 @@ export default function Discover() {
     });
     setIsPlaying(true);
     setElapsedSeconds(0);
-    setVideoProgress(0);
     setStage(1);
   }, []);
 
@@ -268,7 +266,6 @@ export default function Discover() {
         });
         setIsPlaying(true);
         setElapsedSeconds(0);
-        setVideoProgress(0);
         return q.slice(1);
       }
       return q;
@@ -284,12 +281,10 @@ export default function Discover() {
         });
         setIsPlaying(true);
         setElapsedSeconds(0);
-        setVideoProgress(0);
         return h.slice(1);
       }
       setCurrentVideo(prev => prev ? { ...prev } : prev);
       setElapsedSeconds(0);
-      setVideoProgress(0);
       return h;
     });
   }, []);
@@ -356,7 +351,6 @@ export default function Discover() {
       timerRef.current = setInterval(() => {
         setElapsedSeconds(prev => {
           const next = prev + 1;
-          setVideoProgress(Math.min((next / effectiveDuration) * 100, 100));
           if (next >= effectiveDuration) {
             skipNextRef.current();
           }
@@ -573,9 +567,6 @@ export default function Discover() {
 
         {/* ======= TRANSPORT BAR ======= */}
         <div className="throb-transport">
-          <div className="throb-progress">
-            <div className="throb-progress-fill" style={{ width: `${videoProgress}%` }} />
-          </div>
           <div className="throb-transport-inner">
             <div className="throb-transport-left">
               <div className="throb-now-thumb">
@@ -587,9 +578,7 @@ export default function Discover() {
                 <div className="throb-now-title">{currentVideo?.title || "No video selected"}</div>
                 <div className="throb-now-sub">
                   {currentVideo
-                    ? currentVideo.embedUrl && currentVideo.durationSeconds
-                      ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · Use player controls`
-                      : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
+                    ? `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
                     : "Browse to find videos"}
                 </div>
               </div>
@@ -601,7 +590,7 @@ export default function Discover() {
               <button
                 className="throb-t-btn primary"
                 onClick={() => setIsPlaying(!isPlaying)}
-                title={currentVideo?.embedUrl ? (isPlaying ? "Pause timer (video plays independently)" : "Resume timer") : undefined}
+                title={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
               </button>
