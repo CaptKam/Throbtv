@@ -677,14 +677,24 @@
 /* ---- PAUSED OVERLAY ---- */
 .throb-paused-overlay {
   position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px;
   background: rgba(0,0,0,0.4);
   color: rgba(255,255,255,0.8); cursor: pointer;
   transition: background 0.3s;
+  -webkit-tap-highlight-color: transparent;
 }
 .throb-paused-overlay:hover {
   background: rgba(0,0,0,0.3);
   color: #fff;
+}
+.throb-paused-hint {
+  font-size: 13px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; opacity: 0.6;
+  display: none;
+}
+@media (max-width: 768px) {
+  .throb-paused-hint { display: block; }
 }
 
 /* ---- RESPONSIVE ---- */
@@ -693,9 +703,46 @@
   .throb-rail-tab { display: none; }
   .throb-mobile-queue-btn { display: flex; }
   .throb-mobile-queue { display: flex; }
-  .throb-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 8px;
-  }
   .throb-thumb-hover { display: none; }
+
+  /* Touch targets — 44px minimum per Apple HIG */
+  .throb-topbar-btn { width: 44px; height: 44px; }
+  .throb-t-btn { width: 44px; height: 44px; }
+  .throb-t-btn.primary { width: 52px; height: 52px; }
+  .throb-close-btn { width: 44px; height: 44px; }
+  .throb-cat { padding: 10px 16px; font-size: 13px; }
+  .throb-card-btn { padding: 10px 0; font-size: 12px; }
+  .throb-pk-btn { padding: 10px 0; font-size: 11px; }
+  .throb-page-btn { padding: 12px 24px; }
+  .throb-shelf-tab { padding: 12px 24px; }
+  .throb-rq-remove { width: 44px; height: 44px; opacity: 1; }
+  .throb-play-overlay { width: 48px; height: 48px; opacity: 0.9; }
+
+  /* Mobile grid — 2-column with bigger cards */
+  .throb-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  /* Peek cards slightly wider on mobile */
+  .throb-pk-card { width: 150px; }
+  .throb-pk-thumb { width: 150px; }
+
+  /* Transport bar — more padding for thumb reach */
+  .throb-transport-inner { padding: 12px 12px 14px; }
+  .throb-now-info { display: none; }
+  .throb-transport-center { position: static; transform: none; }
+  .throb-transport-left { flex: 0; }
+
+  /* Full browse top — less top padding on mobile */
+  .throb-full-top { padding-top: 16px; }
+
+  /* Swipe hint on shelf tab */
+  .throb-shelf-tab::after {
+    content: 'swipe up';
+    font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+    color: rgba(148,163,184,0.3);
+    position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+    white-space: nowrap; pointer-events: none;
+  }
 }
