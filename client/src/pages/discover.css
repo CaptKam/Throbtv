@@ -13,14 +13,14 @@
 .throb-video-layer {
   position: fixed; inset: 0; z-index: 0;
   background: #000;
-  transition: filter 0.5s ease;
+  transition: filter 0.8s ease;
   will-change: filter;
 }
 .throb-video-layer.dim-1 { filter: brightness(0.82); }
 .throb-video-layer.dim-2 { filter: brightness(0.2) blur(6px); }
 
 .throb-video-el {
-  width: 100%; height: 100%;
+  width: 100%; height: calc(100% - 68px);
   object-fit: contain;
 }
 .throb-video-fallback {
@@ -56,19 +56,19 @@
 
 .throb-vid-info {
   position: absolute; top: 16px; left: 16px; z-index: 1;
-  transition: opacity 0.4s;
+  transition: opacity 0.7s;
   pointer-events: auto;
 }
 .throb-vid-title {
   font-size: 16px; font-weight: 700;
   color: rgba(255,255,255,0.85);
   text-shadow: 0 2px 12px rgba(0,0,0,0.9);
-  transition: opacity 0.4s;
+  transition: opacity 0.7s;
 }
 .throb-vid-sub {
   font-size: 12px; color: rgba(255,255,255,0.5);
   margin-top: 3px; text-shadow: 0 1px 6px rgba(0,0,0,0.8);
-  transition: opacity 0.4s;
+  transition: opacity 0.7s;
 }
 .throb-full-link {
   margin-left: 10px; color: rgba(255,255,255,0.35); text-decoration: none;
@@ -195,7 +195,7 @@
 /* ---- PEEK WRAPPER (tab + shelf move together) ---- */
 .throb-peek-wrapper {
   position: absolute; bottom: 68px; left: 0; right: 0; z-index: 90;
-  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
   transform: translateY(0); opacity: 1;
   pointer-events: none;
 }
@@ -204,11 +204,11 @@
 
 /* ---- PEEK SHELF (Stage 2) ---- */
 .throb-peek {
-  background: rgba(8,9,12,0.95); backdrop-filter: blur(20px);
+  background: rgba(8,9,12,0.98);
   border-top: 1px solid rgba(148,163,184,0.06);
   border-radius: 16px 16px 0 0;
   padding-top: 28px; padding-bottom: 10px;
-  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
   transform: translateY(0); opacity: 1;
 }
 .throb-peek.hidden {
@@ -259,21 +259,19 @@
 
 /* ---- PEEK ROW ---- */
 .throb-peek-row {
-  display: flex; gap: 10px; padding: 0 16px;
-  overflow-x: auto; scroll-snap-type: x mandatory;
-  scrollbar-width: none;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 10px; padding: 0 16px;
 }
-.throb-peek-row::-webkit-scrollbar { display: none; }
 .throb-pk-card {
-  flex-shrink: 0; width: 172px; scroll-snap-align: start;
-  cursor: pointer; transition: transform 0.2s;
+  min-width: 0;
+  cursor: pointer; transition: transform 0.3s;
 }
 .throb-pk-card:hover { transform: scale(1.04); }
 .throb-pk-thumb {
-  width: 172px; aspect-ratio: 16/9; border-radius: 8px;
+  width: 100%; aspect-ratio: 1/1; border-radius: 8px;
   overflow: hidden; position: relative; background: #111;
 }
-.throb-pk-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.throb-pk-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .throb-pk-thumb .throb-trailer-preview {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; transition: opacity 0.3s; z-index: 1;
@@ -286,11 +284,11 @@
 
 /* ---- FULL BROWSE (Stage 3) ---- */
 .throb-full {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 68px;
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   z-index: 80;
-  background: rgba(8,9,12,0.94); backdrop-filter: blur(20px);
+  background: #08090c;
   display: flex; flex-direction: column; overflow: hidden;
-  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
 }
 .throb-full.hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
 .throb-full-top {
@@ -318,16 +316,16 @@
 /* ---- VIDEO GRID ---- */
 .throb-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
 }
-.throb-card { cursor: pointer; transition: transform 0.15s; }
+.throb-card { cursor: pointer; transition: transform 0.3s; }
 .throb-card:hover { transform: scale(1.03); }
 .throb-thumb {
-  aspect-ratio: 16/9; border-radius: 8px;
+  aspect-ratio: 1/1; border-radius: 8px;
   overflow: hidden; position: relative; background: #111;
 }
-.throb-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.throb-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s; }
 .throb-card:hover .throb-thumb img { transform: scale(1.05); }
 .throb-thumb .throb-trailer-preview {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -357,16 +355,20 @@
   -webkit-box-orient: vertical; overflow: hidden;
 }
 .throb-card-meta { font-size: 11px; color: #8892a4; margin-top: 2px; }
-.throb-card-actions { display: flex; gap: 5px; margin-top: 6px; }
-.throb-card-btn {
-  flex: 1; padding: 6px 0; border-radius: 7px;
-  border: 1px solid rgba(148,163,184,0.12);
-  background: rgba(148,163,184,0.06);
-  color: #cbd5e1; font-size: 11px; font-weight: 600;
-  cursor: pointer; transition: all 0.3s;
-  font-family: 'Outfit', sans-serif;
+.throb-add-btn {
+  position: absolute; top: 6px; right: 6px; z-index: 5;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none;
+  background: rgba(34,197,94,0.9);
+  color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; opacity: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
-.throb-card-btn:hover { background: rgba(148,163,184,0.1); color: #f1f5f9; }
+.throb-card:hover .throb-add-btn,
+.throb-pk-card:hover .throb-add-btn { opacity: 1; }
+.throb-add-btn:hover { background: rgba(34,197,94,1); transform: scale(1.15); }
+.throb-add-btn:active { transform: scale(0.9); }
 
 /* ---- PAGINATION ---- */
 .throb-pagination {
@@ -407,7 +409,7 @@
   background: rgba(10,11,15,0.95); backdrop-filter: blur(12px);
   display: flex; flex-direction: column;
   z-index: 20; flex-shrink: 0;
-  transition: width 0.35s cubic-bezier(0.4,0,0.2,1), min-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1), min-width 0.6s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease;
   position: relative;
 }
 .throb-rail.shut {
@@ -566,21 +568,6 @@
 .throb-rq:hover .throb-rq-remove { opacity: 1; }
 .throb-rq-remove:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
 
-/* ---- PEEK CARD ACTIONS ---- */
-.throb-pk-actions {
-  display: flex; gap: 4px; margin-top: 4px;
-}
-.throb-pk-btn {
-  flex: 1; padding: 5px 0; border-radius: 6px;
-  border: 1px solid rgba(148,163,184,0.12);
-  background: rgba(148,163,184,0.06);
-  color: #cbd5e1; font-size: 10px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s;
-  font-family: 'Outfit', sans-serif;
-  display: flex; align-items: center; justify-content: center; gap: 3px;
-}
-.throb-pk-btn:hover { background: rgba(148,163,184,0.12); color: #f1f5f9; }
-.throb-pk-btn:active { transform: scale(0.95); background: rgba(239,68,68,0.15); color: #ef4444; }
 
 /* ---- PLAY OVERLAY (visible on mobile, hover on desktop) ---- */
 .throb-play-overlay {
@@ -647,7 +634,6 @@
 /* ---- TOUCH ACTIVE STATES ---- */
 .throb-card:active { transform: scale(0.97); }
 .throb-pk-card:active { transform: scale(0.96); }
-.throb-card-btn:active { transform: scale(0.93); background: rgba(239,68,68,0.12); color: #ef4444; }
 .throb-t-btn:active { transform: scale(0.9); }
 .throb-topbar-btn:active { transform: scale(0.9); }
 .throb-cat:active { transform: scale(0.95); }
@@ -661,11 +647,11 @@
 .throb-app.mouse-idle .throb-topbar { opacity: 0.2; }
 .throb-app.mouse-idle .throb-vid-info { opacity: 0.3; }
 .throb-app.mouse-idle .throb-rail-tab { opacity: 0.3; }
-.throb-transport { transition: opacity 0.6s ease, transform 0.5s ease; }
-.throb-shelf-tab { transition: all 0.3s, opacity 0.6s ease, transform 0.5s ease; }
-.throb-topbar { transition: opacity 0.6s ease, transform 0.5s ease; }
-.throb-vid-info { transition: opacity 0.6s ease, transform 0.5s ease; }
-.throb-rail-tab { transition: all 0.3s, opacity 0.6s ease, transform 0.5s ease; }
+.throb-transport { transition: opacity 1s ease, transform 0.8s ease; }
+.throb-shelf-tab { transition: all 0.5s, opacity 1s ease, transform 0.8s ease; }
+.throb-topbar { transition: opacity 1s ease, transform 0.8s ease; }
+.throb-vid-info { transition: opacity 1s ease, transform 0.8s ease; }
+.throb-rail-tab { transition: all 0.5s, opacity 1s ease, transform 0.8s ease; }
 
 /* ---- UI HIDDEN (15s idle) ---- */
 .throb-app.ui-hidden .throb-transport { opacity: 0; transform: translateY(100%); pointer-events: none; }
@@ -711,22 +697,19 @@
   .throb-t-btn.primary { width: 52px; height: 52px; }
   .throb-close-btn { width: 44px; height: 44px; }
   .throb-cat { padding: 10px 16px; font-size: 13px; }
-  .throb-card-btn { padding: 10px 0; font-size: 12px; }
-  .throb-pk-btn { padding: 10px 0; font-size: 11px; }
+  .throb-add-btn { opacity: 1; }
   .throb-page-btn { padding: 12px 24px; }
   .throb-shelf-tab { padding: 12px 24px; }
   .throb-rq-remove { width: 44px; height: 44px; opacity: 1; }
   .throb-play-overlay { width: 48px; height: 48px; opacity: 0.9; }
 
-  /* Mobile grid — 2-column with bigger cards */
   .throb-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
 
-  /* Peek cards slightly wider on mobile */
-  .throb-pk-card { width: 150px; }
-  .throb-pk-thumb { width: 150px; }
+  .throb-peek-row { grid-template-columns: repeat(2, 1fr); }
+  .throb-pk-thumb { width: 100%; }
 
   /* Transport bar — more padding for thumb reach */
   .throb-transport-inner { padding: 12px 12px 14px; }
@@ -736,14 +719,6 @@
 
   /* Full browse top — less top padding on mobile */
   .throb-full-top { padding-top: 16px; }
-
-  /* Mobile Stage 1: video layer is interactive, no pointer-events-none needed */
-  .throb-video-layer { z-index: 0; pointer-events: auto; }
-  .throb-video-el {
-    /* Ensure iframe is tappable on mobile */
-    pointer-events: auto;
-    -webkit-overflow-scrolling: touch;
-  }
 
   /* Swipe hint on shelf tab */
   .throb-shelf-tab::after {

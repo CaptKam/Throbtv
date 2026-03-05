@@ -49,7 +49,7 @@ export interface IStorage {
   getVideos(params: { limit?: number; offset?: number; search?: string; category?: string; tags?: string[]; orientation?: string }): Promise<Video[]>;
   getVideoById(id: string): Promise<Video | undefined>;
   createVideo(video: InsertVideo): Promise<Video>;
-  getVideoCount(params?: { search?: string; category?: string; tags?: string[]; orientation?: string }): Promise<number>;
+  getVideoCount(params?: { search?: string; category?: string; tags?: string[]; orientation?: string; minDuration?: number }): Promise<number>;
 
   // Tags
   getTagBySlug(slug: string): Promise<Tag | undefined>;
@@ -100,16 +100,15 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getVideos(params: { limit?: number; offset?: number; search?: string; category?: string; tags?: string[]; orientation?: string } = {}): Promise<Video[]> {
-    const { limit = 24, offset = 0, search, category, tags: tagSlugs, orientation } = params;
+  async getVideos(params: { limit?: number; offset?: number; search?: string; category?: string; tags?: string[]; orientation?: string; minDuration?: number } = {}): Promise<Video[]> {
+    const { limit = 24, offset = 0, search, category, tags: tagSlugs, orientation, minDuration } = params;
 
-    const cacheKey = `v:${limit}:${offset}:${search || ""}:${category || ""}:${(tagSlugs || []).join(",")}:${orientation || ""}`;
+    const cacheKey = `v:${limit}:${offset}:${search || ""}:${category || ""}:${(tagSlugs || []).join(",")}:${orientation || ""}:${minDuration || ""}`;
     const cached = getCached<Video[]>(cacheKey);
     if (cached) return cached;
 
-    // If multi-tag filtering is requested, use raw SQL for the intersection query
     if (tagSlugs && tagSlugs.length > 0) {
-      const result = await this.getVideosByTags(tagSlugs, { limit, offset, search, category, orientation });
+      const result = await this.getVideosByTags(tagSlugs, { limit, offset, search, category, orientation, minDuration });
       setCache(cacheKey, result);
       return result;
     }
@@ -118,7 +117,6 @@ export class DatabaseStorage implements IStorage {
 
     const conditions = [];
     if (search) {
-      // Use PostgreSQL full-text search with fallback to ilike
       conditions.push(sql`(
         to_tsvector('english', ${videos.title}) @@ plainto_tsquery('english', ${search})
         OR ${ilike(videos.title, `%${search}%`)}
@@ -130,12 +128,15 @@ export class DatabaseStorage implements IStorage {
     if (orientation) {
       conditions.push(eq(videos.orientation, orientation));
     }
+    if (minDuration && minDuration > 0) {
+      conditions.push(sql`${videos.durationSeconds} >= ${minDuration}`);
+    }
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions)) as any;
     }
 
-    const result = await query.orderBy(desc(videos.createdAt)).limit(limit).offset(offset);
+    const result = await query.orderBy(desc(videos.views), desc(videos.createdAt)).limit(limit).offset(offset);
     setCache(cacheKey, result);
     return result;
   }
@@ -146,7 +147,7 @@ export class DatabaseStorage implements IStorage {
    */
   private async getVideosByTags(
     tagSlugs: string[],
-    opts: { limit: number; offset: number; search?: string; category?: string; orientation?: string }
+    opts: { limit: number; offset: number; search?: string; category?: string; orientation?: string; minDuration?: number }
   ): Promise<Video[]> {
     const tagCount = tagSlugs.length;
     const searchCondition = opts.search
@@ -158,6 +159,9 @@ export class DatabaseStorage implements IStorage {
     const orientationCondition = opts.orientation
       ? sql`AND v.orientation = ${opts.orientation}`
       : sql``;
+    const minDurationCondition = opts.minDuration && opts.minDuration > 0
+      ? sql`AND v.duration_seconds >= ${opts.minDuration}`
+      : sql``;
 
     const rows = await db.execute(sql`
       SELECT v.* FROM videos v
@@ -167,9 +171,10 @@ export class DatabaseStorage implements IStorage {
       ${searchCondition}
       ${categoryCondition}
       ${orientationCondition}
+      ${minDurationCondition}
       GROUP BY v.id
       HAVING COUNT(DISTINCT t.id) = ${tagCount}
-      ORDER BY v.created_at DESC
+      ORDER BY v.views DESC, v.created_at DESC
       LIMIT ${opts.limit} OFFSET ${opts.offset}
     `);
 
@@ -186,12 +191,11 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getVideoCount(params?: { search?: string; category?: string; tags?: string[]; orientation?: string }): Promise<number> {
-    const cacheKey = `vc:${params?.search || ""}:${params?.category || ""}:${(params?.tags || []).join(",")}:${params?.orientation || ""}`;
+  async getVideoCount(params?: { search?: string; category?: string; tags?: string[]; orientation?: string; minDuration?: number }): Promise<number> {
+    const cacheKey = `vc:${params?.search || ""}:${params?.category || ""}:${(params?.tags || []).join(",")}:${params?.orientation || ""}:${params?.minDuration || ""}`;
     const cached = getCached<number>(cacheKey);
     if (cached !== undefined) return cached;
 
-    // Multi-tag count
     if (params?.tags && params.tags.length > 0) {
       const tagCount = params.tags.length;
       const searchCondition = params.search
@@ -203,6 +207,9 @@ export class DatabaseStorage implements IStorage {
       const orientationCondition = params.orientation
         ? sql`AND v.orientation = ${params.orientation}`
         : sql``;
+      const minDurationCondition = params.minDuration && params.minDuration > 0
+        ? sql`AND v.duration_seconds >= ${params.minDuration}`
+        : sql``;
 
       const result = await db.execute(sql`
         SELECT COUNT(*) as count FROM (
@@ -213,6 +220,7 @@ export class DatabaseStorage implements IStorage {
           ${searchCondition}
           ${categoryCondition}
           ${orientationCondition}
+          ${minDurationCondition}
           GROUP BY v.id
           HAVING COUNT(DISTINCT t.id) = ${tagCount}
         ) sub
@@ -234,6 +242,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (params?.orientation) {
       conditions.push(eq(videos.orientation, params.orientation));
+    }
+    if (params?.minDuration && params.minDuration > 0) {
+      conditions.push(sql`${videos.durationSeconds} >= ${params.minDuration}`);
     }
 
     let query = db.select({ count: sql<number>`count(*)` }).from(videos);
