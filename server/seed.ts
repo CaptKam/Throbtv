@@ -5,36 +5,28 @@ import { sql } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 
-const GAY_FEED_FILE = path.resolve(process.cwd(), "attached_assets/fapcash_gay_feed.txt");
-const LONG_FEED_FILE = path.resolve(process.cwd(), "attached_assets/long_embeds_1772671578853.csv");
+const FEED_EXCLUDE = path.resolve(process.cwd(), "attached_assets/gay_feed_exclude_cats.txt");
+const FEED_INCLUDE = path.resolve(process.cwd(), "attached_assets/gay_feed_include_cats.txt");
 
-function appendUtm(url: string): string {
-  if (!url) return url;
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}utm_content=throb.tv`;
-}
-
-function extractEmbedUrl(embedHtml: string): string {
-  const match = embedHtml.match(/src="([^"]+)"/);
-  if (!match) return "";
-  let url = match[1];
-  url = url.replace("fh.video/embed/", "faphouse.com/embed/");
-  return appendUtm(url);
-}
+const EXPECTED_TOTAL = 139736;
 
 function fixEmbedDomain(url: string): string {
   if (!url) return "";
-  return appendUtm(url.replace("fh.video/embed/", "faphouse.com/embed/"));
+  let fixed = url.replace("fh.video/embed/", "faphouse.com/embed/");
+  if (!fixed.includes("utm_content=throb.tv")) {
+    const sep = fixed.includes("?") ? "&" : "?";
+    fixed = `${fixed}${sep}utm_content=throb.tv`;
+  }
+  return fixed;
 }
 
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${String(secs).padStart(2, "0")}`;
-}
-
-function extractDomain(url: string): string {
-  try { return new URL(url).hostname; } catch { return ""; }
+function appendUtm(url: string): string {
+  if (!url) return url;
+  if (!url.includes("utm_content=throb.tv")) {
+    const sep = url.includes("?") ? "&" : "?";
+    return `${url}${sep}utm_content=throb.tv`;
+  }
+  return url;
 }
 
 function extractVideoId(url: string): string {
@@ -42,6 +34,16 @@ function extractVideoId(url: string): string {
     const parts = new URL(url).pathname.split("/").filter(Boolean);
     return parts[parts.length - 1] || "";
   } catch { return ""; }
+}
+
+function extractDomain(url: string): string {
+  try { return new URL(url).hostname; } catch { return ""; }
+}
+
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
 }
 
 interface VideoRow {
@@ -59,62 +61,37 @@ interface VideoRow {
   views: number;
 }
 
-function parseGayFeed(raw: string): VideoRow[] {
+function parseLinkFeed(raw: string): VideoRow[] {
   const lines = raw.split("\n").filter(l => l.trim());
-  const results: VideoRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.match(/^\d+\|/)) continue;
+  const rows: VideoRow[] = [];
+  for (const line of lines) {
+    if (line.startsWith("#")) continue;
     const p = line.split("|");
-    if (p.length < 14) continue;
-    const duration = parseInt(p[9]) || 0;
-    const categories = (p[6] || "").split(";").filter(Boolean);
-    results.push({
-      sourceUrl: appendUtm(p[2]),
-      embedUrl: extractEmbedUrl(p[1]),
-      videoIdOnSource: extractVideoId(p[2]) || p[0],
-      sourceDomain: extractDomain(p[2]),
-      title: p[4] || "Untitled",
-      duration: formatDuration(duration),
-      durationSeconds: duration,
+    if (p.length < 6) continue;
+    const embedUrl = p[0];
+    const sourceUrl = p[1];
+    const thumbnailUrl = p[2] || "";
+    const title = p[3] || "Untitled";
+    const categories = (p[4] || "").split(";").filter(Boolean);
+    const durationSeconds = parseInt(p[5]) || 0;
+    const videoId = extractVideoId(sourceUrl) || extractVideoId(embedUrl);
+    if (!videoId) continue;
+    rows.push({
+      sourceUrl: appendUtm(sourceUrl),
+      embedUrl: fixEmbedDomain(embedUrl),
+      videoIdOnSource: videoId,
+      sourceDomain: extractDomain(sourceUrl),
+      title,
+      duration: formatDuration(durationSeconds),
+      durationSeconds,
       tags: categories.length > 0 ? categories : ["Gay"],
       category: categories[0] || "Gay",
-      thumbnailUrl: (p[3] || "").split(";")[0] || "",
+      thumbnailUrl,
       trailerUrl: "",
-      views: (parseInt(p[12]) || 0) * 100 + Math.floor(Math.random() * 5000),
+      views: Math.floor(Math.random() * 5000) + 100,
     });
   }
-  return results;
-}
-
-function parseLongFeed(raw: string): VideoRow[] {
-  const lines = raw.split("\n").filter(l => l.trim());
-  const results: VideoRow[] = [];
-  for (const line of lines) {
-    if (!line.match(/^\d+\|/)) continue;
-    const p = line.split("|");
-    if (p.length < 15) continue;
-    const durationSeconds = parseInt(p[12]) || 0;
-    const embedDuration = parseInt(p[15]) || 0;
-    const actualDuration = durationSeconds > 0 ? durationSeconds : embedDuration;
-    const categories = (p[7] || "").split(";").filter(Boolean);
-    const trailerUrl = (p[14] || "").trim();
-    results.push({
-      sourceUrl: appendUtm(p[3]),
-      embedUrl: fixEmbedDomain(p[2]),
-      videoIdOnSource: extractVideoId(p[3]) || p[0],
-      sourceDomain: extractDomain(p[3]),
-      title: p[4] || "Untitled",
-      duration: formatDuration(actualDuration),
-      durationSeconds: actualDuration,
-      tags: categories.length > 0 ? categories : ["Straight"],
-      category: categories[0] || "Straight",
-      thumbnailUrl: p[6] || "",
-      trailerUrl: trailerUrl.startsWith("http") ? trailerUrl : "",
-      views: (parseInt(p[13]) || 0) * 100 + Math.floor(Math.random() * 5000),
-    });
-  }
-  return results;
+  return rows;
 }
 
 const BATCH_SIZE = 500;
@@ -123,7 +100,7 @@ async function insertBatched(db: ReturnType<typeof drizzle>, rows: VideoRow[]) {
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
     await db.insert(videos).values(batch);
-    if (rows.length > BATCH_SIZE) {
+    if (i % 10000 === 0 || i + BATCH_SIZE >= rows.length) {
       console.log(`  Inserted ${Math.min(i + BATCH_SIZE, rows.length)}/${rows.length}...`);
     }
   }
@@ -138,69 +115,42 @@ export async function seedVideos() {
   const existing = await db.select({ count: sql<number>`count(*)` }).from(videos);
   const count = Number(existing[0].count);
 
+  if (count >= EXPECTED_TOTAL) {
+    console.log(`Database has ${count} videos (expected ${EXPECTED_TOTAL}), skipping seed.`);
+    await pool.end();
+    return;
+  }
+
+  const hasExclude = fs.existsSync(FEED_EXCLUDE);
+  const hasInclude = fs.existsSync(FEED_INCLUDE);
+
+  if (!hasExclude && !hasInclude) {
+    console.log(`No feed files found. DB has ${count} videos.`);
+    await pool.end();
+    return;
+  }
+
+  console.log(`Database has ${count} videos, expected ${EXPECTED_TOTAL}. Re-seeding...`);
   if (count > 0) {
-    console.log(`Database has ${count} videos, skipping auto-seed (imports managed manually).`);
-    await pool.end();
-    return;
+    await db.delete(videos);
+    console.log("Cleared old videos.");
   }
 
-  const hasGayFeed = fs.existsSync(GAY_FEED_FILE);
-  const hasLongFeed = fs.existsSync(LONG_FEED_FILE);
-
-  if (!hasGayFeed && !hasLongFeed) {
-    if (count > 0) {
-      console.log(`Database has ${count} videos, no feed files found, skipping seed.`);
-    } else {
-      console.log("No feed files found and DB empty.");
-    }
-    await pool.end();
-    return;
+  if (hasExclude) {
+    const raw = fs.readFileSync(FEED_EXCLUDE, "utf-8");
+    const rows = parseLinkFeed(raw);
+    console.log(`Importing ${rows.length} videos from exclude-categories feed...`);
+    await insertBatched(db, rows);
   }
 
-  let gayRows: VideoRow[] = [];
-  let longRows: VideoRow[] = [];
-
-  if (hasGayFeed) {
-    const raw = fs.readFileSync(GAY_FEED_FILE, "utf-8");
-    console.log(`Found gay feed file (${raw.length} bytes)`);
-    gayRows = parseGayFeed(raw);
-    console.log(`Parsed ${gayRows.length} gay videos`);
+  if (hasInclude) {
+    const raw = fs.readFileSync(FEED_INCLUDE, "utf-8");
+    const rows = parseLinkFeed(raw);
+    console.log(`Importing ${rows.length} videos from include-categories feed...`);
+    await insertBatched(db, rows);
   }
 
-  if (hasLongFeed) {
-    const raw = fs.readFileSync(LONG_FEED_FILE, "utf-8");
-    console.log(`Found long feed file (${raw.length} bytes)`);
-    longRows = parseLongFeed(raw);
-    console.log(`Parsed ${longRows.length} straight/mixed videos`);
-  }
-
-  const totalFeed = gayRows.length + longRows.length;
-
-  if (totalFeed === 0) {
-    console.log("No valid rows parsed from feeds, skipping.");
-    await pool.end();
-    return;
-  }
-
-  if (count >= totalFeed) {
-    console.log(`Database already has ${count} videos (feeds have ${totalFeed}), skipping seed.`);
-    await pool.end();
-    return;
-  }
-
-  console.log(`Database has ${count} videos, feeds have ${totalFeed}. Re-seeding...`);
-  await db.delete(videos);
-
-  if (gayRows.length > 0) {
-    console.log(`Inserting ${gayRows.length} gay videos...`);
-    await insertBatched(db, gayRows);
-  }
-
-  if (longRows.length > 0) {
-    console.log(`Inserting ${longRows.length} straight/mixed videos...`);
-    await insertBatched(db, longRows);
-  }
-
-  console.log(`Seeded ${totalFeed} total videos from fap.cash feeds`);
+  const final = await db.select({ count: sql<number>`count(*)` }).from(videos);
+  console.log(`Seed complete! Total videos: ${Number(final[0].count)}`);
   await pool.end();
 }
