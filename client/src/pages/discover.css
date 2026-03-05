@@ -20,7 +20,7 @@
 .throb-video-layer.dim-2 { filter: brightness(0.2) blur(6px); }
 
 .throb-video-el {
-  width: 100%; height: 100%;
+  width: 100%; height: calc(100% - 68px);
   object-fit: contain;
 }
 .throb-video-fallback {
