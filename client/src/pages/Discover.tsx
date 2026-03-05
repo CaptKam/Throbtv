@@ -153,6 +153,8 @@ export default function Discover() {
   const { toast } = useToast();
   const { logout } = useAuth();
   const peekRowRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [mouseIdle, setMouseIdle] = useState(false);
@@ -295,6 +297,25 @@ export default function Discover() {
   const skipPrevRef = useRef(skipPrev);
   useEffect(() => { skipPrevRef.current = skipPrev; }, [skipPrev]);
 
+  const handleVideoEnded = useCallback(() => { skipNextRef.current(); }, []);
+
+  const handleTimeUpdate = useCallback(() => {
+    const vid = videoRef.current;
+    if (vid && vid.duration > 0) {
+      setElapsedSeconds(Math.floor(vid.currentTime));
+    }
+  }, []);
+
+  const handleVideoError = useCallback(() => {
+    console.warn("Video failed to load, skipping");
+    setTimeout(() => skipNextRef.current(), 1000);
+  }, []);
+
+  const handleVideoClick = useCallback(() => {
+    const vid = videoRef.current;
+    if (vid) { vid.muted = !vid.muted; setIsMuted(!vid.muted); }
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -376,26 +397,24 @@ export default function Discover() {
       {/* ======= VIDEO LAYER ======= */}
       <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
         {currentVideo ? (
-          currentVideo.trailerUrl && isPlaying ? (
+          currentVideo.trailerUrl ? (
             <video
-              key={`trailer-${currentVideo.id}`}
+              ref={videoRef}
+              key={currentVideo.id}
               src={currentVideo.trailerUrl}
               className="throb-video-el"
               autoPlay
-              muted
+              muted={isMuted}
               playsInline
-              onEnded={() => skipNextRef.current()}
-              onTimeUpdate={(e) => {
-                const vid = e.currentTarget;
-                if (vid.duration) {
-                  setElapsedSeconds(Math.floor(vid.currentTime));
-                }
-              }}
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={handleVideoEnded}
+              onError={handleVideoError}
+              onClick={handleVideoClick}
             />
-          ) : currentVideo.embedUrl && isPlaying ? (
+          ) : currentVideo.embedUrl ? (
             <iframe
-              key={`embed-${currentVideo.id}`}
-              src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
+              key={currentVideo.id}
+              src={currentVideo.embedUrl}
               className="throb-video-el"
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen
@@ -405,12 +424,6 @@ export default function Discover() {
           ) : (
             <div className="throb-video-fallback">
               <img src={currentVideo.thumbnailUrl || ""} alt="" />
-              {(currentVideo.trailerUrl || currentVideo.embedUrl) && !isPlaying && (
-                <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
-                  <Play size={64} fill="currentColor" />
-                  <span className="throb-paused-hint">Tap to play</span>
-                </div>
-              )}
             </div>
           )
         ) : (
