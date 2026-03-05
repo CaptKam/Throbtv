@@ -317,7 +317,7 @@ export default function Legal() {
           <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground" data-testid="link-back-home">
               <ArrowLeft className="w-4 h-4" />
-              Back to throb<span style={{ color: '#9ca3af' }}>.</span><span style={{ color: '#ef4444' }}>tv</span>
+              Back to throb<span className="text-muted-foreground">.</span><span className="text-primary">tv</span>
             </Button>
           </Link>
         </div>
