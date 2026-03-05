@@ -147,7 +147,7 @@ export default function Discover() {
 
   // Player state
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [queue, setQueue] = useState<Video[]>([]);
 
   const { toast } = useToast();
@@ -379,7 +379,7 @@ export default function Discover() {
           currentVideo.embedUrl && isPlaying ? (
             <iframe
               key={currentVideo.id}
-              src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1&mute=0`}
+              src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
               className="throb-video-el"
               allow="autoplay *; encrypted-media; fullscreen"
               allowFullScreen
