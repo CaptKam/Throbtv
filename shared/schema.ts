@@ -33,6 +33,7 @@ export const videos = pgTable("videos", {
   rating: integer("rating").default(0),
   thumbnailUrl: text("thumbnail_url"),
   trailerUrl: text("trailer_url"),
+  embedDurationSeconds: integer("embed_duration_seconds"),
   views: integer("views").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [

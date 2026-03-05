@@ -660,6 +660,52 @@
 .throb-app.ui-hidden .throb-vid-info { opacity: 0; transform: translateY(-10px); pointer-events: none; }
 .throb-app.ui-hidden .throb-rail-tab { opacity: 0; pointer-events: none; }
 
+/* ---- WATCH FULL BUTTON ---- */
+.throb-watch-full-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  pointer-events: auto;
+}
+.throb-watch-full-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fff;
+}
+
+/* ---- MUTE BUTTON ---- */
+.throb-mute-btn {
+  position: absolute;
+  bottom: 80px;
+  right: 16px;
+  z-index: 15;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.throb-mute-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
 /* ---- PAUSED OVERLAY ---- */
 .throb-paused-overlay {
   position: absolute; inset: 0;
@@ -727,5 +773,18 @@
     color: rgba(148,163,184,0.3);
     position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
     white-space: nowrap; pointer-events: none;
+  }
+
+  /* Mute button — larger on mobile */
+  .throb-mute-btn {
+    width: 52px;
+    height: 52px;
+    z-index: 15;
+  }
+
+  /* Watch full button — larger tap target on mobile */
+  .throb-watch-full-btn {
+    font-size: 14px;
+    padding: 8px 18px;
   }
 }

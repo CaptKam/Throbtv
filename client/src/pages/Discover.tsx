@@ -4,7 +4,8 @@ import { Reorder } from "framer-motion";
 import {
   Play, Pause, SkipBack, SkipForward, Search, Plus,
   ChevronUp, ChevronDown, ChevronRight, X, List,
-  Trash2, ListMusic, Tv, Cast, LogOut, ExternalLink
+  Trash2, ListMusic, Tv, Cast, LogOut, ExternalLink,
+  VolumeX, Volume2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -149,9 +150,12 @@ export default function Discover() {
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [queue, setQueue] = useState<Video[]>([]);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
 
   const { toast } = useToast();
   const { logout } = useAuth();
+  const videoRef = useRef<HTMLVideoElement>(null);
   const peekRowRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
@@ -218,13 +222,44 @@ export default function Discover() {
   const videos = data?.videos ?? [];
   const totalVideos = data?.total ?? 0;
 
-  // Auto-play first video
-  useEffect(() => {
-    if (!currentVideo && videos.length > 0) {
-      setCurrentVideo(videos[0]);
-      setIsPlaying(true);
+  // No auto-play on load — user must pick their first video via click.
+
+  // --- Native <video> event handlers ---
+
+  // Handle video ended — auto-advance to next in queue
+  const handleVideoEnded = useCallback(() => {
+    skipNextRef.current();
+  }, []);
+
+  // Handle metadata loaded — get actual video duration
+  const handleLoadedMetadata = useCallback(() => {
+    setVideoProgress(0);
+    setElapsedSeconds(0);
+  }, []);
+
+  // Handle time update — real progress tracking
+  const handleTimeUpdate = useCallback(() => {
+    const vid = videoRef.current;
+    if (vid && vid.duration > 0) {
+      setVideoProgress((vid.currentTime / vid.duration) * 100);
+      setElapsedSeconds(Math.floor(vid.currentTime));
     }
-  }, [videos, currentVideo]);
+  }, []);
+
+  // Handle video error — skip to next if video fails to load
+  const handleVideoError = useCallback(() => {
+    console.warn("Video failed to load, skipping to next");
+    setTimeout(() => skipNextRef.current(), 1000);
+  }, []);
+
+  // Handle click on video — toggle mute
+  const handleVideoClick = useCallback(() => {
+    const vid = videoRef.current;
+    if (vid) {
+      vid.muted = !vid.muted;
+      setIsMuted(vid.muted);
+    }
+  }, []);
 
   // Queue functions
   const playNow = useCallback((video: Video) => {
@@ -234,8 +269,23 @@ export default function Discover() {
     });
     setIsPlaying(true);
     setElapsedSeconds(0);
+    setVideoProgress(0);
     setStage(1);
-  }, []);
+
+    // After React re-renders with new video, try to play unmuted
+    setTimeout(() => {
+      const vid = videoRef.current;
+      if (vid) {
+        vid.muted = isMuted;
+        vid.play().catch(() => {
+          // Unmuted autoplay blocked — fall back to muted
+          vid.muted = true;
+          setIsMuted(true);
+          vid.play().catch(() => {});
+        });
+      }
+    }, 100);
+  }, [isMuted]);
 
   const playNext = useCallback((video: Video) => {
     setQueue(q => {
@@ -268,6 +318,7 @@ export default function Discover() {
         });
         setIsPlaying(true);
         setElapsedSeconds(0);
+        setVideoProgress(0);
         return q.slice(1);
       }
       return q;
@@ -283,10 +334,12 @@ export default function Discover() {
         });
         setIsPlaying(true);
         setElapsedSeconds(0);
+        setVideoProgress(0);
         return h.slice(1);
       }
       setCurrentVideo(prev => prev ? { ...prev } : prev);
       setElapsedSeconds(0);
+      setVideoProgress(0);
       return h;
     });
   }, []);
@@ -297,24 +350,23 @@ export default function Discover() {
   const skipPrevRef = useRef(skipPrev);
   useEffect(() => { skipPrevRef.current = skipPrev; }, [skipPrev]);
 
-  const handleVideoEnded = useCallback(() => { skipNextRef.current(); }, []);
-
-  const handleTimeUpdate = useCallback(() => {
+  // Toggle play/pause — controls native video or iframe timer
+  const togglePlayPause = useCallback(() => {
     const vid = videoRef.current;
-    if (vid && vid.duration > 0) {
-      setElapsedSeconds(Math.floor(vid.currentTime));
+    if (vid) {
+      if (vid.paused) {
+        vid.play().catch(() => {});
+        setIsPlaying(true);
+      } else {
+        vid.pause();
+        setIsPlaying(false);
+      }
+    } else {
+      // Iframe fallback — just toggle state (can't control iframe)
+      setIsPlaying(p => !p);
     }
   }, []);
 
-  const handleVideoError = useCallback(() => {
-    console.warn("Video failed to load, skipping");
-    setTimeout(() => skipNextRef.current(), 1000);
-  }, []);
-
-  const handleVideoClick = useCallback(() => {
-    const vid = videoRef.current;
-    if (vid) { vid.muted = !vid.muted; setIsMuted(!vid.muted); }
-  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -323,15 +375,16 @@ export default function Discover() {
       if (e.key === "Escape") {
         setStage(s => s === 3 ? 2 : s === 2 ? 1 : s);
       }
-      if (e.key === " ") { e.preventDefault(); setIsPlaying(p => !p); }
+      if (e.key === " ") { e.preventDefault(); togglePlayPause(); }
       if (e.key === "ArrowRight") skipNextRef.current();
       if (e.key === "ArrowLeft") skipPrevRef.current();
       if (e.key === "b" || e.key === "B") setStage(s => s >= 3 ? 1 : (s + 1) as 1 | 2 | 3);
       if (e.key === "q" || e.key === "Q") setRailOpen(r => !r);
+      if (e.key === "m" || e.key === "M") handleVideoClick();
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, []);
+  }, [togglePlayPause, handleVideoClick]);
 
   const toggleShelf = () => setStage(s => s === 1 ? 2 : 1);
 
@@ -355,7 +408,7 @@ export default function Discover() {
     }
   }, []);
 
-  // Timer-based progress for iframe embeds using durationSeconds
+  // Timer — ONLY for iframe embeds (no trailerUrl). Native <video> uses onTimeUpdate/onEnded.
   useEffect(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -364,21 +417,25 @@ export default function Discover() {
 
     if (!currentVideo) return;
 
-    const isEmbed = !!currentVideo.embedUrl;
-    const totalSec = currentVideo.durationSeconds || 0;
-    const effectiveDuration = totalSec > 0 ? totalSec + 15 : 0;
+    // Only use timer for iframe embeds (no trailerUrl)
+    const isIframe = !currentVideo.trailerUrl && !!currentVideo.embedUrl;
+    const totalSec = currentVideo.embedDurationSeconds || currentVideo.durationSeconds || 300;
 
-    if (isEmbed && effectiveDuration > 0 && isPlaying) {
+    if (isIframe && totalSec > 0 && isPlaying) {
       timerRef.current = setInterval(() => {
         setElapsedSeconds(prev => {
           const next = prev + 1;
-          if (next >= effectiveDuration) {
+          setVideoProgress(Math.min((next / totalSec) * 100, 100));
+          if (next >= totalSec) {
             skipNextRef.current();
+            return 0;
           }
           return next;
         });
       }, 1000);
     }
+
+    // For <video> elements, progress is handled by onTimeUpdate and onEnded
 
     return () => {
       if (timerRef.current) {
@@ -408,19 +465,28 @@ export default function Discover() {
               playsInline
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleVideoEnded}
+              onLoadedMetadata={handleLoadedMetadata}
               onError={handleVideoError}
               onClick={handleVideoClick}
             />
           ) : currentVideo.embedUrl ? (
-            <iframe
-              key={currentVideo.id}
-              src={currentVideo.embedUrl}
-              className="throb-video-el"
-              allow="autoplay; encrypted-media; fullscreen"
-              allowFullScreen
-              referrerPolicy="origin"
-              style={{ border: 0 }}
-            />
+            <>
+              <iframe
+                key={currentVideo.id}
+                src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
+                className="throb-video-el"
+                allow="autoplay *; encrypted-media; fullscreen"
+                allowFullScreen
+                referrerPolicy="origin"
+                style={{ border: 0 }}
+              />
+              {!isPlaying && (
+                <div className="throb-paused-overlay" onClick={() => setIsPlaying(true)}>
+                  <Play size={64} fill="currentColor" />
+                  <span className="throb-paused-hint">Paused — timer stopped</span>
+                </div>
+              )}
+            </>
           ) : (
             <div className="throb-video-fallback">
               <img src={currentVideo.thumbnailUrl || ""} alt="" />
@@ -432,24 +498,35 @@ export default function Discover() {
           </div>
         )}
 
+        {/* Mute/Unmute button for native video */}
+        {currentVideo?.trailerUrl && (
+          <button
+            className="throb-mute-btn"
+            onClick={handleVideoClick}
+            title={isMuted ? "Tap to unmute" : "Tap to mute"}
+          >
+            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          </button>
+        )}
+
         {/* Video info overlay */}
         {currentVideo && stage === 1 && (
           <div className="throb-vid-info">
             <div className="throb-vid-title">{currentVideo.title}</div>
             <div className="throb-vid-sub">
               {currentVideo.sourceDomain} · {currentVideo.duration}
-              {currentVideo.sourceUrl && (
-                <a
-                  href={currentVideo.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="throb-full-link"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Watch Full <ExternalLink size={11} />
-                </a>
-              )}
             </div>
+            {(currentVideo.sourceUrl || currentVideo.embedUrl) && (
+              <a
+                href={currentVideo.sourceUrl || currentVideo.embedUrl || ""}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="throb-watch-full-btn"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Watch Full Video →
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -596,6 +673,9 @@ export default function Discover() {
 
         {/* ======= TRANSPORT BAR ======= */}
         <div className="throb-transport">
+          <div className="throb-progress">
+            <div className="throb-progress-fill" style={{ width: `${videoProgress}%` }} />
+          </div>
           <div className="throb-transport-inner">
             <div className="throb-transport-left">
               <div className="throb-now-thumb">
@@ -607,7 +687,9 @@ export default function Discover() {
                 <div className="throb-now-title">{currentVideo?.title || "No video selected"}</div>
                 <div className="throb-now-sub">
                   {currentVideo
-                    ? `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
+                    ? currentVideo.trailerUrl
+                      ? `${formatTime(elapsedSeconds)} · ${currentVideo.sourceDomain || ""}`
+                      : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
                     : "Browse to find videos"}
                 </div>
               </div>
@@ -618,7 +700,7 @@ export default function Discover() {
               </button>
               <button
                 className="throb-t-btn primary"
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={togglePlayPause}
                 title={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
@@ -628,6 +710,18 @@ export default function Discover() {
               </button>
             </div>
             <div className="throb-transport-right">
+              {currentVideo?.sourceUrl && (
+                <a
+                  href={currentVideo.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="throb-t-btn ghost"
+                  style={{ textDecoration: 'none' }}
+                  title="Watch full video on FapHouse"
+                >
+                  <ExternalLink size={16} />
+                </a>
+              )}
               <button className="throb-t-btn cast" onClick={() => window.open("/theater", "_blank")} title="Theater Mode">
                 <Cast size={16} />
               </button>

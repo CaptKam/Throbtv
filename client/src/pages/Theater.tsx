@@ -203,7 +203,31 @@ export default function Theater() {
       {currentVideo && !quickFade && (
         <div className="fixed inset-0 flex flex-col">
           <div className="flex-1 bg-black relative">
-            {currentVideo.embedUrl ? (
+            {currentVideo.trailerUrl ? (
+              <video
+                key={currentVideo.id}
+                src={currentVideo.trailerUrl}
+                className="w-full h-full object-contain"
+                autoPlay
+                playsInline
+                onEnded={() => {
+                  // Auto-advance to next in queue
+                  setPlayerState((prev) => {
+                    const nextIndex = prev.currentIndex + 1 < prev.queue.length ? prev.currentIndex + 1 : 0;
+                    const nextVideo = prev.queue[nextIndex] || null;
+                    const newState = {
+                      ...prev,
+                      currentIndex: nextIndex,
+                      currentVideo: nextVideo,
+                      countdown: nextVideo ? (nextVideo.durationSeconds || 300) + bufferSeconds : 0,
+                      isPlaying: prev.queue.length > 0,
+                    };
+                    syncState(newState);
+                    return newState;
+                  });
+                }}
+              />
+            ) : currentVideo.embedUrl ? (
               <iframe
                 key={currentVideo.id}
                 src={currentVideo.embedUrl}

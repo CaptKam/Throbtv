@@ -164,6 +164,7 @@ export async function seedVideos() {
   const db = drizzle(pool);
 
   await db.execute(sql`ALTER TABLE videos ADD COLUMN IF NOT EXISTS trailer_url text`);
+  await db.execute(sql`ALTER TABLE videos ADD COLUMN IF NOT EXISTS embed_duration_seconds integer`);
   await db.execute(sql`ALTER TABLE videos ADD COLUMN IF NOT EXISTS description text`);
   await db.execute(sql`ALTER TABLE videos ADD COLUMN IF NOT EXISTS orientation text DEFAULT 'gay'`);
   await db.execute(sql`ALTER TABLE videos ADD COLUMN IF NOT EXISTS quality text DEFAULT 'HD'`);
