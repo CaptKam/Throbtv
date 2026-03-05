@@ -765,7 +765,7 @@ const scopedStyles = `
   .throb-topbar-btn {pointer-events: auto;
     width: 38px; height: 38px; border-radius: 50%;
     border: 1px solid rgba(148,163,184,0.15);
-    background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+    background: rgba(0,0,0,0.85);
     color: #94a3b8; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all 0.3s;
@@ -775,7 +775,7 @@ const scopedStyles = `
   /* ---- TRANSPORT BAR ---- */
   .throb-transport {pointer-events: auto;
     position: absolute; bottom: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(8,9,12,0.92); backdrop-filter: blur(24px);
+    background: rgba(8,9,12,0.97);
     border-top: 1px solid rgba(148,163,184,0.06);
     pointer-events: auto;
   }
@@ -840,7 +840,7 @@ const scopedStyles = `
     display: flex; align-items: center; gap: 8px;
     margin: 0 auto; width: fit-content;
     padding: 7px 20px;
-    background: rgba(8,9,12,0.9); backdrop-filter: blur(12px);
+    background: rgba(8,9,12,0.95);
     border: 1px solid rgba(148,163,184,0.12); border-bottom: none;
     border-radius: 12px 12px 0 0;
     cursor: pointer; transition: all 0.3s; user-select: none;
@@ -876,7 +876,7 @@ const scopedStyles = `
 
   /* ---- PEEK SHELF (Stage 2) ---- */
   .throb-peek {
-    background: rgba(8,9,12,0.95); backdrop-filter: blur(20px);
+    background: rgba(8,9,12,0.98);
     border-top: 1px solid rgba(148,163,184,0.06);
     border-radius: 16px 16px 0 0;
     padding-top: 28px; padding-bottom: 10px;
@@ -960,7 +960,7 @@ const scopedStyles = `
   .throb-full {
     position: absolute; top: 0; left: 0; right: 0; bottom: 68px;
     z-index: 80;
-    background: rgba(8,9,12,0.94); backdrop-filter: blur(20px);
+    background: rgba(8,9,12,0.98);
     display: flex; flex-direction: column; overflow: hidden;
     transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
   }
@@ -1076,7 +1076,7 @@ const scopedStyles = `
   .throb-rail {
     width: 300px; min-width: 300px; height: 100vh;
     border-left: 1px solid rgba(148,163,184,0.06);
-    background: rgba(10,11,15,0.95); backdrop-filter: blur(12px);
+    background: rgba(10,11,15,0.98);
     display: flex; flex-direction: column;
     z-index: 20; flex-shrink: 0;
     transition: width 0.35s cubic-bezier(0.4,0,0.2,1), min-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
@@ -1099,7 +1099,7 @@ const scopedStyles = `
     width: 42px;
     display: flex; flex-direction: column; align-items: center;
     gap: 5px; padding: 12px 5px;
-    background: rgba(10,11,15,0.92); backdrop-filter: blur(12px);
+    background: rgba(10,11,15,0.95);
     border: 1px solid rgba(148,163,184,0.12); border-right: none;
     border-radius: 12px 0 0 12px;
     cursor: pointer; transition: all 0.3s; user-select: none;
@@ -1292,7 +1292,7 @@ const scopedStyles = `
     display: none; /* hidden on desktop */
     position: absolute; bottom: 80px; left: 8px; right: 8px;
     max-height: 50vh; z-index: 200;
-    background: rgba(10,11,15,0.97); backdrop-filter: blur(20px);
+    background: rgba(10,11,15,0.98);
     border: 1px solid rgba(148,163,184,0.1);
     border-radius: 16px; overflow: hidden;
     transform: translateY(20px); opacity: 0;
