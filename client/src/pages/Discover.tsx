@@ -255,7 +255,7 @@ export default function Discover() {
         </div>
 
         {/* ======= CONTENT AREA ======= */}
-        <div className="throb-content">
+        <div className="throb-content" style={{ pointerEvents: stage === 1 ? 'none' : 'auto' }}>
           {/* Top bar */}
           <div className="throb-topbar">
             <button className="throb-topbar-btn" onClick={() => logout.mutate()} title="Logout">
@@ -714,7 +714,7 @@ const scopedStyles = `
     position: fixed; top: 10px; right: 10px; z-index: 300;
     display: flex; gap: 4px;
   }
-  .throb-topbar-btn {
+  .throb-topbar-btn {pointer-events: auto;
     width: 38px; height: 38px; border-radius: 50%;
     border: 1px solid rgba(148,163,184,0.15);
     background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
@@ -725,7 +725,7 @@ const scopedStyles = `
   .throb-topbar-btn:hover { background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.2); }
 
   /* ---- TRANSPORT BAR ---- */
-  .throb-transport {
+  .throb-transport }pointer-events: auto;
     position: absolute; bottom: 0; left: 0; right: 0; z-index: 100;
     background: rgba(8,9,12,0.92); backdrop-filter: blur(24px);
     border-top: 1px solid rgba(148,163,184,0.06);
@@ -787,7 +787,7 @@ const scopedStyles = `
   .throb-t-btn.cast:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
 
   /* ---- SHELF TAB ---- */
-  .throb-shelf-tab {
+  .throb-shelf-tab {pointer-events: auto;
     display: flex; align-items: center; gap: 8px;
     margin: 0 auto; width: fit-content;
     padding: 7px 20px;
