@@ -10,7 +10,16 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Vite hashed assets (js/css) — cache for 1 year (immutable)
+  app.use("/assets", express.static(path.join(distPath, "assets"), {
+    maxAge: "1y",
+    immutable: true,
+  }));
+
+  // Other static files — cache for 1 hour
+  app.use(express.static(distPath, {
+    maxAge: "1h",
+  }));
 
   // fall through to index.html if the file doesn't exist
   app.use("/{*path}", (_req, res) => {

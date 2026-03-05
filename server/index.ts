@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import compression from "compression";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -11,6 +12,9 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+// Gzip compress all responses — huge win for JSON API payloads
+app.use(compression());
 
 app.use(
   express.json({
@@ -35,24 +39,12 @@ export function log(message: string, source = "express") {
 
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
+  const reqPath = req.path;
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      log(logLine);
+    if (reqPath.startsWith("/api")) {
+      log(`${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`);
     }
   });
 
@@ -64,6 +56,13 @@ app.use((req, res, next) => {
   const pg = await import("pg");
   const migrationPool = new pg.default.Pool({ connectionString: process.env.DATABASE_URL });
   await migrationPool.query(`ALTER TABLE videos ADD COLUMN IF NOT EXISTS trailer_url text`);
+  // Performance indexes for 139K+ video catalog
+  await migrationPool.query(`CREATE INDEX IF NOT EXISTS videos_category_idx ON videos (category)`);
+  await migrationPool.query(`CREATE INDEX IF NOT EXISTS videos_created_at_idx ON videos (created_at DESC)`);
+  await migrationPool.query(`CREATE INDEX IF NOT EXISTS videos_category_created_idx ON videos (category, created_at DESC)`);
+  // pg_trgm for fast ILIKE text search (ignore if extension unavailable)
+  await migrationPool.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`).catch(() => {});
+  await migrationPool.query(`CREATE INDEX IF NOT EXISTS videos_title_trgm_idx ON videos USING gin (title gin_trgm_ops)`).catch(() => {});
   await migrationPool.end();
 
   const { seedVideos } = await import("./seed");

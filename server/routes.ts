@@ -117,12 +117,15 @@ export async function registerRoutes(
       storage.getVideoCount({ search, category }),
     ]);
 
+    // Cache video listings for 60s — catalog doesn't change often
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     return res.json({ videos: videosList, total, limit, offset });
   });
 
   app.get("/api/videos/:id", async (req: Request, res: Response) => {
     const video = await storage.getVideoById(req.params.id);
     if (!video) return res.status(404).json({ message: "Video not found" });
+    res.set("Cache-Control", "public, max-age=300");
     return res.json(video);
   });
 
