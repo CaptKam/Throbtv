@@ -327,6 +327,26 @@ export default function Discover() {
 
   const cycleStage = () => setStage(s => (s >= 3 ? 1 : s + 1) as 1 | 2 | 3);
 
+  // Swipe up/down to cycle stages on mobile
+  const touchStartRef = useRef<{ y: number; time: number } | null>(null);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = { y: e.touches[0].clientY, time: Date.now() };
+  }, []);
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const dy = touchStartRef.current.y - e.changedTouches[0].clientY;
+    const dt = Date.now() - touchStartRef.current.time;
+    touchStartRef.current = null;
+    if (dt > 500 || Math.abs(dy) < 50) return; // too slow or too short
+    if (dy > 0) {
+      // Swipe up → open shelf
+      setStage(s => (s >= 3 ? 3 : (s + 1) as 1 | 2 | 3));
+    } else {
+      // Swipe down → close shelf
+      setStage(s => (s <= 1 ? 1 : (s - 1) as 1 | 2 | 3));
+    }
+  }, []);
+
   // Timer-based progress for iframe embeds using durationSeconds
   useEffect(() => {
     if (timerRef.current) {
@@ -362,7 +382,11 @@ export default function Discover() {
   }, [currentVideo?.id, isPlaying]);
 
   return (
-    <div className={`throb-app ${mouseIdle ? "mouse-idle" : ""} ${uiHidden ? "ui-hidden" : ""}`}>
+    <div
+      className={`throb-app ${mouseIdle ? "mouse-idle" : ""} ${uiHidden ? "ui-hidden" : ""}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* ======= VIDEO LAYER ======= */}
       <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
         {currentVideo ? (
@@ -382,6 +406,7 @@ export default function Discover() {
               {currentVideo.embedUrl && !isPlaying && (
                 <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
                   <Play size={64} fill="currentColor" />
+                  <span className="throb-paused-hint">Tap to play</span>
                 </div>
               )}
             </div>
