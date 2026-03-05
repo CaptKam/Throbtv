@@ -366,16 +366,22 @@ export default function Discover() {
     }
   }, []);
 
-  // Timer-based progress for iframe embeds using durationSeconds
+  // Reset progress only when video changes (not on pause/play)
+  const prevVideoIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (currentVideo?.id !== prevVideoIdRef.current) {
+      prevVideoIdRef.current = currentVideo?.id ?? null;
+      setVideoProgress(0);
+      setElapsedSeconds(0);
+    }
+  }, [currentVideo?.id]);
+
+  // Timer — ticks elapsed while playing, auto-advances at end
   useEffect(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-
-    // Reset progress when video changes
-    setVideoProgress(0);
-    setElapsedSeconds(0);
 
     if (!currentVideo?.embedUrl || !currentVideo?.durationSeconds || !isPlaying) {
       return;
@@ -386,11 +392,9 @@ export default function Discover() {
     timerRef.current = setInterval(() => {
       setElapsedSeconds(prev => {
         const next = prev + 1;
-        const progress = Math.min((next / totalSec) * 100, 100);
-        setVideoProgress(progress);
+        setVideoProgress(Math.min((next / totalSec) * 100, 100));
 
         if (next >= totalSec) {
-          // Auto-advance to next in queue
           skipNextRef.current();
           return 0;
         }
@@ -425,7 +429,7 @@ export default function Discover() {
         {currentVideo ? (
           currentVideo.embedUrl && isPlaying ? (
             <iframe
-              key={`${currentVideo.id}-${elapsedSeconds === 0 ? 'fresh' : 'playing'}`}
+              key={currentVideo.id}
               src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
               className="throb-video-el"
               allow="autoplay; encrypted-media; fullscreen"
