@@ -110,7 +110,9 @@ export async function importFeedFromFile(filePath: string) {
   await db.delete(videos);
   console.log("Cleared existing videos");
 
-  const rows = feedVideos.map((v) => {
+  const rows = feedVideos
+    .filter(v => v.duration >= 120) // Skip clips under 2 minutes
+    .map((v) => {
     const embedUrl = extractEmbedUrl(v.embedHtml);
     const videoId = extractVideoId(v.sourceUrl);
     const domain = extractDomain(v.sourceUrl);
@@ -123,6 +125,7 @@ export async function importFeedFromFile(filePath: string) {
       title: v.title,
       duration: formatDuration(v.duration),
       durationSeconds: v.duration,
+      embedDurationSeconds: v.embedDuration || 0,
       tags: v.categories.length > 0 ? v.categories : ["Gay"],
       category: v.categories[0] || "Gay",
       thumbnailUrl: v.thumbnails[0] || "",

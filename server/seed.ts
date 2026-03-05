@@ -111,6 +111,7 @@ export async function seedVideos() {
   const db = drizzle(pool);
 
   await db.execute(sql`ALTER TABLE videos ADD COLUMN IF NOT EXISTS trailer_url text`);
+  await db.execute(sql`ALTER TABLE videos ADD COLUMN IF NOT EXISTS embed_duration_seconds integer`);
 
   const existing = await db.select({ count: sql<number>`count(*)` }).from(videos);
   const count = Number(existing[0].count);
