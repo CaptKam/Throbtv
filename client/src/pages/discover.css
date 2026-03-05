@@ -13,7 +13,7 @@
 .throb-video-layer {
   position: fixed; inset: 0; z-index: 0;
   background: #000;
-  transition: filter 0.5s ease;
+  transition: filter 0.8s ease;
   will-change: filter;
 }
 .throb-video-layer.dim-1 { filter: brightness(0.82); }
@@ -56,19 +56,19 @@
 
 .throb-vid-info {
   position: absolute; top: 16px; left: 16px; z-index: 1;
-  transition: opacity 0.4s;
+  transition: opacity 0.7s;
   pointer-events: auto;
 }
 .throb-vid-title {
   font-size: 16px; font-weight: 700;
   color: rgba(255,255,255,0.85);
   text-shadow: 0 2px 12px rgba(0,0,0,0.9);
-  transition: opacity 0.4s;
+  transition: opacity 0.7s;
 }
 .throb-vid-sub {
   font-size: 12px; color: rgba(255,255,255,0.5);
   margin-top: 3px; text-shadow: 0 1px 6px rgba(0,0,0,0.8);
-  transition: opacity 0.4s;
+  transition: opacity 0.7s;
 }
 .throb-full-link {
   margin-left: 10px; color: rgba(255,255,255,0.35); text-decoration: none;
@@ -195,7 +195,7 @@
 /* ---- PEEK WRAPPER (tab + shelf move together) ---- */
 .throb-peek-wrapper {
   position: absolute; bottom: 68px; left: 0; right: 0; z-index: 90;
-  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
   transform: translateY(0); opacity: 1;
   pointer-events: none;
 }
@@ -208,7 +208,7 @@
   border-top: 1px solid rgba(148,163,184,0.06);
   border-radius: 16px 16px 0 0;
   padding-top: 28px; padding-bottom: 10px;
-  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
   transform: translateY(0); opacity: 1;
 }
 .throb-peek.hidden {
@@ -264,7 +264,7 @@
 }
 .throb-pk-card {
   min-width: 0;
-  cursor: pointer; transition: transform 0.2s;
+  cursor: pointer; transition: transform 0.3s;
 }
 .throb-pk-card:hover { transform: scale(1.04); }
 .throb-pk-thumb {
@@ -288,7 +288,7 @@
   z-index: 80;
   background: #08090c;
   display: flex; flex-direction: column; overflow: hidden;
-  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
 }
 .throb-full.hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
 .throb-full-top {
@@ -319,13 +319,13 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
 }
-.throb-card { cursor: pointer; transition: transform 0.15s; }
+.throb-card { cursor: pointer; transition: transform 0.3s; }
 .throb-card:hover { transform: scale(1.03); }
 .throb-thumb {
   aspect-ratio: 1/1; border-radius: 8px;
   overflow: hidden; position: relative; background: #111;
 }
-.throb-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.throb-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s; }
 .throb-card:hover .throb-thumb img { transform: scale(1.05); }
 .throb-thumb .throb-trailer-preview {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -409,7 +409,7 @@
   background: rgba(10,11,15,0.95); backdrop-filter: blur(12px);
   display: flex; flex-direction: column;
   z-index: 20; flex-shrink: 0;
-  transition: width 0.35s cubic-bezier(0.4,0,0.2,1), min-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1), min-width 0.6s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease;
   position: relative;
 }
 .throb-rail.shut {
@@ -647,11 +647,11 @@
 .throb-app.mouse-idle .throb-topbar { opacity: 0.2; }
 .throb-app.mouse-idle .throb-vid-info { opacity: 0.3; }
 .throb-app.mouse-idle .throb-rail-tab { opacity: 0.3; }
-.throb-transport { transition: opacity 0.6s ease, transform 0.5s ease; }
-.throb-shelf-tab { transition: all 0.3s, opacity 0.6s ease, transform 0.5s ease; }
-.throb-topbar { transition: opacity 0.6s ease, transform 0.5s ease; }
-.throb-vid-info { transition: opacity 0.6s ease, transform 0.5s ease; }
-.throb-rail-tab { transition: all 0.3s, opacity 0.6s ease, transform 0.5s ease; }
+.throb-transport { transition: opacity 1s ease, transform 0.8s ease; }
+.throb-shelf-tab { transition: all 0.5s, opacity 1s ease, transform 0.8s ease; }
+.throb-topbar { transition: opacity 1s ease, transform 0.8s ease; }
+.throb-vid-info { transition: opacity 1s ease, transform 0.8s ease; }
+.throb-rail-tab { transition: all 0.5s, opacity 1s ease, transform 0.8s ease; }
 
 /* ---- UI HIDDEN (15s idle) ---- */
 .throb-app.ui-hidden .throb-transport { opacity: 0; transform: translateY(100%); pointer-events: none; }
