@@ -145,7 +145,7 @@ const PeekCard = memo(function PeekCard({
 
 export default function Discover() {
   // UI state
-  const [stage, setStage] = useState<1 | 2 | 3>(1);
+  const [stage, setStage] = useState<1 | 2 | 3>(2);
   const [railOpen, setRailOpen] = useState(true);
   const [activeCat, setActiveCat] = useState("All");
   const [searchInput, setSearchInput] = useState("");
@@ -173,7 +173,7 @@ export default function Discover() {
   const [uiHidden, setUiHidden] = useState(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const savedStageRef = useRef<1 | 2 | 3>(1);
+  const savedStageRef = useRef<1 | 2 | 3>(2);
   const savedRailRef = useRef(true);
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
@@ -231,13 +231,9 @@ export default function Discover() {
   const videos = data?.videos ?? [];
   const totalVideos = data?.total ?? 0;
 
-  // Auto-play first video
-  useEffect(() => {
-    if (!currentVideo && videos.length > 0) {
-      setCurrentVideo(videos[0]);
-      setIsPlaying(true);
-    }
-  }, [videos, currentVideo]);
+  // No auto-play on load — user must pick their first video via click.
+  // That click gives the browser the user-gesture needed for iframe autoplay.
+  // After the first pick, all subsequent loads (skip, timer, queue) autoplay.
 
   // Queue functions
   const playNow = useCallback((video: Video) => {
