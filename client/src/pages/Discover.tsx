@@ -376,9 +376,25 @@ export default function Discover() {
       {/* ======= VIDEO LAYER ======= */}
       <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
         {currentVideo ? (
-          currentVideo.embedUrl && isPlaying ? (
+          currentVideo.trailerUrl && isPlaying ? (
+            <video
+              key={`trailer-${currentVideo.id}`}
+              src={currentVideo.trailerUrl}
+              className="throb-video-el"
+              autoPlay
+              muted
+              playsInline
+              onEnded={() => skipNextRef.current()}
+              onTimeUpdate={(e) => {
+                const vid = e.currentTarget;
+                if (vid.duration) {
+                  setElapsedSeconds(Math.floor(vid.currentTime));
+                }
+              }}
+            />
+          ) : currentVideo.embedUrl && isPlaying ? (
             <iframe
-              key={`${currentVideo.id}-${elapsedSeconds === 0 ? 'fresh' : 'playing'}`}
+              key={`embed-${currentVideo.id}`}
               src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
               className="throb-video-el"
               allow="autoplay; encrypted-media; fullscreen"
@@ -389,7 +405,7 @@ export default function Discover() {
           ) : (
             <div className="throb-video-fallback">
               <img src={currentVideo.thumbnailUrl || ""} alt="" />
-              {currentVideo.embedUrl && !isPlaying && (
+              {(currentVideo.trailerUrl || currentVideo.embedUrl) && !isPlaying && (
                 <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
                   <Play size={64} fill="currentColor" />
                   <span className="throb-paused-hint">Tap to play</span>
