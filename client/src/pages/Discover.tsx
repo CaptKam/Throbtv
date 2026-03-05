@@ -2,13 +2,12 @@ import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Reorder } from "framer-motion";
 import {
-  Play, Pause, SkipBack, SkipForward, Search,
+  Play, Pause, SkipBack, SkipForward, Search, Plus,
   ChevronUp, ChevronDown, ChevronRight, X, List,
   Trash2, ListMusic, Tv, Cast, LogOut, ExternalLink
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useSocket } from "@/hooks/use-socket";
 import type { Video } from "@shared/schema";
 import "./discover.css";
 
@@ -83,14 +82,12 @@ const VideoCard = memo(function VideoCard({
         <div className="throb-thumb-hover">
           <Play size={24} fill="white" />
         </div>
-        <div className="throb-play-overlay"><Play size={24} fill="currentColor" /></div>
+        <button className="throb-add-btn" data-testid={`btn-add-${video.id}`} onClick={(e) => { e.stopPropagation(); onAddToQueue(video); }}>
+          <Plus size={14} strokeWidth={3} />
+        </button>
       </div>
       <div className="throb-card-title">{video.title}</div>
       <div className="throb-card-meta">{formatViews(video.views || 0)} views</div>
-      <div className="throb-card-actions">
-        <button className="throb-card-btn" onClick={(e) => { e.stopPropagation(); onPlayNext(video); }}>Next</button>
-        <button className="throb-card-btn" onClick={(e) => { e.stopPropagation(); onAddToQueue(video); }}>+Queue</button>
-      </div>
     </div>
   );
 });
@@ -128,17 +125,11 @@ const PeekCard = memo(function PeekCard({
         )}
         <span className="throb-dur">{video.duration}</span>
         <span className="throb-src">{video.sourceDomain?.replace(".com", "")}</span>
-        <div className="throb-play-overlay"><Play size={24} fill="currentColor" /></div>
+        <button className="throb-add-btn" onClick={(e) => { e.stopPropagation(); onAddToQueue(video); }}>
+          <Plus size={14} strokeWidth={3} />
+        </button>
       </div>
       <div className="throb-pk-title">{video.title}</div>
-      <div className="throb-pk-actions">
-        <button className="throb-pk-btn" onClick={(e) => { e.stopPropagation(); onPlay(video); }}>
-          <Play size={10} fill="currentColor" style={{ marginLeft: 1 }} /> Play
-        </button>
-        <button className="throb-pk-btn" onClick={(e) => { e.stopPropagation(); onAddToQueue(video); }}>
-          + Queue
-        </button>
-      </div>
     </div>
   );
 });
@@ -154,19 +145,14 @@ export default function Discover() {
   // Debounce search by 350ms to avoid hammering API on every keystroke
   const searchQuery = useDebouncedValue(searchInput, 350);
 
-  // Player state — local for Discover (not socket-synced for solo browsing)
+  // Player state
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [queue, setQueue] = useState<Video[]>([]);
-  const [history, setHistory] = useState<Video[]>([]);
-
-  // Socket — for syncing with Theater/Remote when connected
-  const socket = useSocket();
 
   const { toast } = useToast();
   const { logout } = useAuth();
   const peekRowRef = useRef<HTMLDivElement>(null);
-  const [videoProgress, setVideoProgress] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [mouseIdle, setMouseIdle] = useState(false);
@@ -176,7 +162,6 @@ export default function Discover() {
   const savedStageRef = useRef<1 | 2 | 3>(2);
   const savedRailRef = useRef(true);
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
 
   // Mouse idle detection — dim UI after 3s, hide after 15s
   useEffect(() => {
@@ -243,79 +228,60 @@ export default function Discover() {
     });
     setIsPlaying(true);
     setElapsedSeconds(0);
-    setVideoProgress(0);
     setStage(1);
-    // Also sync to socket if connected to a session
-    if (socket.sessionCode) {
-      socket.addToQueue(video, "next");
-    }
-  }, [socket]);
+  }, []);
 
   const playNext = useCallback((video: Video) => {
     setQueue(q => {
-      const newQ = [video, ...q];
+      const ci = q.findIndex(v => v.id === currentVideo?.id);
+      const insertAt = ci >= 0 ? ci + 1 : 0;
+      const newQ = [...q];
+      newQ.splice(insertAt, 0, video);
       return newQ;
     });
-    if (socket.sessionCode) {
-      socket.addToQueue(video, "next");
-    }
     toast({ title: "Playing Next", description: `"${video.title}" queued up next` });
-  }, [socket, toast]);
+  }, [currentVideo, toast]);
 
   const addToQueue = useCallback((video: Video) => {
     setQueue(q => [...q, video]);
-    if (socket.sessionCode) {
-      socket.addToQueue(video, "end");
-    }
     toast({ title: "Added to Queue", description: `"${video.title}" added` });
-  }, [socket, toast]);
+  }, [toast]);
 
   const removeFromQueue = useCallback((idx: number) => {
     setQueue(q => q.filter((_, i) => i !== idx));
   }, []);
 
+  const [history, setHistory] = useState<Video[]>([]);
+
   const skipNext = useCallback(() => {
-    setQueue(prevQueue => {
-      if (prevQueue.length > 0) {
-        const nextVideo = prevQueue[0];
-        const remaining = prevQueue.slice(1);
-        setTimeout(() => {
-          setCurrentVideo(prev => {
-            if (prev) setHistory(h => [prev, ...h]);
-            return nextVideo;
-          });
-          setIsPlaying(true);
-          setElapsedSeconds(0);
-          setVideoProgress(0);
-        }, 0);
-        return remaining;
+    setQueue(q => {
+      if (q.length > 0) {
+        setCurrentVideo(prev => {
+          if (prev) setHistory(h => [prev, ...h]);
+          return q[0];
+        });
+        setIsPlaying(true);
+        setElapsedSeconds(0);
+        return q.slice(1);
       }
-      return prevQueue;
+      return q;
     });
   }, []);
 
   const skipPrev = useCallback(() => {
-    setHistory(prevHistory => {
-      if (prevHistory.length > 0) {
-        const prevVideo = prevHistory[0];
-        const remaining = prevHistory.slice(1);
-        setTimeout(() => {
-          setCurrentVideo(prev => {
-            if (prev) setQueue(q => [prev, ...q]);
-            return prevVideo;
-          });
-          setIsPlaying(true);
-          setElapsedSeconds(0);
-          setVideoProgress(0);
-        }, 0);
-        return remaining;
-      }
-      // No history — restart current video
-      setTimeout(() => {
+    setHistory(h => {
+      if (h.length > 0) {
+        setCurrentVideo(prev => {
+          if (prev) setQueue(q => [prev, ...q]);
+          return h[0];
+        });
+        setIsPlaying(true);
         setElapsedSeconds(0);
-        setVideoProgress(0);
-      }, 0);
-      return prevHistory;
+        return h.slice(1);
+      }
+      setCurrentVideo(prev => prev ? { ...prev } : prev);
+      setElapsedSeconds(0);
+      return h;
     });
   }, []);
 
@@ -342,7 +308,7 @@ export default function Discover() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  const cycleStage = () => setStage(s => (s >= 3 ? 1 : s + 1) as 1 | 2 | 3);
+  const toggleShelf = () => setStage(s => s === 1 ? 2 : 1);
 
   // Swipe up/down to cycle stages on mobile
   const touchStartRef = useRef<{ y: number; time: number } | null>(null);
@@ -354,49 +320,41 @@ export default function Discover() {
     const dy = touchStartRef.current.y - e.changedTouches[0].clientY;
     const dt = Date.now() - touchStartRef.current.time;
     touchStartRef.current = null;
-    if (dt > 500 || Math.abs(dy) < 50) return;
+    if (dt > 500 || Math.abs(dy) < 50) return; // too slow or too short
     if (dy > 0) {
+      // Swipe up → open shelf
       setStage(s => (s >= 3 ? 3 : (s + 1) as 1 | 2 | 3));
     } else {
+      // Swipe down → close shelf
       setStage(s => (s <= 1 ? 1 : (s - 1) as 1 | 2 | 3));
     }
   }, []);
 
-  // Reset progress only when video changes (not on pause/play)
-  const prevVideoIdRef = useRef<string | number | null>(null);
-  useEffect(() => {
-    if (currentVideo?.id !== prevVideoIdRef.current) {
-      prevVideoIdRef.current = currentVideo?.id ?? null;
-      setVideoProgress(0);
-      setElapsedSeconds(0);
-    }
-  }, [currentVideo?.id]);
-
-  // Timer — ticks elapsed while playing, auto-advances at end
+  // Timer-based progress for iframe embeds using durationSeconds
+  // BUG FIX: depend on currentVideo?.id (not whole object) to avoid iframe flicker
   useEffect(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
-    if (!currentVideo?.embedUrl || !currentVideo?.durationSeconds || !isPlaying) {
-      return;
+    if (!currentVideo) return;
+
+    const isEmbed = !!currentVideo.embedUrl;
+    const totalSec = currentVideo.durationSeconds || 0;
+    const effectiveDuration = totalSec > 0 ? totalSec + 15 : 0;
+
+    if (isEmbed && effectiveDuration > 0 && isPlaying) {
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(prev => {
+          const next = prev + 1;
+          if (next >= effectiveDuration) {
+            skipNextRef.current();
+          }
+          return next;
+        });
+      }, 1000);
     }
-
-    const totalSec = currentVideo.durationSeconds + 15; // 15 sec buffer
-
-    timerRef.current = setInterval(() => {
-      setElapsedSeconds(prev => {
-        const next = prev + 1;
-        setVideoProgress(Math.min((next / totalSec) * 100, 100));
-
-        if (next >= totalSec) {
-          skipNextRef.current();
-          return 0;
-        }
-        return next;
-      });
-    }, 1000);
 
     return () => {
       if (timerRef.current) {
@@ -406,11 +364,6 @@ export default function Discover() {
     };
   }, [currentVideo?.id, isPlaying]);
 
-  // On mobile Stage 1, show video layer as interactive (not behind pointer-events-none content)
-  // Desktop: pointer-events-none on content lets clicks pass through to iframe
-  // Mobile: content layer gets pointer-events back, video layer tap triggers play
-  const contentPointerClass = stage === 1 && !isMobile ? ' pointer-events-none' : '';
-
   return (
     <div
       className={`throb-app ${mouseIdle ? "mouse-idle" : ""} ${uiHidden ? "ui-hidden" : ""}`}
@@ -418,18 +371,16 @@ export default function Discover() {
       onTouchEnd={handleTouchEnd}
     >
       {/* ======= VIDEO LAYER ======= */}
-      <div
-        className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}
-        onClick={isMobile && stage === 1 ? () => setIsPlaying(p => !p) : undefined}
-      >
+      <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
         {currentVideo ? (
           currentVideo.embedUrl ? (
             <>
+              {/* BUG FIX: keep iframe mounted on pause — only stop the timer, not the video */}
               <iframe
                 key={currentVideo.id}
                 src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
                 className="throb-video-el"
-                allow="autoplay; encrypted-media; fullscreen"
+                allow="autoplay *; encrypted-media; fullscreen"
                 allowFullScreen
                 referrerPolicy="origin"
                 style={{ border: 0 }}
@@ -475,7 +426,7 @@ export default function Discover() {
       </div>
 
       {/* ======= CONTENT AREA ======= */}
-      <div className={`throb-content${contentPointerClass}`}>
+      <div className={`throb-content${stage === 1 ? ' pointer-events-none' : ''}`}>
         {/* Top bar */}
         <div className="throb-topbar">
           <button className="throb-topbar-btn" onClick={() => logout.mutate()} title="Logout">
@@ -566,7 +517,7 @@ export default function Discover() {
 
         {/* ======= SHELF TAB + PEEK SHELF ======= */}
         <div className="throb-peek-wrapper">
-          <div className="throb-shelf-tab" onClick={cycleStage}>
+          <div className="throb-shelf-tab" onClick={toggleShelf}>
             <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
               <ChevronUp size={14} />
             </div>
@@ -602,7 +553,7 @@ export default function Discover() {
             ))}
           </div>
           <div className="throb-peek-row" ref={peekRowRef}>
-            {videos.slice(0, 20).map((v) => (
+            {videos.slice(0, 5).map((v) => (
               <PeekCard
                 key={v.id}
                 video={v}
@@ -616,9 +567,6 @@ export default function Discover() {
 
         {/* ======= TRANSPORT BAR ======= */}
         <div className="throb-transport">
-          <div className="throb-progress">
-            <div className="throb-progress-fill" style={{ width: `${videoProgress}%` }} />
-          </div>
           <div className="throb-transport-inner">
             <div className="throb-transport-left">
               <div className="throb-now-thumb">
@@ -630,9 +578,7 @@ export default function Discover() {
                 <div className="throb-now-title">{currentVideo?.title || "No video selected"}</div>
                 <div className="throb-now-sub">
                   {currentVideo
-                    ? currentVideo.embedUrl && currentVideo.durationSeconds
-                      ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · Use player controls`
-                      : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
+                    ? `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
                     : "Browse to find videos"}
                 </div>
               </div>
@@ -644,7 +590,7 @@ export default function Discover() {
               <button
                 className="throb-t-btn primary"
                 onClick={() => setIsPlaying(!isPlaying)}
-                title={currentVideo?.embedUrl ? (isPlaying ? "Pause timer (video plays independently)" : "Resume timer") : undefined}
+                title={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
               </button>
