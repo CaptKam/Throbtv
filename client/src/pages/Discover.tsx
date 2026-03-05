@@ -182,14 +182,14 @@ export default function Discover() {
       }
       if (e.key === "ArrowRight") skipNextRef.current();
       if (e.key === "ArrowLeft") skipPrevRef.current();
-      if (e.key === "b" || e.key === "B") setStage(s => s >= 3 ? 1 : (s + 1) as 1 | 2 | 3);
+      if (e.key === "b" || e.key === "B") setStage(s => (s === 1 ? 2 : s === 2 ? 3 : 1) as 1 | 2 | 3);
       if (e.key === "q" || e.key === "Q") setRailOpen(r => !r);
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  const cycleStage = () => setStage(s => (s >= 3 ? 1 : s + 1) as 1 | 2 | 3);
+  const cycleStage = () => setStage(s => (s === 1 ? 2 : 1) as 1 | 2 | 3);
 
   // Video progress tracking for <video> elements (trailer fallback)
   const handleTimeUpdate = useCallback(() => {
@@ -432,7 +432,7 @@ export default function Discover() {
                 <ChevronUp size={14} />
               </div>
               <span className="throb-shelf-text">
-                {stage === 1 ? "Browse" : stage === 2 ? "More" : "Close"}
+                {stage === 1 ? "Browse" : "Close"}
               </span>
               <div className="throb-shelf-line" />
             </div>
@@ -499,6 +499,10 @@ export default function Discover() {
                   </div>
                 </div>
               ))}
+              <div className="throb-pk-viewall" onClick={() => setStage(3)}>
+                <span>View All</span>
+                <ChevronRight size={14} />
+              </div>
             </div>
           </div>
           </div>
@@ -981,6 +985,14 @@ const scopedStyles = `
     margin-top: 5px; white-space: nowrap;
     overflow: hidden; text-overflow: ellipsis;
   }
+  .throb-pk-viewall {
+    flex-shrink: 0; width: 100px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; cursor: pointer; color: #94a3b8;
+    font-size: 12px; font-weight: 600;
+    transition: color 0.3s;
+  }
+  .throb-pk-viewall:hover { color: #ef4444; }
 
   /* ---- FULL BROWSE (Stage 3) ---- */
   .throb-full {
