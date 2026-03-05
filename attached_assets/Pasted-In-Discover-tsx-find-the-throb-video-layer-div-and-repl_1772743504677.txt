@@ -1,0 +1,79 @@
+In Discover.tsx, find the throb-video-layer div and replace the entire video rendering block with this. The current code checks embedUrl first and uses an iframe. Change it to check trailerUrl FIRST and use a native <video> element:
+
+FIND:
+          currentVideo.embedUrl && isPlaying ? (
+            <iframe
+              key={`${currentVideo.id}-${elapsedSeconds === 0 ? 'fresh' : 'playing'}`}
+              src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
+              className="throb-video-el"
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+              referrerPolicy="origin"
+              style={{ border: 0 }}
+            />
+          ) : (
+            <div className="throb-video-fallback">
+              <img src={currentVideo.thumbnailUrl || ""} alt="" />
+              {currentVideo.embedUrl && !isPlaying && (
+                <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
+                  <Play size={64} fill="currentColor" />
+                  <span className="throb-paused-hint">Tap to play</span>
+                </div>
+              )}
+            </div>
+          )
+
+REPLACE WITH:
+          currentVideo.trailerUrl ? (
+            <video
+              ref={videoRef}
+              key={currentVideo.id}
+              src={currentVideo.trailerUrl}
+              className="throb-video-el"
+              autoPlay
+              muted={isMuted}
+              playsInline
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={handleVideoEnded}
+              onError={handleVideoError}
+              onClick={handleVideoClick}
+            />
+          ) : currentVideo.embedUrl ? (
+            <iframe
+              key={currentVideo.id}
+              src={currentVideo.embedUrl}
+              className="throb-video-el"
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+              referrerPolicy="origin"
+              style={{ border: 0 }}
+            />
+          ) : (
+            <div className="throb-video-fallback">
+              <img src={currentVideo.thumbnailUrl || ""} alt="" />
+            </div>
+          )
+
+Make sure these handler functions and state exist in the component (add if missing):
+
+const [isMuted, setIsMuted] = useState(true);
+
+const handleVideoEnded = useCallback(() => { skipNext(); }, [skipNext]);
+
+const handleTimeUpdate = useCallback(() => {
+  const vid = videoRef.current;
+  if (vid && vid.duration > 0) {
+    setVideoProgress((vid.currentTime / vid.duration) * 100);
+    setElapsedSeconds(Math.floor(vid.currentTime));
+  }
+}, []);
+
+const handleVideoError = useCallback(() => {
+  console.warn("Video failed to load, skipping");
+  setTimeout(() => skipNext(), 1000);
+}, [skipNext]);
+
+const handleVideoClick = useCallback(() => {
+  const vid = videoRef.current;
+  if (vid) { vid.muted = !vid.muted; setIsMuted(!vid.muted); }
+}, []);

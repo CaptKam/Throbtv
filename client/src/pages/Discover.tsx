@@ -137,7 +137,7 @@ const PeekCard = memo(function PeekCard({
 
 export default function Discover() {
   // UI state
-  const [stage, setStage] = useState<1 | 2 | 3>(2);
+  const [stage, setStage] = useState<1 | 2 | 3>(1);
   const [railOpen, setRailOpen] = useState(true);
   const [activeCat, setActiveCat] = useState("All");
   const [searchInput, setSearchInput] = useState("");
@@ -157,13 +157,15 @@ export default function Discover() {
   const { logout } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const peekRowRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [mouseIdle, setMouseIdle] = useState(false);
   const [uiHidden, setUiHidden] = useState(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const savedStageRef = useRef<1 | 2 | 3>(2);
+  const savedStageRef = useRef<1 | 2 | 3>(1);
   const savedRailRef = useRef(true);
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
 
@@ -365,6 +367,7 @@ export default function Discover() {
     }
   }, []);
 
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -458,7 +461,7 @@ export default function Discover() {
               src={currentVideo.trailerUrl}
               className="throb-video-el"
               autoPlay
-              muted
+              muted={isMuted}
               playsInline
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleVideoEnded}
