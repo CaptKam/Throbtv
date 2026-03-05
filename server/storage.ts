@@ -10,6 +10,33 @@ import {
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool);
 
+// Simple TTL cache for video list queries (avoids hitting DB on every browse/scroll)
+interface CacheEntry<T> {
+  data: T;
+  expiry: number;
+}
+const videoCache = new Map<string, CacheEntry<any>>();
+const VIDEO_CACHE_TTL = 60_000; // 1 minute
+
+function getCached<T>(key: string): T | undefined {
+  const entry = videoCache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiry) {
+    videoCache.delete(key);
+    return undefined;
+  }
+  return entry.data as T;
+}
+
+function setCache<T>(key: string, data: T): void {
+  // Cap cache size to prevent unbounded growth
+  if (videoCache.size > 500) {
+    const firstKey = videoCache.keys().next().value;
+    if (firstKey) videoCache.delete(firstKey);
+  }
+  videoCache.set(key, { data, expiry: Date.now() + VIDEO_CACHE_TTL });
+}
+
 export interface IStorage {
   // Users
   getUserById(id: string): Promise<User | undefined>;
@@ -59,6 +86,11 @@ export class DatabaseStorage implements IStorage {
 
   async getVideos(params: { limit?: number; offset?: number; search?: string; category?: string; tags?: string[] } = {}): Promise<Video[]> {
     const { limit = 24, offset = 0, search, category } = params;
+
+    const cacheKey = `v:${limit}:${offset}:${search || ""}:${category || ""}`;
+    const cached = getCached<Video[]>(cacheKey);
+    if (cached) return cached;
+
     let query = db.select().from(videos);
 
     const conditions = [];
@@ -73,7 +105,9 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions)) as any;
     }
 
-    return query.orderBy(desc(videos.createdAt)).limit(limit).offset(offset);
+    const result = await query.orderBy(desc(videos.createdAt)).limit(limit).offset(offset);
+    setCache(cacheKey, result);
+    return result;
   }
 
   async getVideoById(id: string): Promise<Video | undefined> {
@@ -87,6 +121,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVideoCount(params?: { search?: string; category?: string }): Promise<number> {
+    const cacheKey = `vc:${params?.search || ""}:${params?.category || ""}`;
+    const cached = getCached<number>(cacheKey);
+    if (cached !== undefined) return cached;
+
     const conditions = [];
     if (params?.search) {
       conditions.push(ilike(videos.title, `%${params.search}%`));
@@ -100,7 +138,9 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions)) as any;
     }
     const [result] = await query;
-    return Number(result.count);
+    const count = Number(result.count);
+    setCache(cacheKey, count);
+    return count;
   }
 
   async getPlaylistsByUser(userId: string): Promise<Playlist[]> {

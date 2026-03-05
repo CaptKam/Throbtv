@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -31,7 +31,11 @@ export const videos = pgTable("videos", {
   trailerUrl: text("trailer_url"),
   views: integer("views").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("videos_category_idx").on(table.category),
+  index("videos_created_at_idx").on(table.createdAt),
+  index("videos_category_created_idx").on(table.category, table.createdAt),
+]);
 
 export const playlists = pgTable("playlists", {
   id: varchar("id", { length: 64 }).primaryKey().default(sql`gen_random_uuid()`),
