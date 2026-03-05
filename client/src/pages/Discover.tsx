@@ -171,7 +171,15 @@ export default function Discover() {
       if (e.key === "Escape") {
         setStage(s => s === 3 ? 2 : s === 2 ? 1 : s);
       }
-      if (e.key === " ") { e.preventDefault(); setIsPlaying(p => !p); }
+      if (e.key === " ") {
+        e.preventDefault();
+        setIsPlaying(p => {
+          if (p) return false;
+          setElapsedSeconds(0);
+          setVideoProgress(0);
+          return true;
+        });
+      }
       if (e.key === "ArrowRight") skipNextRef.current();
       if (e.key === "ArrowLeft") skipPrevRef.current();
       if (e.key === "b" || e.key === "B") setStage(s => s >= 3 ? 1 : (s + 1) as 1 | 2 | 3);
@@ -247,9 +255,9 @@ export default function Discover() {
         {/* ======= VIDEO LAYER ======= */}
         <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
           {currentVideo ? (
-            currentVideo.embedUrl ? (
+            currentVideo.embedUrl && isPlaying ? (
               <iframe
-                key={currentVideo.id}
+                key={`${currentVideo.id}-${elapsedSeconds === 0 ? 'fresh' : 'playing'}`}
                 src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
                 className="throb-video-el"
                 allow="autoplay; encrypted-media; fullscreen"
@@ -260,6 +268,11 @@ export default function Discover() {
             ) : (
               <div className="throb-video-fallback">
                 <img src={currentVideo.thumbnailUrl || ""} alt="" />
+                {currentVideo.embedUrl && !isPlaying && (
+                  <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
+                    <Play size={64} fill="currentColor" />
+                  </div>
+                )}
               </div>
             )
           ) : (
@@ -507,7 +520,7 @@ export default function Discover() {
                   <div className="throb-now-sub">
                     {currentVideo
                       ? currentVideo.embedUrl && currentVideo.durationSeconds
-                        ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · Use player controls`
+                        ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)}`
                         : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
                       : "Browse to find videos"}
                   </div>
@@ -517,19 +530,21 @@ export default function Discover() {
                 <button className="throb-t-btn ghost" onClick={skipPrev}>
                   <SkipBack size={16} fill="currentColor" />
                 </button>
-                {currentVideo?.embedUrl ? (
-                  <button
-                    className="throb-t-btn primary"
-                    onClick={() => setIsPlaying(!isPlaying)}
-                    title={isPlaying ? "Pause timer (video plays independently)" : "Resume timer"}
-                  >
-                    {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
-                  </button>
-                ) : (
-                  <button className="throb-t-btn primary" onClick={() => setIsPlaying(!isPlaying)}>
-                    {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
-                  </button>
-                )}
+                <button
+                  className="throb-t-btn primary"
+                  onClick={() => {
+                    if (isPlaying) {
+                      setIsPlaying(false);
+                    } else {
+                      setElapsedSeconds(0);
+                      setVideoProgress(0);
+                      setIsPlaying(true);
+                    }
+                  }}
+                  title={isPlaying ? "Pause" : "Play"}
+                >
+                  {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
+                </button>
                 <button className="throb-t-btn ghost" onClick={skipNext}>
                   <SkipForward size={16} fill="currentColor" />
                 </button>
@@ -705,6 +720,17 @@ const scopedStyles = `
   .throb-video-fallback img {
     max-width: 100%; max-height: 100%;
     object-fit: contain; opacity: 0.6;
+  }
+  .throb-paused-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.4);
+    color: rgba(255,255,255,0.8); cursor: pointer;
+    transition: background 0.3s;
+  }
+  .throb-paused-overlay:hover {
+    background: rgba(0,0,0,0.3);
+    color: #fff;
   }
   .throb-video-empty {
     width: 100%; height: 100%;
