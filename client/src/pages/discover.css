@@ -9,6 +9,39 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* ---- GESTURE GATE ---- */
+.throb-gesture-gate {
+  position: fixed; inset: 0; z-index: 9999;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+}
+.throb-gesture-bg {
+  position: absolute; inset: 0;
+  background: #08090c;
+}
+.throb-gesture-bg img {
+  width: 100%; height: 100%;
+  object-fit: cover; opacity: 0.3;
+  filter: blur(20px) brightness(0.4);
+}
+.throb-gesture-content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 16px;
+  color: #fff;
+}
+.throb-gesture-content svg {
+  filter: drop-shadow(0 0 30px rgba(239,68,68,0.5));
+  color: #ef4444;
+}
+.throb-gesture-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px; font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 /* ---- VIDEO LAYER ---- */
 .throb-video-layer {
   position: fixed; inset: 0; z-index: 0;
