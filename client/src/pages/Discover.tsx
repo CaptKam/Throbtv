@@ -255,7 +255,7 @@ export default function Discover() {
         </div>
 
         {/* ======= CONTENT AREA ======= */}
-        <div className="throb-content" style={{ pointerEvents: stage === 1 ? 'none' : 'auto' }}>
+        <div className={`throb-content${stage === 1 ? ' pointer-events-none' : ''}`}>
           {/* Top bar */}
           <div className="throb-topbar">
             <button className="throb-topbar-btn" onClick={() => logout.mutate()} title="Logout">
