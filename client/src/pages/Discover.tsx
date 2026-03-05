@@ -165,25 +165,44 @@ export default function Discover() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [mouseIdle, setMouseIdle] = useState(false);
+  const [uiHidden, setUiHidden] = useState(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedStageRef = useRef<1 | 2 | 3>(1);
+  const savedRailRef = useRef(true);
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
 
-  // Mouse idle detection — dim UI after 3s of no movement
+  // Mouse idle detection — dim UI after 3s, hide after 15s
   useEffect(() => {
     const resetIdle = () => {
       setMouseIdle(false);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
       idleTimerRef.current = setTimeout(() => setMouseIdle(true), 3000);
+      hideTimerRef.current = setTimeout(() => {
+        setUiHidden(true);
+        setStage(prev => { savedStageRef.current = prev; return 1; });
+        setRailOpen(prev => { savedRailRef.current = prev; return false; });
+      }, 15000);
+      setUiHidden(prev => {
+        if (prev) {
+          setStage(savedStageRef.current);
+          setRailOpen(savedRailRef.current);
+        }
+        return false;
+      });
     };
     window.addEventListener("mousemove", resetIdle);
     window.addEventListener("mousedown", resetIdle);
     window.addEventListener("touchstart", resetIdle);
     idleTimerRef.current = setTimeout(() => setMouseIdle(true), 3000);
+    hideTimerRef.current = setTimeout(() => setUiHidden(true), 15000);
     return () => {
       window.removeEventListener("mousemove", resetIdle);
       window.removeEventListener("mousedown", resetIdle);
       window.removeEventListener("touchstart", resetIdle);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, []);
 
@@ -343,13 +362,13 @@ export default function Discover() {
   }, [currentVideo?.id, isPlaying]);
 
   return (
-    <div className={`throb-app ${mouseIdle ? "mouse-idle" : ""}`}>
+    <div className={`throb-app ${mouseIdle ? "mouse-idle" : ""} ${uiHidden ? "ui-hidden" : ""}`}>
       {/* ======= VIDEO LAYER ======= */}
       <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
         {currentVideo ? (
-          currentVideo.embedUrl ? (
+          currentVideo.embedUrl && isPlaying ? (
             <iframe
-              key={currentVideo.id}
+              key={`${currentVideo.id}-${elapsedSeconds === 0 ? 'fresh' : 'playing'}`}
               src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
               className="throb-video-el"
               allow="autoplay; encrypted-media; fullscreen"
@@ -360,6 +379,11 @@ export default function Discover() {
           ) : (
             <div className="throb-video-fallback">
               <img src={currentVideo.thumbnailUrl || ""} alt="" />
+              {currentVideo.embedUrl && !isPlaying && (
+                <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
+                  <Play size={64} fill="currentColor" />
+                </div>
+              )}
             </div>
           )
         ) : (

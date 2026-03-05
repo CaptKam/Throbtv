@@ -661,11 +661,31 @@
 .throb-app.mouse-idle .throb-topbar { opacity: 0.2; }
 .throb-app.mouse-idle .throb-vid-info { opacity: 0.3; }
 .throb-app.mouse-idle .throb-rail-tab { opacity: 0.3; }
-.throb-transport { transition: opacity 0.6s ease; }
-.throb-shelf-tab { transition: all 0.3s, opacity 0.6s ease; }
-.throb-topbar { transition: opacity 0.6s ease; }
-.throb-vid-info { transition: opacity 0.6s ease; }
-.throb-rail-tab { transition: all 0.3s, opacity 0.6s ease; }
+.throb-transport { transition: opacity 0.6s ease, transform 0.5s ease; }
+.throb-shelf-tab { transition: all 0.3s, opacity 0.6s ease, transform 0.5s ease; }
+.throb-topbar { transition: opacity 0.6s ease, transform 0.5s ease; }
+.throb-vid-info { transition: opacity 0.6s ease, transform 0.5s ease; }
+.throb-rail-tab { transition: all 0.3s, opacity 0.6s ease, transform 0.5s ease; }
+
+/* ---- UI HIDDEN (15s idle) ---- */
+.throb-app.ui-hidden .throb-transport { opacity: 0; transform: translateY(100%); pointer-events: none; }
+.throb-app.ui-hidden .throb-shelf-tab { opacity: 0; transform: translateY(40px); pointer-events: none; }
+.throb-app.ui-hidden .throb-topbar { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+.throb-app.ui-hidden .throb-vid-info { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+.throb-app.ui-hidden .throb-rail-tab { opacity: 0; pointer-events: none; }
+
+/* ---- PAUSED OVERLAY ---- */
+.throb-paused-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.8); cursor: pointer;
+  transition: background 0.3s;
+}
+.throb-paused-overlay:hover {
+  background: rgba(0,0,0,0.3);
+  color: #fff;
+}
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
