@@ -318,13 +318,13 @@
 /* ---- VIDEO GRID ---- */
 .throb-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 .throb-card { cursor: pointer; transition: transform 0.15s; }
 .throb-card:hover { transform: scale(1.03); }
 .throb-thumb {
-  aspect-ratio: 16/9; border-radius: 8px;
+  aspect-ratio: 1/1; border-radius: 8px;
   overflow: hidden; position: relative; background: #111;
 }
 .throb-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
@@ -705,7 +705,6 @@
   .throb-rq-remove { width: 44px; height: 44px; opacity: 1; }
   .throb-play-overlay { width: 48px; height: 48px; opacity: 0.9; }
 
-  /* Mobile grid — 2-column with bigger cards */
   .throb-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
