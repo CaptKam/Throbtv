@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Reorder } from "framer-motion";
 import {
-  Play, Pause, SkipBack, SkipForward, Search,
+  Play, Pause, SkipBack, SkipForward, Search, Plus,
   ChevronUp, ChevronDown, ChevronRight, X, List,
   Trash2, ListMusic, Tv, Cast, LogOut, ExternalLink
 } from "lucide-react";
@@ -83,13 +83,12 @@ const VideoCard = memo(function VideoCard({
         <div className="throb-thumb-hover">
           <Play size={24} fill="white" />
         </div>
-        <div className="throb-play-overlay"><Play size={24} fill="currentColor" /></div>
+        <button className="throb-add-btn" data-testid={`btn-add-${video.id}`} onClick={(e) => { e.stopPropagation(); onAddToQueue(video); }}>
+          <Plus size={14} strokeWidth={3} />
+        </button>
       </div>
       <div className="throb-card-title">{video.title}</div>
       <div className="throb-card-meta">{formatViews(video.views || 0)} views</div>
-      <div className="throb-card-actions">
-        <button className="throb-card-btn" onClick={(e) => { e.stopPropagation(); onAddToQueue(video); }}>+Queue</button>
-      </div>
     </div>
   );
 });
@@ -127,17 +126,11 @@ const PeekCard = memo(function PeekCard({
         )}
         <span className="throb-dur">{video.duration}</span>
         <span className="throb-src">{video.sourceDomain?.replace(".com", "")}</span>
-        <div className="throb-play-overlay"><Play size={24} fill="currentColor" /></div>
+        <button className="throb-add-btn" onClick={(e) => { e.stopPropagation(); onAddToQueue(video); }}>
+          <Plus size={14} strokeWidth={3} />
+        </button>
       </div>
       <div className="throb-pk-title">{video.title}</div>
-      <div className="throb-pk-actions">
-        <button className="throb-pk-btn" onClick={(e) => { e.stopPropagation(); onPlay(video); }}>
-          <Play size={10} fill="currentColor" style={{ marginLeft: 1 }} /> Play
-        </button>
-        <button className="throb-pk-btn" onClick={(e) => { e.stopPropagation(); onAddToQueue(video); }}>
-          + Queue
-        </button>
-      </div>
     </div>
   );
 });

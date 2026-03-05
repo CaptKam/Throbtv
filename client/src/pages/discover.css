@@ -357,16 +357,20 @@
   -webkit-box-orient: vertical; overflow: hidden;
 }
 .throb-card-meta { font-size: 11px; color: #8892a4; margin-top: 2px; }
-.throb-card-actions { display: flex; gap: 5px; margin-top: 6px; }
-.throb-card-btn {
-  flex: 1; padding: 6px 0; border-radius: 7px;
-  border: 1px solid rgba(148,163,184,0.12);
-  background: rgba(148,163,184,0.06);
-  color: #cbd5e1; font-size: 11px; font-weight: 600;
-  cursor: pointer; transition: all 0.3s;
-  font-family: 'Outfit', sans-serif;
+.throb-add-btn {
+  position: absolute; top: 6px; right: 6px; z-index: 5;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none;
+  background: rgba(34,197,94,0.9);
+  color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; opacity: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
-.throb-card-btn:hover { background: rgba(148,163,184,0.1); color: #f1f5f9; }
+.throb-card:hover .throb-add-btn,
+.throb-pk-card:hover .throb-add-btn { opacity: 1; }
+.throb-add-btn:hover { background: rgba(34,197,94,1); transform: scale(1.15); }
+.throb-add-btn:active { transform: scale(0.9); }
 
 /* ---- PAGINATION ---- */
 .throb-pagination {
@@ -566,21 +570,6 @@
 .throb-rq:hover .throb-rq-remove { opacity: 1; }
 .throb-rq-remove:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
 
-/* ---- PEEK CARD ACTIONS ---- */
-.throb-pk-actions {
-  display: flex; gap: 4px; margin-top: 4px;
-}
-.throb-pk-btn {
-  flex: 1; padding: 5px 0; border-radius: 6px;
-  border: 1px solid rgba(148,163,184,0.12);
-  background: rgba(148,163,184,0.06);
-  color: #cbd5e1; font-size: 10px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s;
-  font-family: 'Outfit', sans-serif;
-  display: flex; align-items: center; justify-content: center; gap: 3px;
-}
-.throb-pk-btn:hover { background: rgba(148,163,184,0.12); color: #f1f5f9; }
-.throb-pk-btn:active { transform: scale(0.95); background: rgba(239,68,68,0.15); color: #ef4444; }
 
 /* ---- PLAY OVERLAY (visible on mobile, hover on desktop) ---- */
 .throb-play-overlay {
@@ -647,7 +636,6 @@
 /* ---- TOUCH ACTIVE STATES ---- */
 .throb-card:active { transform: scale(0.97); }
 .throb-pk-card:active { transform: scale(0.96); }
-.throb-card-btn:active { transform: scale(0.93); background: rgba(239,68,68,0.12); color: #ef4444; }
 .throb-t-btn:active { transform: scale(0.9); }
 .throb-topbar-btn:active { transform: scale(0.9); }
 .throb-cat:active { transform: scale(0.95); }
@@ -711,8 +699,7 @@
   .throb-t-btn.primary { width: 52px; height: 52px; }
   .throb-close-btn { width: 44px; height: 44px; }
   .throb-cat { padding: 10px 16px; font-size: 13px; }
-  .throb-card-btn { padding: 10px 0; font-size: 12px; }
-  .throb-pk-btn { padding: 10px 0; font-size: 11px; }
+  .throb-add-btn { opacity: 1; }
   .throb-page-btn { padding: 12px 24px; }
   .throb-shelf-tab { padding: 12px 24px; }
   .throb-rq-remove { width: 44px; height: 44px; opacity: 1; }
