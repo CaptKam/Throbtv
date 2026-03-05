@@ -378,21 +378,23 @@ export default function Discover() {
         {currentVideo ? (
           currentVideo.embedUrl && isPlaying ? (
             <iframe
-              key={currentVideo.id}
+              key={`${currentVideo.id}-${elapsedSeconds === 0 ? 'fresh' : 'playing'}`}
               src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
               className="throb-video-el"
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
+              referrerPolicy="origin"
               style={{ border: 0 }}
             />
           ) : (
             <div className="throb-video-fallback">
               <img src={currentVideo.thumbnailUrl || ""} alt="" />
-              <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
-                <Play size={64} fill="currentColor" />
-                <span className="throb-paused-hint">Tap to play</span>
-              </div>
+              {currentVideo.embedUrl && !isPlaying && (
+                <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
+                  <Play size={64} fill="currentColor" />
+                  <span className="throb-paused-hint">Tap to play</span>
+                </div>
+              )}
             </div>
           )
         ) : (
