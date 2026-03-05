@@ -88,7 +88,6 @@ const VideoCard = memo(function VideoCard({
       <div className="throb-card-title">{video.title}</div>
       <div className="throb-card-meta">{formatViews(video.views || 0)} views</div>
       <div className="throb-card-actions">
-        <button className="throb-card-btn" onClick={(e) => { e.stopPropagation(); onPlayNext(video); }}>Next</button>
         <button className="throb-card-btn" onClick={(e) => { e.stopPropagation(); onAddToQueue(video); }}>+Queue</button>
       </div>
     </div>
