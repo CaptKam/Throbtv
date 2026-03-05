@@ -317,7 +317,7 @@ export default function Discover() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  const cycleStage = () => setStage(s => (s >= 3 ? 1 : s + 1) as 1 | 2 | 3);
+  const toggleShelf = () => setStage(s => s === 1 ? 2 : 1);
 
   // Swipe up/down to cycle stages on mobile
   const touchStartRef = useRef<{ y: number; time: number } | null>(null);
@@ -523,7 +523,7 @@ export default function Discover() {
 
         {/* ======= SHELF TAB + PEEK SHELF ======= */}
         <div className="throb-peek-wrapper">
-          <div className="throb-shelf-tab" onClick={cycleStage}>
+          <div className="throb-shelf-tab" onClick={toggleShelf}>
             <div className={`throb-shelf-icon ${stage > 1 ? "flipped" : ""}`}>
               <ChevronUp size={14} />
             </div>
