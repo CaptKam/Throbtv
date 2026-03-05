@@ -378,10 +378,10 @@ export default function Discover() {
         {currentVideo ? (
           currentVideo.embedUrl && isPlaying ? (
             <iframe
-              key={`${currentVideo.id}-${elapsedSeconds === 0 ? 'fresh' : 'playing'}`}
-              src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
+              key={currentVideo.id}
+              src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1&mute=0`}
               className="throb-video-el"
-              allow="autoplay; encrypted-media; fullscreen"
+              allow="autoplay *; encrypted-media; fullscreen"
               allowFullScreen
               referrerPolicy="origin"
               style={{ border: 0 }}
