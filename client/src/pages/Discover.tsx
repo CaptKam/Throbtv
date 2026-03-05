@@ -136,7 +136,7 @@ const PeekCard = memo(function PeekCard({
 
 export default function Discover() {
   // UI state
-  const [stage, setStage] = useState<1 | 2 | 3>(2);
+  const [stage, setStage] = useState<1 | 2 | 3>(1);
   const [railOpen, setRailOpen] = useState(true);
   const [activeCat, setActiveCat] = useState("All");
   const [searchInput, setSearchInput] = useState("");
@@ -149,7 +149,6 @@ export default function Discover() {
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [queue, setQueue] = useState<Video[]>([]);
-  const [needsGesture, setNeedsGesture] = useState(true);
 
   const { toast } = useToast();
   const { logout } = useAuth();
@@ -160,7 +159,7 @@ export default function Discover() {
   const [uiHidden, setUiHidden] = useState(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const savedStageRef = useRef<1 | 2 | 3>(2);
+  const savedStageRef = useRef<1 | 2 | 3>(1);
   const savedRailRef = useRef(true);
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
 
@@ -217,18 +216,13 @@ export default function Discover() {
   const videos = data?.videos ?? [];
   const totalVideos = data?.total ?? 0;
 
+  // Auto-play first video
   useEffect(() => {
     if (!currentVideo && videos.length > 0) {
       setCurrentVideo(videos[0]);
-    }
-  }, [videos, currentVideo]);
-
-  const handleGesture = useCallback(() => {
-    if (needsGesture) {
-      setNeedsGesture(false);
       setIsPlaying(true);
     }
-  }, [needsGesture]);
+  }, [videos, currentVideo]);
 
   // Queue functions
   const playNow = useCallback((video: Video) => {
@@ -341,7 +335,6 @@ export default function Discover() {
   }, []);
 
   // Timer-based progress for iframe embeds using durationSeconds
-  // BUG FIX: depend on currentVideo?.id (not whole object) to avoid iframe flicker
   useEffect(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -380,42 +373,28 @@ export default function Discover() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {needsGesture && currentVideo && (
-        <div className="throb-gesture-gate" onClick={handleGesture} data-testid="gesture-gate">
-          <div className="throb-gesture-bg">
-            {currentVideo.thumbnailUrl && <img src={currentVideo.thumbnailUrl} alt="" />}
-          </div>
-          <div className="throb-gesture-content">
-            <Play size={72} fill="currentColor" strokeWidth={0} />
-            <span className="throb-gesture-text">Tap to start</span>
-          </div>
-        </div>
-      )}
-
       {/* ======= VIDEO LAYER ======= */}
       <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
         {currentVideo ? (
           currentVideo.embedUrl && isPlaying ? (
             <iframe
-              key={currentVideo.id}
+              key={`${currentVideo.id}-${elapsedSeconds === 0 ? 'fresh' : 'playing'}`}
               src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
               className="throb-video-el"
-              allow="autoplay *; encrypted-media; fullscreen"
+              allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen
               referrerPolicy="origin"
               style={{ border: 0 }}
             />
-          ) : currentVideo.embedUrl && !isPlaying ? (
-            <div className="throb-video-fallback">
-              <img src={currentVideo.thumbnailUrl || ""} alt="" />
-              <div className="throb-paused-overlay" onClick={() => setIsPlaying(true)}>
-                <Play size={64} fill="currentColor" />
-                <span className="throb-paused-hint">Tap to play</span>
-              </div>
-            </div>
           ) : (
             <div className="throb-video-fallback">
               <img src={currentVideo.thumbnailUrl || ""} alt="" />
+              {currentVideo.embedUrl && !isPlaying && (
+                <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
+                  <Play size={64} fill="currentColor" />
+                  <span className="throb-paused-hint">Tap to play</span>
+                </div>
+              )}
             </div>
           )
         ) : (

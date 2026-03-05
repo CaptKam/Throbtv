@@ -17,7 +17,7 @@ function Router() {
   return (
     <Suspense fallback={<div style={{ background: "#000", width: "100vw", height: "100vh" }} />}>
       <Switch>
-        <Route path="/" component={Discover} />
+        <Route path="/" component={Landing} />
         <Route path="/discover" component={Discover} />
         <Route path="/theater" component={Theater} />
         <Route path="/remote/:sessionCode" component={Remote} />
