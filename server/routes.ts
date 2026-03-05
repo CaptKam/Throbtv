@@ -114,10 +114,11 @@ export async function registerRoutes(
     const orientation = typeof req.query.orientation === "string" ? req.query.orientation : undefined;
     const tagsParam = typeof req.query.tags === "string" ? req.query.tags : undefined;
     const tagSlugs = tagsParam ? tagsParam.split(",").map(t => t.trim()).filter(Boolean) : undefined;
+    const minDuration = req.query.minDuration !== undefined ? Number(req.query.minDuration) : 120;
 
     const [videosList, total] = await Promise.all([
-      storage.getVideos({ limit, offset, search, category, tags: tagSlugs, orientation }),
-      storage.getVideoCount({ search, category, tags: tagSlugs, orientation }),
+      storage.getVideos({ limit, offset, search, category, tags: tagSlugs, orientation, minDuration }),
+      storage.getVideoCount({ search, category, tags: tagSlugs, orientation, minDuration }),
     ]);
 
     // Cache video listings for 60s — catalog doesn't change often
