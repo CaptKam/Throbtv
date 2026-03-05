@@ -367,7 +367,7 @@ export default function Discover() {
   }, []);
 
   // Reset progress only when video changes (not on pause/play)
-  const prevVideoIdRef = useRef<number | null>(null);
+  const prevVideoIdRef = useRef<string | number | null>(null);
   useEffect(() => {
     if (currentVideo?.id !== prevVideoIdRef.current) {
       prevVideoIdRef.current = currentVideo?.id ?? null;
@@ -427,25 +427,27 @@ export default function Discover() {
         onClick={isMobile && stage === 1 ? () => setIsPlaying(p => !p) : undefined}
       >
         {currentVideo ? (
-          currentVideo.embedUrl && isPlaying ? (
-            <iframe
-              key={currentVideo.id}
-              src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
-              className="throb-video-el"
-              allow="autoplay; encrypted-media; fullscreen"
-              allowFullScreen
-              referrerPolicy="origin"
-              style={{ border: 0 }}
-            />
+          currentVideo.embedUrl ? (
+            <>
+              <iframe
+                key={currentVideo.id}
+                src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
+                className="throb-video-el"
+                allow="autoplay; encrypted-media; fullscreen"
+                allowFullScreen
+                referrerPolicy="origin"
+                style={{ border: 0 }}
+              />
+              {!isPlaying && (
+                <div className="throb-paused-overlay" onClick={() => setIsPlaying(true)}>
+                  <Play size={64} fill="currentColor" />
+                  <span className="throb-paused-hint">Paused — timer stopped</span>
+                </div>
+              )}
+            </>
           ) : (
             <div className="throb-video-fallback">
               <img src={currentVideo.thumbnailUrl || ""} alt="" />
-              {currentVideo.embedUrl && !isPlaying && (
-                <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
-                  <Play size={64} fill="currentColor" />
-                  <span className="throb-paused-hint">Tap to play</span>
-                </div>
-              )}
             </div>
           )
         ) : (
