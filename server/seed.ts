@@ -138,6 +138,12 @@ export async function seedVideos() {
   const existing = await db.select({ count: sql<number>`count(*)` }).from(videos);
   const count = Number(existing[0].count);
 
+  if (count > 0) {
+    console.log(`Database has ${count} videos, skipping auto-seed (imports managed manually).`);
+    await pool.end();
+    return;
+  }
+
   const hasGayFeed = fs.existsSync(GAY_FEED_FILE);
   const hasLongFeed = fs.existsSync(LONG_FEED_FILE);
 
