@@ -725,7 +725,7 @@ const scopedStyles = `
   .throb-topbar-btn:hover { background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.2); }
 
   /* ---- TRANSPORT BAR ---- */
-  .throb-transport }pointer-events: auto;
+  .throb-transport {pointer-events: auto;
     position: absolute; bottom: 0; left: 0; right: 0; z-index: 100;
     background: rgba(8,9,12,0.92); backdrop-filter: blur(24px);
     border-top: 1px solid rgba(148,163,184,0.06);
