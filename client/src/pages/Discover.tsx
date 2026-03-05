@@ -559,7 +559,7 @@ export default function Discover() {
             ))}
           </div>
           <div className="throb-peek-row" ref={peekRowRef}>
-            {videos.slice(0, 10).map((v) => (
+            {videos.slice(0, 5).map((v) => (
               <PeekCard
                 key={v.id}
                 video={v}
