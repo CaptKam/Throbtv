@@ -41,7 +41,7 @@ export default function Remote() {
     prev,
     adjustTimer,
     skipNow,
-  } = useSocket();
+  } = useSocket("phone");
 
   useEffect(() => {
     if (isConnected && sessionCode && !isPaired) {
