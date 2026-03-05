@@ -376,15 +376,25 @@ export default function Discover() {
       {/* ======= VIDEO LAYER ======= */}
       <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
         {currentVideo ? (
-          <div className="throb-video-fallback">
-            <img src={currentVideo.thumbnailUrl || ""} alt="" />
-            {currentVideo.sourceUrl && (
-              <div className="throb-paused-overlay" onClick={() => window.open(currentVideo.sourceUrl, "_blank")}>
+          currentVideo.embedUrl && isPlaying ? (
+            <iframe
+              key={currentVideo.id}
+              src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
+              className="throb-video-el"
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              style={{ border: 0 }}
+            />
+          ) : (
+            <div className="throb-video-fallback">
+              <img src={currentVideo.thumbnailUrl || ""} alt="" />
+              <div className="throb-paused-overlay" onClick={() => { setElapsedSeconds(0); setIsPlaying(true); }}>
                 <Play size={64} fill="currentColor" />
-                <span className="throb-paused-hint">Watch on site</span>
+                <span className="throb-paused-hint">Tap to play</span>
               </div>
-            )}
-          </div>
+            </div>
+          )
         ) : (
           <div className="throb-video-empty">
             <div className="throb-watermark">throb</div>
