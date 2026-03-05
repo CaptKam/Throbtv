@@ -151,13 +151,10 @@ export default function Discover() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [queue, setQueue] = useState<Video[]>([]);
   const [videoProgress, setVideoProgress] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
-
   const { toast } = useToast();
   const { logout } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const peekRowRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
