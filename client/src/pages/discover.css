@@ -204,7 +204,7 @@
 
 /* ---- PEEK SHELF (Stage 2) ---- */
 .throb-peek {
-  background: rgba(8,9,12,0.95); backdrop-filter: blur(20px);
+  background: rgba(8,9,12,0.98);
   border-top: 1px solid rgba(148,163,184,0.06);
   border-radius: 16px 16px 0 0;
   padding-top: 28px; padding-bottom: 10px;
@@ -262,8 +262,8 @@
   display: grid; grid-template-columns: repeat(5, 1fr);
   gap: 10px; padding: 0 16px;
 }
-.throb-peek-row::-webkit-scrollbar { display: none; }
 .throb-pk-card {
+  min-width: 0;
   cursor: pointer; transition: transform 0.2s;
 }
 .throb-pk-card:hover { transform: scale(1.04); }
@@ -271,7 +271,7 @@
   width: 100%; aspect-ratio: 1/1; border-radius: 8px;
   overflow: hidden; position: relative; background: #111;
 }
-.throb-pk-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.throb-pk-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .throb-pk-thumb .throb-trailer-preview {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; transition: opacity 0.3s; z-index: 1;
