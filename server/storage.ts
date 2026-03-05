@@ -3,8 +3,10 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import {
   users, videos, playlists, playlistItems, likes, watchHistory,
+  tags, videoTags, performers, videoPerformers, studios, videoStudios,
   type User, type InsertVideo, type Video, type Playlist, type InsertPlaylist,
-  type PlaylistItem, type Like, type WatchHistoryEntry
+  type PlaylistItem, type Like, type WatchHistoryEntry,
+  type Tag, type Performer, type Studio
 } from "@shared/schema";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
@@ -44,10 +46,24 @@ export interface IStorage {
   createUser(email: string, passwordHash: string): Promise<User>;
 
   // Videos
-  getVideos(params: { limit?: number; offset?: number; search?: string; category?: string; tags?: string[] }): Promise<Video[]>;
+  getVideos(params: { limit?: number; offset?: number; search?: string; category?: string; tags?: string[]; orientation?: string }): Promise<Video[]>;
   getVideoById(id: string): Promise<Video | undefined>;
   createVideo(video: InsertVideo): Promise<Video>;
-  getVideoCount(params?: { search?: string; category?: string }): Promise<number>;
+  getVideoCount(params?: { search?: string; category?: string; tags?: string[]; orientation?: string }): Promise<number>;
+
+  // Tags
+  getTagBySlug(slug: string): Promise<Tag | undefined>;
+  getPopularTags(limit?: number): Promise<Tag[]>;
+  getTagsForVideo(videoId: string): Promise<Tag[]>;
+  setVideoTags(videoId: string, tagSlugs: string[]): Promise<void>;
+
+  // Performers
+  getPerformers(limit?: number): Promise<Performer[]>;
+  getPerformersForVideo(videoId: string): Promise<Performer[]>;
+
+  // Studios
+  getStudios(limit?: number): Promise<Studio[]>;
+  getStudiosForVideo(videoId: string): Promise<Studio[]>;
 
   // Playlists
   getPlaylistsByUser(userId: string): Promise<Playlist[]>;
@@ -84,21 +100,35 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getVideos(params: { limit?: number; offset?: number; search?: string; category?: string; tags?: string[] } = {}): Promise<Video[]> {
-    const { limit = 24, offset = 0, search, category } = params;
+  async getVideos(params: { limit?: number; offset?: number; search?: string; category?: string; tags?: string[]; orientation?: string } = {}): Promise<Video[]> {
+    const { limit = 24, offset = 0, search, category, tags: tagSlugs, orientation } = params;
 
-    const cacheKey = `v:${limit}:${offset}:${search || ""}:${category || ""}`;
+    const cacheKey = `v:${limit}:${offset}:${search || ""}:${category || ""}:${(tagSlugs || []).join(",")}:${orientation || ""}`;
     const cached = getCached<Video[]>(cacheKey);
     if (cached) return cached;
+
+    // If multi-tag filtering is requested, use raw SQL for the intersection query
+    if (tagSlugs && tagSlugs.length > 0) {
+      const result = await this.getVideosByTags(tagSlugs, { limit, offset, search, category, orientation });
+      setCache(cacheKey, result);
+      return result;
+    }
 
     let query = db.select().from(videos);
 
     const conditions = [];
     if (search) {
-      conditions.push(ilike(videos.title, `%${search}%`));
+      // Use PostgreSQL full-text search with fallback to ilike
+      conditions.push(sql`(
+        to_tsvector('english', ${videos.title}) @@ plainto_tsquery('english', ${search})
+        OR ${ilike(videos.title, `%${search}%`)}
+      )`);
     }
     if (category) {
       conditions.push(eq(videos.category, category));
+    }
+    if (orientation) {
+      conditions.push(eq(videos.orientation, orientation));
     }
 
     if (conditions.length > 0) {
@@ -108,6 +138,42 @@ export class DatabaseStorage implements IStorage {
     const result = await query.orderBy(desc(videos.createdAt)).limit(limit).offset(offset);
     setCache(cacheKey, result);
     return result;
+  }
+
+  /**
+   * Find videos that match ALL given tag slugs (intersection query).
+   * Uses a JOIN per tag with HAVING COUNT to ensure all tags match.
+   */
+  private async getVideosByTags(
+    tagSlugs: string[],
+    opts: { limit: number; offset: number; search?: string; category?: string; orientation?: string }
+  ): Promise<Video[]> {
+    const tagCount = tagSlugs.length;
+    const searchCondition = opts.search
+      ? sql`AND (to_tsvector('english', v.title) @@ plainto_tsquery('english', ${opts.search}) OR v.title ILIKE ${'%' + opts.search + '%'})`
+      : sql``;
+    const categoryCondition = opts.category
+      ? sql`AND v.category = ${opts.category}`
+      : sql``;
+    const orientationCondition = opts.orientation
+      ? sql`AND v.orientation = ${opts.orientation}`
+      : sql``;
+
+    const rows = await db.execute(sql`
+      SELECT v.* FROM videos v
+      JOIN video_tags vt ON v.id = vt.video_id
+      JOIN tags t ON vt.tag_id = t.id
+      WHERE t.slug = ANY(${tagSlugs})
+      ${searchCondition}
+      ${categoryCondition}
+      ${orientationCondition}
+      GROUP BY v.id
+      HAVING COUNT(DISTINCT t.id) = ${tagCount}
+      ORDER BY v.created_at DESC
+      LIMIT ${opts.limit} OFFSET ${opts.offset}
+    `);
+
+    return rows.rows as Video[];
   }
 
   async getVideoById(id: string): Promise<Video | undefined> {
@@ -120,17 +186,54 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getVideoCount(params?: { search?: string; category?: string }): Promise<number> {
-    const cacheKey = `vc:${params?.search || ""}:${params?.category || ""}`;
+  async getVideoCount(params?: { search?: string; category?: string; tags?: string[]; orientation?: string }): Promise<number> {
+    const cacheKey = `vc:${params?.search || ""}:${params?.category || ""}:${(params?.tags || []).join(",")}:${params?.orientation || ""}`;
     const cached = getCached<number>(cacheKey);
     if (cached !== undefined) return cached;
 
+    // Multi-tag count
+    if (params?.tags && params.tags.length > 0) {
+      const tagCount = params.tags.length;
+      const searchCondition = params.search
+        ? sql`AND (to_tsvector('english', v.title) @@ plainto_tsquery('english', ${params.search}) OR v.title ILIKE ${'%' + params.search + '%'})`
+        : sql``;
+      const categoryCondition = params.category
+        ? sql`AND v.category = ${params.category}`
+        : sql``;
+      const orientationCondition = params.orientation
+        ? sql`AND v.orientation = ${params.orientation}`
+        : sql``;
+
+      const result = await db.execute(sql`
+        SELECT COUNT(*) as count FROM (
+          SELECT v.id FROM videos v
+          JOIN video_tags vt ON v.id = vt.video_id
+          JOIN tags t ON vt.tag_id = t.id
+          WHERE t.slug = ANY(${params.tags})
+          ${searchCondition}
+          ${categoryCondition}
+          ${orientationCondition}
+          GROUP BY v.id
+          HAVING COUNT(DISTINCT t.id) = ${tagCount}
+        ) sub
+      `);
+      const count = Number((result.rows[0] as any)?.count ?? 0);
+      setCache(cacheKey, count);
+      return count;
+    }
+
     const conditions = [];
     if (params?.search) {
-      conditions.push(ilike(videos.title, `%${params.search}%`));
+      conditions.push(sql`(
+        to_tsvector('english', ${videos.title}) @@ plainto_tsquery('english', ${params.search})
+        OR ${ilike(videos.title, `%${params.search}%`)}
+      )`);
     }
     if (params?.category) {
       conditions.push(eq(videos.category, params.category));
+    }
+    if (params?.orientation) {
+      conditions.push(eq(videos.orientation, params.orientation));
     }
 
     let query = db.select({ count: sql<number>`count(*)` }).from(videos);
@@ -142,6 +245,83 @@ export class DatabaseStorage implements IStorage {
     setCache(cacheKey, count);
     return count;
   }
+
+  // ---- Tags ----
+
+  async getTagBySlug(slug: string): Promise<Tag | undefined> {
+    const [tag] = await db.select().from(tags).where(eq(tags.slug, slug)).limit(1);
+    return tag;
+  }
+
+  async getPopularTags(limit = 50): Promise<Tag[]> {
+    return db.select().from(tags).orderBy(desc(tags.count)).limit(limit);
+  }
+
+  async getTagsForVideo(videoId: string): Promise<Tag[]> {
+    const rows = await db.select({ tag: tags })
+      .from(videoTags)
+      .innerJoin(tags, eq(videoTags.tagId, tags.id))
+      .where(eq(videoTags.videoId, videoId));
+    return rows.map(r => r.tag);
+  }
+
+  async setVideoTags(videoId: string, tagSlugs: string[]): Promise<void> {
+    // Remove existing tags
+    await db.delete(videoTags).where(eq(videoTags.videoId, videoId));
+
+    if (tagSlugs.length === 0) return;
+
+    // Upsert tags and link them
+    for (const slug of tagSlugs) {
+      const name = slug.replace(/-/g, " ");
+      const [tag] = await db.insert(tags)
+        .values({ name, slug, count: 0 })
+        .onConflictDoNothing({ target: tags.slug })
+        .returning();
+
+      const existing = tag || await this.getTagBySlug(slug);
+      if (existing) {
+        await db.insert(videoTags).values({ videoId, tagId: existing.id }).onConflictDoNothing();
+      }
+    }
+
+    // Update tag counts
+    await db.execute(sql`
+      UPDATE tags SET count = (
+        SELECT COUNT(*) FROM video_tags WHERE video_tags.tag_id = tags.id
+      ) WHERE slug = ANY(${tagSlugs})
+    `);
+  }
+
+  // ---- Performers ----
+
+  async getPerformers(limit = 50): Promise<Performer[]> {
+    return db.select().from(performers).orderBy(asc(performers.name)).limit(limit);
+  }
+
+  async getPerformersForVideo(videoId: string): Promise<Performer[]> {
+    const rows = await db.select({ performer: performers })
+      .from(videoPerformers)
+      .innerJoin(performers, eq(videoPerformers.performerId, performers.id))
+      .where(eq(videoPerformers.videoId, videoId));
+    return rows.map(r => r.performer);
+  }
+
+  // ---- Studios ----
+
+  async getStudios(limit = 50): Promise<Studio[]> {
+    return db.select().from(studios).orderBy(asc(studios.name)).limit(limit);
+  }
+
+  async getStudiosForVideo(videoId: string): Promise<Studio[]> {
+    const rows = await db.select({ studio: studios })
+      .from(videoStudios)
+      .innerJoin(studios, eq(videoStudios.studioId, studios.id))
+      .where(eq(videoStudios.videoId, videoId));
+    return rows.map(r => r.studio);
+  }
+
+  // ---- Playlists ----
 
   async getPlaylistsByUser(userId: string): Promise<Playlist[]> {
     return db.select().from(playlists).where(eq(playlists.userId, userId)).orderBy(desc(playlists.createdAt));

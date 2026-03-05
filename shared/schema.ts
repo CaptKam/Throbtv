@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, uniqueIndex, index, serial, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -23,10 +23,14 @@ export const videos = pgTable("videos", {
   videoIdOnSource: text("video_id_on_source"),
   sourceDomain: text("source_domain"),
   title: text("title").notNull(),
+  description: text("description"),
   duration: text("duration"),
   durationSeconds: integer("duration_seconds"),
   tags: text("tags").array(),
   category: text("category"),
+  orientation: text("orientation").default("straight"),
+  quality: text("quality").default("HD"),
+  rating: integer("rating").default(0),
   thumbnailUrl: text("thumbnail_url"),
   trailerUrl: text("trailer_url"),
   views: integer("views").default(0),
@@ -35,6 +39,57 @@ export const videos = pgTable("videos", {
   index("videos_category_idx").on(table.category),
   index("videos_created_at_idx").on(table.createdAt),
   index("videos_category_created_idx").on(table.category, table.createdAt),
+  index("videos_orientation_idx").on(table.orientation),
+  index("videos_views_idx").on(table.views),
+  index("videos_duration_idx").on(table.durationSeconds),
+]);
+
+// ---- Normalized tags ----
+export const tags = pgTable("tags", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+  count: integer("count").default(0),
+});
+
+export const videoTags = pgTable("video_tags", {
+  videoId: varchar("video_id", { length: 64 }).notNull().references(() => videos.id, { onDelete: "cascade" }),
+  tagId: integer("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
+}, (table) => [
+  primaryKey({ columns: [table.videoId, table.tagId] }),
+  index("video_tags_tag_idx").on(table.tagId),
+]);
+
+// ---- Performers ----
+export const performers = pgTable("performers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  imageUrl: text("image_url"),
+});
+
+export const videoPerformers = pgTable("video_performers", {
+  videoId: varchar("video_id", { length: 64 }).notNull().references(() => videos.id, { onDelete: "cascade" }),
+  performerId: integer("performer_id").notNull().references(() => performers.id, { onDelete: "cascade" }),
+}, (table) => [
+  primaryKey({ columns: [table.videoId, table.performerId] }),
+  index("video_performers_performer_idx").on(table.performerId),
+]);
+
+// ---- Studios ----
+export const studios = pgTable("studios", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  imageUrl: text("image_url"),
+});
+
+export const videoStudios = pgTable("video_studios", {
+  videoId: varchar("video_id", { length: 64 }).notNull().references(() => videos.id, { onDelete: "cascade" }),
+  studioId: integer("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+}, (table) => [
+  primaryKey({ columns: [table.videoId, table.studioId] }),
+  index("video_studios_studio_idx").on(table.studioId),
 ]);
 
 export const playlists = pgTable("playlists", {
@@ -98,3 +153,6 @@ export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
 export type PlaylistItem = typeof playlistItems.$inferSelect;
 export type Like = typeof likes.$inferSelect;
 export type WatchHistoryEntry = typeof watchHistory.$inferSelect;
+export type Tag = typeof tags.$inferSelect;
+export type Performer = typeof performers.$inferSelect;
+export type Studio = typeof studios.$inferSelect;

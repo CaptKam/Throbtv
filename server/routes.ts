@@ -109,12 +109,15 @@ export async function registerRoutes(
   app.get("/api/videos", async (req: Request, res: Response) => {
     const limit = Math.min(Number(req.query.limit) || 24, 100);
     const offset = Number(req.query.offset) || 0;
-    const search = req.query.search as string | undefined;
-    const category = req.query.category as string | undefined;
+    const search = typeof req.query.search === "string" ? req.query.search : undefined;
+    const category = typeof req.query.category === "string" ? req.query.category : undefined;
+    const orientation = typeof req.query.orientation === "string" ? req.query.orientation : undefined;
+    const tagsParam = typeof req.query.tags === "string" ? req.query.tags : undefined;
+    const tagSlugs = tagsParam ? tagsParam.split(",").map(t => t.trim()).filter(Boolean) : undefined;
 
     const [videosList, total] = await Promise.all([
-      storage.getVideos({ limit, offset, search, category }),
-      storage.getVideoCount({ search, category }),
+      storage.getVideos({ limit, offset, search, category, tags: tagSlugs, orientation }),
+      storage.getVideoCount({ search, category, tags: tagSlugs, orientation }),
     ]);
 
     // Cache video listings for 60s — catalog doesn't change often
@@ -123,10 +126,19 @@ export async function registerRoutes(
   });
 
   app.get("/api/videos/:id", async (req: Request, res: Response) => {
-    const video = await storage.getVideoById(req.params.id);
+    const id = String(String(req.params.id));
+    const video = await storage.getVideoById(id);
     if (!video) return res.status(404).json({ message: "Video not found" });
+
+    // Fetch related tags, performers, studios in parallel
+    const [relatedTags, relatedPerformers, relatedStudios] = await Promise.all([
+      storage.getTagsForVideo(id),
+      storage.getPerformersForVideo(id),
+      storage.getStudiosForVideo(id),
+    ]);
+
     res.set("Cache-Control", "public, max-age=300");
-    return res.json(video);
+    return res.json({ ...video, videoTags: relatedTags, videoPerformers: relatedPerformers, videoStudios: relatedStudios });
   });
 
   app.post("/api/videos", requireAuth, async (req: Request, res: Response) => {
@@ -136,6 +148,33 @@ export async function registerRoutes(
     }
     const video = await storage.createVideo(parsed.data);
     return res.status(201).json(video);
+  });
+
+  // ==================== TAGS ====================
+
+  app.get("/api/tags", async (_req: Request, res: Response) => {
+    const limit = Number(_req.query.limit) || 50;
+    const tagsList = await storage.getPopularTags(limit);
+    res.set("Cache-Control", "public, max-age=300");
+    return res.json(tagsList);
+  });
+
+  // ==================== PERFORMERS ====================
+
+  app.get("/api/performers", async (_req: Request, res: Response) => {
+    const limit = Number(_req.query.limit) || 50;
+    const performersList = await storage.getPerformers(limit);
+    res.set("Cache-Control", "public, max-age=300");
+    return res.json(performersList);
+  });
+
+  // ==================== STUDIOS ====================
+
+  app.get("/api/studios", async (_req: Request, res: Response) => {
+    const limit = Number(_req.query.limit) || 50;
+    const studiosList = await storage.getStudios(limit);
+    res.set("Cache-Control", "public, max-age=300");
+    return res.json(studiosList);
   });
 
   // ==================== PLAYLISTS ====================
@@ -155,25 +194,25 @@ export async function registerRoutes(
   });
 
   app.delete("/api/playlists/:id", requireAuth, async (req: Request, res: Response) => {
-    const deleted = await storage.deletePlaylist(req.params.id, req.session.userId!);
+    const deleted = await storage.deletePlaylist(String(req.params.id), req.session.userId!);
     if (!deleted) return res.status(404).json({ message: "Playlist not found" });
     return res.json({ message: "Deleted" });
   });
 
   app.get("/api/playlists/:id/items", requireAuth, async (req: Request, res: Response) => {
-    const items = await storage.getPlaylistItems(req.params.id);
+    const items = await storage.getPlaylistItems(String(req.params.id));
     return res.json(items);
   });
 
   app.post("/api/playlists/:id/items", requireAuth, async (req: Request, res: Response) => {
     const { videoId, position } = req.body;
     if (!videoId) return res.status(400).json({ message: "videoId is required" });
-    const item = await storage.addPlaylistItem(req.params.id, videoId, position ?? 0);
+    const item = await storage.addPlaylistItem(String(req.params.id), videoId, position ?? 0);
     return res.status(201).json(item);
   });
 
   app.delete("/api/playlist-items/:id", requireAuth, async (req: Request, res: Response) => {
-    const removed = await storage.removePlaylistItem(req.params.id);
+    const removed = await storage.removePlaylistItem(String(req.params.id));
     if (!removed) return res.status(404).json({ message: "Item not found" });
     return res.json({ message: "Removed" });
   });
