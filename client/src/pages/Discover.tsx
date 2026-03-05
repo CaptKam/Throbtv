@@ -80,23 +80,6 @@ export default function Discover() {
   const videos = data?.videos ?? [];
   const totalVideos = data?.total ?? 0;
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
-      if (e.key === "Escape") {
-        if (stage === 3) setStage(2);
-        else if (stage === 2) setStage(1);
-      }
-      if (e.key === " ") { e.preventDefault(); setIsPlaying(p => !p); }
-      if (e.key === "ArrowRight") skipNext();
-      if (e.key === "b" || e.key === "B") setStage(s => s >= 3 ? 1 : (s + 1) as 1 | 2 | 3);
-      if (e.key === "q" || e.key === "Q") setRailOpen(r => !r);
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [stage]);
-
   // Auto-play first video
   useEffect(() => {
     if (!currentVideo && videos.length > 0) {
@@ -107,8 +90,13 @@ export default function Discover() {
 
   // Queue functions
   const playNow = useCallback((video: Video) => {
-    setCurrentVideo(video);
+    setCurrentVideo(prev => {
+      if (prev) setHistory(h => [prev, ...h]);
+      return video;
+    });
     setIsPlaying(true);
+    setElapsedSeconds(0);
+    setVideoProgress(0);
     setStage(1);
   }, []);
 
@@ -132,16 +120,65 @@ export default function Discover() {
     setQueue(q => q.filter((_, i) => i !== idx));
   }, []);
 
+  const [history, setHistory] = useState<Video[]>([]);
+
   const skipNext = useCallback(() => {
-    if (queue.length > 0) {
-      setCurrentVideo(queue[0]);
-      setQueue(q => q.slice(1));
-      setIsPlaying(true);
-    }
-  }, [queue]);
+    setQueue(q => {
+      if (q.length > 0) {
+        setCurrentVideo(prev => {
+          if (prev) setHistory(h => [prev, ...h]);
+          return q[0];
+        });
+        setIsPlaying(true);
+        setElapsedSeconds(0);
+        setVideoProgress(0);
+        return q.slice(1);
+      }
+      return q;
+    });
+  }, []);
 
   const skipPrev = useCallback(() => {
-    // No-op for now, could track history
+    setHistory(h => {
+      if (h.length > 0) {
+        setCurrentVideo(prev => {
+          if (prev) setQueue(q => [prev, ...q]);
+          return h[0];
+        });
+        setIsPlaying(true);
+        setElapsedSeconds(0);
+        setVideoProgress(0);
+        return h.slice(1);
+      }
+      // No history — restart current video by forcing re-render
+      setCurrentVideo(prev => prev ? { ...prev } : prev);
+      setElapsedSeconds(0);
+      setVideoProgress(0);
+      return h;
+    });
+  }, []);
+
+  // Keep refs to skip functions so handlers don't have stale closures
+  const skipNextRef = useRef(skipNext);
+  useEffect(() => { skipNextRef.current = skipNext; }, [skipNext]);
+  const skipPrevRef = useRef(skipPrev);
+  useEffect(() => { skipPrevRef.current = skipPrev; }, [skipPrev]);
+
+  // Keyboard shortcuts — use refs to avoid stale closures
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
+      if (e.key === "Escape") {
+        setStage(s => s === 3 ? 2 : s === 2 ? 1 : s);
+      }
+      if (e.key === " ") { e.preventDefault(); setIsPlaying(p => !p); }
+      if (e.key === "ArrowRight") skipNextRef.current();
+      if (e.key === "ArrowLeft") skipPrevRef.current();
+      if (e.key === "b" || e.key === "B") setStage(s => s >= 3 ? 1 : (s + 1) as 1 | 2 | 3);
+      if (e.key === "q" || e.key === "Q") setRailOpen(r => !r);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
   const cycleStage = () => setStage(s => (s >= 3 ? 1 : s + 1) as 1 | 2 | 3);
@@ -161,23 +198,22 @@ export default function Discover() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    setVideoProgress(0);
-    setElapsedSeconds(0);
 
     if (!currentVideo) return;
 
     // Only use timer for iframe embeds (embedUrl present)
     const isEmbed = !!currentVideo.embedUrl;
     const totalSec = currentVideo.durationSeconds || 0;
+    // Add 15s buffer — embed previews may differ from full duration
+    const effectiveDuration = totalSec > 0 ? totalSec + 15 : 0;
 
-    if (isEmbed && totalSec > 0 && isPlaying) {
+    if (isEmbed && effectiveDuration > 0 && isPlaying) {
       timerRef.current = setInterval(() => {
         setElapsedSeconds(prev => {
           const next = prev + 1;
-          setVideoProgress(Math.min((next / totalSec) * 100, 100));
-          if (next >= totalSec) {
-            // Auto-skip to next when video ends
-            skipNext();
+          setVideoProgress(Math.min((next / effectiveDuration) * 100, 100));
+          if (next >= effectiveDuration) {
+            skipNextRef.current();
           }
           return next;
         });
@@ -214,7 +250,7 @@ export default function Discover() {
             currentVideo.embedUrl ? (
               <iframe
                 key={currentVideo.id}
-                src={currentVideo.embedUrl}
+                src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
                 className="throb-video-el"
                 allow="autoplay; encrypted-media; fullscreen"
                 allowFullScreen
@@ -471,7 +507,7 @@ export default function Discover() {
                   <div className="throb-now-sub">
                     {currentVideo
                       ? currentVideo.embedUrl && currentVideo.durationSeconds
-                        ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · ${currentVideo.sourceDomain || ""}`
+                        ? `${formatTime(elapsedSeconds)} / ${formatTime(currentVideo.durationSeconds)} · Use player controls`
                         : `${currentVideo.duration || "—"} · ${currentVideo.sourceDomain || ""}`
                       : "Browse to find videos"}
                   </div>
@@ -481,9 +517,19 @@ export default function Discover() {
                 <button className="throb-t-btn ghost" onClick={skipPrev}>
                   <SkipBack size={16} fill="currentColor" />
                 </button>
-                <button className="throb-t-btn primary" onClick={() => setIsPlaying(!isPlaying)}>
-                  {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
-                </button>
+                {currentVideo?.embedUrl ? (
+                  <button
+                    className="throb-t-btn primary"
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    title={isPlaying ? "Pause timer (video plays independently)" : "Resume timer"}
+                  >
+                    {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
+                  </button>
+                ) : (
+                  <button className="throb-t-btn primary" onClick={() => setIsPlaying(!isPlaying)}>
+                    {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />}
+                  </button>
+                )}
                 <button className="throb-t-btn ghost" onClick={skipNext}>
                   <SkipForward size={16} fill="currentColor" />
                 </button>
@@ -685,6 +731,7 @@ const scopedStyles = `
   .throb-vid-info {
     position: absolute; top: 16px; left: 16px; z-index: 1;
     transition: opacity 0.4s;
+    pointer-events: auto;
   }
   .throb-vid-title {
     font-size: 16px; font-weight: 700;
@@ -713,6 +760,7 @@ const scopedStyles = `
   .throb-topbar {
     position: fixed; top: 10px; right: 10px; z-index: 300;
     display: flex; gap: 4px;
+    pointer-events: auto;
   }
   .throb-topbar-btn {pointer-events: auto;
     width: 38px; height: 38px; border-radius: 50%;
@@ -729,6 +777,7 @@ const scopedStyles = `
     position: absolute; bottom: 0; left: 0; right: 0; z-index: 100;
     background: rgba(8,9,12,0.92); backdrop-filter: blur(24px);
     border-top: 1px solid rgba(148,163,184,0.06);
+    pointer-events: auto;
   }
   .throb-progress { height: 4px; background: rgba(148,163,184,0.08); position: relative; }
   .throb-progress-fill {
