@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import compression from "compression";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -11,6 +12,9 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+// Gzip compress all responses — huge win for JSON API payloads
+app.use(compression());
 
 app.use(
   express.json({
