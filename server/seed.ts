@@ -12,7 +12,7 @@ const EXPECTED_TOTAL = 139736;
 
 function fixEmbedDomain(url: string): string {
   if (!url) return "";
-  let fixed = url.replace("faphouse.com/embed/", "fh.video/embed/");
+  let fixed = url.replace("fh.video/embed/", "faphouse.com/embed/");
   if (!fixed.includes("utm_content=throb.tv")) {
     const sep = fixed.includes("?") ? "&" : "?";
     fixed = `${fixed}${sep}utm_content=throb.tv`;
