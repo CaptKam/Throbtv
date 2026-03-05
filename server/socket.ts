@@ -71,53 +71,6 @@ export function setupSocket(httpServer: HttpServer) {
       }
     });
 
-    socket.on("session:rejoin", ({ sessionCode, role }, callback) => {
-      const session = sessions.get(sessionCode);
-      if (!session) {
-        if (typeof callback === "function") {
-          callback({ success: false, error: "Session expired" });
-        }
-        return;
-      }
-
-      const effectiveRole = role || "tv";
-      if (effectiveRole === "tv") {
-        session.tvSocketId = socket.id;
-        socket.data.role = "tv";
-      } else {
-        session.phoneSocketId = socket.id;
-        socket.data.role = "phone";
-      }
-
-      socket.join(sessionCode);
-      socket.data.sessionCode = sessionCode;
-
-      // Notify the other device
-      socket.to(sessionCode).emit("session:paired", {
-        deviceId: socket.id,
-        role: socket.data.role,
-      });
-
-      const hasPeer = effectiveRole === "tv"
-        ? !!session.phoneSocketId
-        : !!session.tvSocketId;
-
-      log(`${effectiveRole} ${socket.id} rejoined session ${sessionCode}`, "socket");
-      if (typeof callback === "function") {
-        callback({
-          success: true,
-          sessionCode,
-          isPaired: hasPeer,
-          state: {
-            queue: session.queue,
-            currentIndex: session.currentIndex,
-            isPlaying: session.isPlaying,
-            countdown: session.countdown,
-          },
-        });
-      }
-    });
-
     socket.on("session:join", ({ sessionCode }, callback) => {
       const session = sessions.get(sessionCode);
       if (!session) {

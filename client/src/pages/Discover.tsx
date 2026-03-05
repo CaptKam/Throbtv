@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useSocket } from "@/hooks/use-socket";
 import type { Video } from "@shared/schema";
 import "./discover.css";
 
@@ -154,14 +153,10 @@ export default function Discover() {
   // Debounce search by 350ms to avoid hammering API on every keystroke
   const searchQuery = useDebouncedValue(searchInput, 350);
 
-  // Player state — local for Discover (not socket-synced for solo browsing)
+  // Player state
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [queue, setQueue] = useState<Video[]>([]);
-  const [history, setHistory] = useState<Video[]>([]);
-
-  // Socket — for syncing with Theater/Remote when connected
-  const socket = useSocket();
 
   const { toast } = useToast();
   const { logout } = useAuth();
@@ -176,7 +171,6 @@ export default function Discover() {
   const savedStageRef = useRef<1 | 2 | 3>(1);
   const savedRailRef = useRef(true);
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
 
   // Mouse idle detection — dim UI after 3s, hide after 15s
   useEffect(() => {
@@ -249,77 +243,62 @@ export default function Discover() {
     setElapsedSeconds(0);
     setVideoProgress(0);
     setStage(1);
-    // Also sync to socket if connected to a session
-    if (socket.sessionCode) {
-      socket.addToQueue(video, "next");
-    }
-  }, [socket]);
+  }, []);
 
   const playNext = useCallback((video: Video) => {
     setQueue(q => {
-      const newQ = [video, ...q];
+      const ci = q.findIndex(v => v.id === currentVideo?.id);
+      const insertAt = ci >= 0 ? ci + 1 : 0;
+      const newQ = [...q];
+      newQ.splice(insertAt, 0, video);
       return newQ;
     });
-    if (socket.sessionCode) {
-      socket.addToQueue(video, "next");
-    }
     toast({ title: "Playing Next", description: `"${video.title}" queued up next` });
-  }, [socket, toast]);
+  }, [currentVideo, toast]);
 
   const addToQueue = useCallback((video: Video) => {
     setQueue(q => [...q, video]);
-    if (socket.sessionCode) {
-      socket.addToQueue(video, "end");
-    }
     toast({ title: "Added to Queue", description: `"${video.title}" added` });
-  }, [socket, toast]);
+  }, [toast]);
 
   const removeFromQueue = useCallback((idx: number) => {
     setQueue(q => q.filter((_, i) => i !== idx));
   }, []);
 
+  const [history, setHistory] = useState<Video[]>([]);
+
   const skipNext = useCallback(() => {
-    setQueue(prevQueue => {
-      if (prevQueue.length > 0) {
-        const nextVideo = prevQueue[0];
-        const remaining = prevQueue.slice(1);
-        setTimeout(() => {
-          setCurrentVideo(prev => {
-            if (prev) setHistory(h => [prev, ...h]);
-            return nextVideo;
-          });
-          setIsPlaying(true);
-          setElapsedSeconds(0);
-          setVideoProgress(0);
-        }, 0);
-        return remaining;
+    setQueue(q => {
+      if (q.length > 0) {
+        setCurrentVideo(prev => {
+          if (prev) setHistory(h => [prev, ...h]);
+          return q[0];
+        });
+        setIsPlaying(true);
+        setElapsedSeconds(0);
+        setVideoProgress(0);
+        return q.slice(1);
       }
-      return prevQueue;
+      return q;
     });
   }, []);
 
   const skipPrev = useCallback(() => {
-    setHistory(prevHistory => {
-      if (prevHistory.length > 0) {
-        const prevVideo = prevHistory[0];
-        const remaining = prevHistory.slice(1);
-        setTimeout(() => {
-          setCurrentVideo(prev => {
-            if (prev) setQueue(q => [prev, ...q]);
-            return prevVideo;
-          });
-          setIsPlaying(true);
-          setElapsedSeconds(0);
-          setVideoProgress(0);
-        }, 0);
-        return remaining;
-      }
-      // No history — restart current video
-      setTimeout(() => {
+    setHistory(h => {
+      if (h.length > 0) {
+        setCurrentVideo(prev => {
+          if (prev) setQueue(q => [prev, ...q]);
+          return h[0];
+        });
+        setIsPlaying(true);
         setElapsedSeconds(0);
         setVideoProgress(0);
-      }, 0);
-      return prevHistory;
+        return h.slice(1);
+      }
+      setCurrentVideo(prev => prev ? { ...prev } : prev);
+      setElapsedSeconds(0);
+      setVideoProgress(0);
+      return h;
     });
   }, []);
 
@@ -358,10 +337,12 @@ export default function Discover() {
     const dy = touchStartRef.current.y - e.changedTouches[0].clientY;
     const dt = Date.now() - touchStartRef.current.time;
     touchStartRef.current = null;
-    if (dt > 500 || Math.abs(dy) < 50) return;
+    if (dt > 500 || Math.abs(dy) < 50) return; // too slow or too short
     if (dy > 0) {
+      // Swipe up → open shelf
       setStage(s => (s >= 3 ? 3 : (s + 1) as 1 | 2 | 3));
     } else {
+      // Swipe down → close shelf
       setStage(s => (s <= 1 ? 1 : (s - 1) as 1 | 2 | 3));
     }
   }, []);
@@ -373,30 +354,24 @@ export default function Discover() {
       timerRef.current = null;
     }
 
-    // Reset progress when video changes
-    setVideoProgress(0);
-    setElapsedSeconds(0);
+    if (!currentVideo) return;
 
-    if (!currentVideo?.embedUrl || !currentVideo?.durationSeconds || !isPlaying) {
-      return;
+    const isEmbed = !!currentVideo.embedUrl;
+    const totalSec = currentVideo.durationSeconds || 0;
+    const effectiveDuration = totalSec > 0 ? totalSec + 15 : 0;
+
+    if (isEmbed && effectiveDuration > 0 && isPlaying) {
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(prev => {
+          const next = prev + 1;
+          setVideoProgress(Math.min((next / effectiveDuration) * 100, 100));
+          if (next >= effectiveDuration) {
+            skipNextRef.current();
+          }
+          return next;
+        });
+      }, 1000);
     }
-
-    const totalSec = currentVideo.durationSeconds + 15; // 15 sec buffer
-
-    timerRef.current = setInterval(() => {
-      setElapsedSeconds(prev => {
-        const next = prev + 1;
-        const progress = Math.min((next / totalSec) * 100, 100);
-        setVideoProgress(progress);
-
-        if (next >= totalSec) {
-          // Auto-advance to next in queue
-          skipNextRef.current();
-          return 0;
-        }
-        return next;
-      });
-    }, 1000);
 
     return () => {
       if (timerRef.current) {
@@ -406,11 +381,6 @@ export default function Discover() {
     };
   }, [currentVideo?.id, isPlaying]);
 
-  // On mobile Stage 1, show video layer as interactive (not behind pointer-events-none content)
-  // Desktop: pointer-events-none on content lets clicks pass through to iframe
-  // Mobile: content layer gets pointer-events back, video layer tap triggers play
-  const contentPointerClass = stage === 1 && !isMobile ? ' pointer-events-none' : '';
-
   return (
     <div
       className={`throb-app ${mouseIdle ? "mouse-idle" : ""} ${uiHidden ? "ui-hidden" : ""}`}
@@ -418,10 +388,7 @@ export default function Discover() {
       onTouchEnd={handleTouchEnd}
     >
       {/* ======= VIDEO LAYER ======= */}
-      <div
-        className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}
-        onClick={isMobile && stage === 1 ? () => setIsPlaying(p => !p) : undefined}
-      >
+      <div className={`throb-video-layer ${stage === 2 ? "dim-1" : stage === 3 ? "dim-2" : ""}`}>
         {currentVideo ? (
           currentVideo.embedUrl && isPlaying ? (
             <iframe
@@ -473,7 +440,7 @@ export default function Discover() {
       </div>
 
       {/* ======= CONTENT AREA ======= */}
-      <div className={`throb-content${contentPointerClass}`}>
+      <div className={`throb-content${stage === 1 ? ' pointer-events-none' : ''}`}>
         {/* Top bar */}
         <div className="throb-topbar">
           <button className="throb-topbar-btn" onClick={() => logout.mutate()} title="Logout">

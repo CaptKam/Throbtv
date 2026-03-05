@@ -1,9 +1,8 @@
-import { createContext, useContext, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import type { Video } from "@shared/schema";
-import React from "react";
 
-export interface PlayerState {
+interface PlayerState {
   currentIndex: number;
   currentVideo: Video | null;
   queue: Video[];
@@ -19,33 +18,7 @@ const initialState: PlayerState = {
   countdown: 0,
 };
 
-interface SocketContextValue {
-  isConnected: boolean;
-  isPaired: boolean;
-  peerDisconnected: boolean;
-  sessionCode: string | null;
-  playerState: PlayerState;
-  setPlayerState: React.Dispatch<React.SetStateAction<PlayerState>>;
-  createSession: () => Promise<string>;
-  joinSession: (code: string) => Promise<PlayerState>;
-  emit: (event: string, data?: any) => void;
-  addToQueue: (video: Video, position?: "next" | "end") => void;
-  removeFromQueue: (index: number) => void;
-  reorderQueue: (from: number, to: number) => void;
-  clearQueue: () => void;
-  play: () => void;
-  pause: () => void;
-  next: () => void;
-  prev: () => void;
-  jump: (index: number) => void;
-  adjustTimer: (delta: number) => void;
-  skipNow: () => void;
-  syncState: (state: Partial<PlayerState>) => void;
-}
-
-const SocketContext = createContext<SocketContextValue | null>(null);
-
-export function SocketProvider({ children }: { children: React.ReactNode }) {
+export function useSocket(role: "tv" | "phone") {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isPaired, setIsPaired] = useState(false);
@@ -57,48 +30,17 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     const socket = io(window.location.origin, {
       path: "/socket.io",
       transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
     });
 
     socketRef.current = socket;
 
     socket.on("connect", () => {
       setIsConnected(true);
-
-      // Auto-rejoin session if we have one stored
-      const stored = sessionStorage.getItem("throb_session");
-      const storedRole = sessionStorage.getItem("throb_role");
-      if (stored) {
-        socket.emit("session:rejoin", { sessionCode: stored, role: storedRole || "tv" }, (response: any) => {
-          if (response.success) {
-            setSessionCode(stored);
-            if (response.state) {
-              const s = response.state;
-              setPlayerState({
-                queue: s.queue || [],
-                currentIndex: s.currentIndex ?? -1,
-                currentVideo: s.queue?.[s.currentIndex] || null,
-                isPlaying: s.isPlaying || false,
-                countdown: s.countdown || 0,
-              });
-            }
-            if (response.isPaired) {
-              setIsPaired(true);
-              setPeerDisconnected(false);
-            }
-          } else {
-            sessionStorage.removeItem("throb_session");
-            sessionStorage.removeItem("throb_role");
-          }
-        });
-      }
     });
 
     socket.on("disconnect", () => {
       setIsConnected(false);
+      setIsPaired(false);
     });
 
     socket.on("session:paired", () => {
@@ -107,13 +49,17 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     });
 
     socket.on("session:tv-disconnected", () => {
-      setPeerDisconnected(true);
-      setIsPaired(false);
+      if (role === "phone") {
+        setPeerDisconnected(true);
+        setIsPaired(false);
+      }
     });
 
     socket.on("session:phone-disconnected", () => {
-      setIsPaired(false);
-      setPeerDisconnected(true);
+      if (role === "tv") {
+        setIsPaired(false);
+        setPeerDisconnected(true);
+      }
     });
 
     socket.on("player:play", () => {
@@ -205,7 +151,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, []);
+  }, [role]);
 
   const createSession = useCallback((): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -215,8 +161,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       socket.emit("session:create", (response: any) => {
         if (response.success) {
           setSessionCode(response.sessionCode);
-          sessionStorage.setItem("throb_session", response.sessionCode);
-          sessionStorage.setItem("throb_role", "tv");
           resolve(response.sessionCode);
         } else {
           reject(new Error(response.error || "Failed to create session"));
@@ -235,8 +179,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           setSessionCode(code);
           setIsPaired(true);
           setPeerDisconnected(false);
-          sessionStorage.setItem("throb_session", code);
-          sessionStorage.setItem("throb_role", "phone");
           const state = response.state || {};
           const ps: PlayerState = {
             queue: state.queue || [],
@@ -286,7 +228,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     emit("player:state", state);
   }, [emit]);
 
-  const value: SocketContextValue = {
+  return {
     isConnected,
     isPaired,
     peerDisconnected,
@@ -309,14 +251,4 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     skipNow,
     syncState,
   };
-
-  return React.createElement(SocketContext.Provider, { value }, children);
-}
-
-export function useSocket() {
-  const ctx = useContext(SocketContext);
-  if (!ctx) {
-    throw new Error("useSocket must be used within a SocketProvider");
-  }
-  return ctx;
 }
