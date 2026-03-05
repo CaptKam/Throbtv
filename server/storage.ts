@@ -136,7 +136,7 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions)) as any;
     }
 
-    const result = await query.orderBy(desc(videos.createdAt)).limit(limit).offset(offset);
+    const result = await query.orderBy(desc(videos.views), desc(videos.createdAt)).limit(limit).offset(offset);
     setCache(cacheKey, result);
     return result;
   }
@@ -174,7 +174,7 @@ export class DatabaseStorage implements IStorage {
       ${minDurationCondition}
       GROUP BY v.id
       HAVING COUNT(DISTINCT t.id) = ${tagCount}
-      ORDER BY v.created_at DESC
+      ORDER BY v.views DESC, v.created_at DESC
       LIMIT ${opts.limit} OFFSET ${opts.offset}
     `);
 
