@@ -737,6 +737,14 @@
   /* Full browse top — less top padding on mobile */
   .throb-full-top { padding-top: 16px; }
 
+  /* Mobile Stage 1: video layer is interactive, no pointer-events-none needed */
+  .throb-video-layer { z-index: 0; pointer-events: auto; }
+  .throb-video-el {
+    /* Ensure iframe is tappable on mobile */
+    pointer-events: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Swipe hint on shelf tab */
   .throb-shelf-tab::after {
     content: 'swipe up';

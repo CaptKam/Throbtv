@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, SkipForward, SkipBack, Wifi, WifiOff, Cast, Smartphone } from "lucide-react";
@@ -14,7 +14,7 @@ export default function Theater() {
     setPlayerState,
     createSession,
     syncState,
-  } = useSocket("tv");
+  } = useSocket();
 
   const [quickFade, setQuickFade] = useState(false);
   const [sessionCreated, setSessionCreated] = useState(false);
@@ -29,7 +29,7 @@ export default function Theater() {
 
   useEffect(() => {
     if (isConnected && !sessionCreated) {
-      createSession().then((code) => {
+      createSession().then(() => {
         setSessionCreated(true);
       });
     }
@@ -93,6 +93,10 @@ export default function Theater() {
     const sec = s % 60;
     return `${m}:${String(sec).padStart(2, "0")}`;
   };
+
+  const embedSrc = currentVideo?.embedUrl
+    ? `${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`
+    : null;
 
   return (
     <div className="fixed inset-0 bg-black text-white flex items-center justify-center overflow-hidden">
@@ -203,10 +207,10 @@ export default function Theater() {
       {currentVideo && !quickFade && (
         <div className="fixed inset-0 flex flex-col">
           <div className="flex-1 bg-black relative">
-            {currentVideo.embedUrl ? (
+            {embedSrc ? (
               <iframe
                 key={currentVideo.id}
-                src={currentVideo.embedUrl}
+                src={embedSrc}
                 className="w-full h-full border-0"
                 allow="autoplay; encrypted-media; fullscreen"
                 allowFullScreen
