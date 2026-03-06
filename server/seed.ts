@@ -184,16 +184,10 @@ export async function seedVideos() {
     return;
   }
 
-  if (count > 0 && hasV2) {
+  if (count > 0) {
     const trailerCount = await db.execute(sql`SELECT COUNT(*) as c FROM videos WHERE trailer_url IS NOT NULL AND trailer_url != ''`);
     const tc = Number((trailerCount.rows[0] as any)?.c ?? 0);
-    if (tc > 0) {
-      console.log(`Database has ${count} videos (${tc} with trailers), skipping seed.`);
-      await pool.end();
-      return;
-    }
-  } else if (count > 0 && !hasV2) {
-    console.log(`Database has ${count} videos, skipping seed.`);
+    console.log(`Database has ${count} videos (${tc} with trailers), skipping seed.`);
     await pool.end();
     return;
   }
