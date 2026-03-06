@@ -119,7 +119,8 @@ export class DatabaseStorage implements IStorage {
 
     let query = db.select().from(videos);
 
-    const conditions = [];
+    // Only return videos with playable trailer URLs (FapHouse blocks iframe embeds)
+    const conditions = [sql`${videos.trailerUrl} IS NOT NULL AND ${videos.trailerUrl} != ''`];
     if (search) {
       conditions.push(sql`(
         to_tsvector('english', ${videos.title}) @@ plainto_tsquery('english', ${search})
@@ -136,9 +137,7 @@ export class DatabaseStorage implements IStorage {
       conditions.push(sql`${videos.durationSeconds} >= ${minDuration}`);
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as any;
-    }
+    query = query.where(and(...conditions)) as any;
 
     const result = await query.orderBy(desc(videos.views), desc(videos.createdAt)).limit(limit).offset(offset);
     setCache(cacheKey, result);
@@ -172,6 +171,7 @@ export class DatabaseStorage implements IStorage {
       JOIN video_tags vt ON v.id = vt.video_id
       JOIN tags t ON vt.tag_id = t.id
       WHERE t.slug = ANY(${tagSlugs})
+      AND v.trailer_url IS NOT NULL AND v.trailer_url != ''
       ${searchCondition}
       ${categoryCondition}
       ${orientationCondition}
@@ -221,6 +221,7 @@ export class DatabaseStorage implements IStorage {
           JOIN video_tags vt ON v.id = vt.video_id
           JOIN tags t ON vt.tag_id = t.id
           WHERE t.slug = ANY(${params.tags})
+          AND v.trailer_url IS NOT NULL AND v.trailer_url != ''
           ${searchCondition}
           ${categoryCondition}
           ${orientationCondition}
@@ -234,7 +235,8 @@ export class DatabaseStorage implements IStorage {
       return count;
     }
 
-    const conditions = [];
+    // Only count videos with playable trailer URLs (FapHouse blocks iframe embeds)
+    const conditions: any[] = [sql`${videos.trailerUrl} IS NOT NULL AND ${videos.trailerUrl} != ''`];
     if (params?.search) {
       conditions.push(sql`(
         to_tsvector('english', ${videos.title}) @@ plainto_tsquery('english', ${params.search})
@@ -252,9 +254,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     let query = db.select({ count: sql<number>`count(*)` }).from(videos);
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as any;
-    }
+    query = query.where(and(...conditions)) as any;
     const [result] = await query;
     const count = Number(result.count);
     setCache(cacheKey, count);
