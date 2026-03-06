@@ -63,6 +63,8 @@ app.use((req, res, next) => {
   // pg_trgm for fast ILIKE text search (ignore if extension unavailable)
   await migrationPool.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`).catch(() => {});
   await migrationPool.query(`CREATE INDEX IF NOT EXISTS videos_title_trgm_idx ON videos USING gin (title gin_trgm_ops)`).catch(() => {});
+  // Fix embed URLs: /videos/ path gets blocked by X-Frame-Options, must use /embed/
+  await migrationPool.query(`UPDATE videos SET embed_url = REPLACE(embed_url, 'faphouse.com/videos/', 'faphouse.com/embed/') WHERE embed_url LIKE '%faphouse.com/videos/%'`);
   await migrationPool.end();
 
   const { seedVideos } = await import("./seed");

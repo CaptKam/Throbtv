@@ -470,7 +470,7 @@ export default function Discover() {
             <>
               <iframe
                 key={currentVideo.id}
-                src={`${currentVideo.embedUrl.replace('/embed/', '/videos/')}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
+                src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
                 className="throb-video-el"
                 allow="autoplay *; encrypted-media; fullscreen"
                 allowFullScreen
