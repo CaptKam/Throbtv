@@ -23,13 +23,6 @@ export function serveStatic(app: Express) {
 
   // fall through to index.html if the file doesn't exist
   app.use("/{*path}", (_req, res) => {
-    const indexPath = path.resolve(distPath, "index.html");
-    fs.readFile(indexPath, "utf-8", (err, data) => {
-      if (err) {
-        return res.sendStatus(404);
-      }
-      const html = data.replace('nonce="${nonce}"', `nonce="${res.locals.nonce}"`);
-      res.send(html);
-    });
+    res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
