@@ -63,6 +63,10 @@ app.use((req, res, next) => {
   // pg_trgm for fast ILIKE text search (ignore if extension unavailable)
   await migrationPool.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`).catch(() => {});
   await migrationPool.query(`CREATE INDEX IF NOT EXISTS videos_title_trgm_idx ON videos USING gin (title gin_trgm_ops)`).catch(() => {});
+  const fixResult = await migrationPool.query(`UPDATE videos SET embed_url = REPLACE(embed_url, '/embed/', '/videos/') WHERE embed_url LIKE '%/embed/%'`);
+  if (fixResult.rowCount && fixResult.rowCount > 0) {
+    console.log(`[migration] Fixed ${fixResult.rowCount} embed URLs: /embed/ → /videos/`);
+  }
   await migrationPool.end();
 
   const { seedVideos } = await import("./seed");

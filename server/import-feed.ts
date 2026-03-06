@@ -27,7 +27,9 @@ function extractEmbedUrl(embedHtml: string): string {
   const match = embedHtml.match(/src="([^"]+)"/);
   if (!match) return "";
   let url = match[1];
-  url = url.replace("fh.video/embed/", "faphouse.com/embed/");
+  url = url
+    .replace("fh.video/embed/", "faphouse.com/videos/")
+    .replace("faphouse.com/embed/", "faphouse.com/videos/");
   const sep = url.includes("?") ? "&" : "?";
   return `${url}${sep}utm_content=throb.tv`;
 }
