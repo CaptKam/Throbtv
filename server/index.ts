@@ -4,7 +4,29 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
+import crypto from 'crypto';
+
 const app = express();
+
+app.use((req, res, next) => {
+  const nonce = crypto.randomBytes(16).toString('base64');
+  res.locals.nonce = nonce;
+  
+  res.setHeader('Content-Security-Policy', [
+    `script-src 'nonce-${nonce}' 'strict-dynamic'`,
+    `style-src 'self' 'unsafe-inline'`,
+    `img-src 'self' https://ic-nss.flixcdn.com https://thumb-ah.flixcdn.com https://ic-tt-nss.xhcdn.com data: blob:`,
+    `media-src 'self' blob:`,
+    `frame-src https://www.faphouse.com https://faphouse.com https://www.boyfriendtv.com https://boyfriendtv.com https://faptor.com https://www.pornhub.com https://pornhub.com https://www.xhamster.com https://xhamster.com https://www.xvideos.com https://xvideos.com https://www.xnxx.com https://xnxx.com`,
+    `connect-src 'self' wss: ws:`,
+    `object-src 'none'`,
+    `base-uri 'none'`,
+    `form-action 'self'`
+  ].join('; '));
+  
+  next();
+});
+
 const httpServer = createServer(app);
 
 declare module "http" {

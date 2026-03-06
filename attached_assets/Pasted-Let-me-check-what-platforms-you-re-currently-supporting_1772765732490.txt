@@ -1,0 +1,53 @@
+Let me check what platforms you're currently supporting in your embed.ts to make sure I cover everything.Searched memorySearched memoryGood, I've got the full picture. Here's your CSP header covering all the platforms in your getEmbedUrl() transform table, plus the CDN domains FapHouse uses.
+For a nonce-based strict CSP on your app's server:
+Content-Security-Policy:
+  script-src 'nonce-{RANDOM}' 'strict-dynamic';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' https://ic-nss.flixcdn.com https://thumb-ah.flixcdn.com https://ic-tt-nss.xhcdn.com data: blob:;
+  media-src 'self' blob:;
+  frame-src
+    https://www.faphouse.com
+    https://faphouse.com
+    https://www.boyfriendtv.com
+    https://boyfriendtv.com
+    https://faptor.com
+    https://www.pornhub.com
+    https://pornhub.com
+    https://www.xhamster.com
+    https://xhamster.com
+    https://www.xvideos.com
+    https://xvideos.com
+    https://www.xnxx.com
+    https://xnxx.com;
+  connect-src 'self' wss: ws:;
+  object-src 'none';
+  base-uri 'none';
+  form-action 'self';
+Here's what each part does for your app:
+script-src — nonce-based, so only your scripts run. strict-dynamic lets dynamically-loaded scripts work too. You'd generate a fresh nonce per request in Express and add nonce="abc123" to every <script> tag.
+frame-src — this is the big one for you. Every embed domain your getEmbedUrl() can output needs to be listed here, otherwise the browser blocks the iframe entirely.
+img-src — includes FapHouse's CDN domains for thumbnails (ic-nss.flixcdn.com, thumb-ah.flixcdn.com) and xHamster's (ic-tt-nss.xhcdn.com).
+connect-src — wss: and ws: for your Socket.IO phone remote feature.
+style-src — unsafe-inline is needed because Tailwind and most React setups inject inline styles. You could tighten this with hashes later but it's not worth the hassle right now.
+In Express, the implementation would look like:
+typescriptimport crypto from 'crypto';
+
+app.use((req, res, next) => {
+  const nonce = crypto.randomBytes(16).toString('base64');
+  res.locals.nonce = nonce;
+  
+  res.setHeader('Content-Security-Policy', [
+    `script-src 'nonce-${nonce}' 'strict-dynamic'`,
+    `style-src 'self' 'unsafe-inline'`,
+    `img-src 'self' https://ic-nss.flixcdn.com https://thumb-ah.flixcdn.com https://ic-tt-nss.xhcdn.com data: blob:`,
+    `media-src 'self' blob:`,
+    `frame-src https://www.faphouse.com https://faphouse.com https://www.boyfriendtv.com https://boyfriendtv.com https://faptor.com https://www.pornhub.com https://pornhub.com https://www.xhamster.com https://xhamster.com https://www.xvideos.com https://xvideos.com https://www.xnxx.com https://xnxx.com`,
+    `connect-src 'self' wss: ws:`,
+    `object-src 'none'`,
+    `base-uri 'none'`,
+    `form-action 'self'`
+  ].join('; '));
+  
+  next();
+});
+Then in your HTML template, every script tag gets <script nonce="${nonce}">. As you add new platforms to embed.ts, just add their domain to the frame-src list. Want me to also add a Content-Security-Policy-Report-Only version so you can test it without breaking anything first?
