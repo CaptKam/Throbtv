@@ -67,6 +67,10 @@ app.use((req, res, next) => {
   await migrationPool.query(`UPDATE videos SET embed_url = REPLACE(embed_url, 'faphouse.com/embed/', 'faphouse.com/videos/') WHERE embed_url LIKE '%faphouse.com/embed/%'`);
   await migrationPool.end();
 
+  // Clear in-memory video cache so stale /embed/ URLs aren't served
+  const { clearVideoCache } = await import("./storage");
+  clearVideoCache();
+
   const { seedVideos } = await import("./seed");
   await seedVideos().catch(err => console.error("Seed error:", err));
 

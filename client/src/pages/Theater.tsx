@@ -230,7 +230,7 @@ export default function Theater() {
             ) : currentVideo.embedUrl ? (
               <iframe
                 key={currentVideo.id}
-                src={currentVideo.embedUrl}
+                src={`${currentVideo.embedUrl.replace('/embed/', '/videos/')}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
                 className="w-full h-full border-0"
                 allow="autoplay; encrypted-media; fullscreen"
                 allowFullScreen
