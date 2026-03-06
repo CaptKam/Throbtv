@@ -9,6 +9,12 @@ import { insertUserSchema, loginSchema, insertVideoSchema, insertPlaylistSchema 
 
 const PgSession = connectPgSimple(session);
 
+// FapHouse blocks /embed/ via frame-ancestors CSP; /videos/ works in iframes
+function normalizeEmbedUrl(url: string | null | undefined): string | null {
+  if (!url) return url as null;
+  return url.replace('faphouse.com/embed/', 'faphouse.com/videos/');
+}
+
 declare module "express-session" {
   interface SessionData {
     userId: string;
@@ -121,9 +127,12 @@ export async function registerRoutes(
       storage.getVideoCount({ search, category, tags: tagSlugs, orientation, minDuration }),
     ]);
 
+    // Normalize embed URLs so FapHouse iframes use /videos/ (allowed) not /embed/ (blocked)
+    const normalized = videosList.map(v => ({ ...v, embedUrl: normalizeEmbedUrl(v.embedUrl) }));
+
     // Cache video listings for 60s — catalog doesn't change often
     res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-    return res.json({ videos: videosList, total, limit, offset });
+    return res.json({ videos: normalized, total, limit, offset });
   });
 
   app.get("/api/videos/:id", async (req: Request, res: Response) => {
@@ -139,7 +148,7 @@ export async function registerRoutes(
     ]);
 
     res.set("Cache-Control", "public, max-age=300");
-    return res.json({ ...video, videoTags: relatedTags, videoPerformers: relatedPerformers, videoStudios: relatedStudios });
+    return res.json({ ...video, embedUrl: normalizeEmbedUrl(video.embedUrl), videoTags: relatedTags, videoPerformers: relatedPerformers, videoStudios: relatedStudios });
   });
 
   app.post("/api/videos", requireAuth, async (req: Request, res: Response) => {

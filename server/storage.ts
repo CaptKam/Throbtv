@@ -39,6 +39,10 @@ function setCache<T>(key: string, data: T): void {
   videoCache.set(key, { data, expiry: Date.now() + VIDEO_CACHE_TTL });
 }
 
+export function clearVideoCache() {
+  videoCache.clear();
+}
+
 export interface IStorage {
   // Users
   getUserById(id: string): Promise<User | undefined>;
