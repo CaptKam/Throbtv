@@ -12,7 +12,8 @@ const FEED_INCLUDE = path.resolve(process.cwd(), "attached_assets/gay_feed_inclu
 function fixEmbedDomain(url: string): string {
   if (!url) return "";
   let fixed = url
-    .replace("fh.video/embed/", "faphouse.com/embed/");
+    .replace("fh.video/embed/", "faphouse.com/videos/")
+    .replace("faphouse.com/embed/", "faphouse.com/videos/");
   if (!fixed.includes("utm_content=throb.tv")) {
     const sep = fixed.includes("?") ? "&" : "?";
     fixed = `${fixed}${sep}utm_content=throb.tv`;
