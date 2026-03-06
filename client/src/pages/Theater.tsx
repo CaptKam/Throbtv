@@ -228,14 +228,20 @@ export default function Theater() {
                 }}
               />
             ) : currentVideo.embedUrl ? (
-              <iframe
+              <div
                 key={currentVideo.id}
-                src={`${currentVideo.embedUrl.replace('/embed/', '/videos/')}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
-                className="w-full h-full border-0"
-                allow="autoplay; encrypted-media; fullscreen"
-                allowFullScreen
-                referrerPolicy="origin"
-              />
+                className="w-full h-full flex items-center justify-center relative cursor-pointer"
+                onClick={() => {
+                  const url = currentVideo.sourceUrl || currentVideo.embedUrl;
+                  if (url) window.open(url, '_blank', 'noopener');
+                }}
+              >
+                <img src={currentVideo.thumbnailUrl || ""} className="max-w-full max-h-full object-contain" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  <span className="text-sm opacity-90">Tap to watch full video</span>
+                </div>
+              </div>
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <img src={currentVideo.thumbnailUrl || ""} className="max-w-full max-h-full object-contain opacity-60" />

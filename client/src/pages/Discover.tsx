@@ -466,17 +466,30 @@ export default function Discover() {
               onError={handleVideoError}
               onClick={handleVideoClick}
             />
-          ) : currentVideo.embedUrl ? (
+          ) : currentVideo.embedUrl || currentVideo.thumbnailUrl ? (
             <>
-              <iframe
-                key={currentVideo.id}
-                src={`${currentVideo.embedUrl.replace('/embed/', '/videos/')}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
+              <div
                 className="throb-video-el"
-                allow="autoplay *; encrypted-media; fullscreen"
-                allowFullScreen
-                referrerPolicy="origin"
-                style={{ border: 0 }}
-              />
+                style={{ position: 'relative', cursor: 'pointer' }}
+                onClick={() => {
+                  const url = currentVideo.sourceUrl || currentVideo.embedUrl;
+                  if (url) window.open(url, '_blank', 'noopener');
+                }}
+              >
+                <img
+                  src={currentVideo.thumbnailUrl || ""}
+                  alt={currentVideo.title || ""}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+                <div style={{
+                  position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(0,0,0,0.4)', color: 'white', gap: '8px',
+                }}>
+                  <ExternalLink size={48} />
+                  <span style={{ fontSize: '14px', opacity: 0.9 }}>Tap to watch full video</span>
+                </div>
+              </div>
               {!isPlaying && (
                 <div className="throb-paused-overlay" onClick={() => setIsPlaying(true)}>
                   <Play size={64} fill="currentColor" />
